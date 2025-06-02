@@ -1,0 +1,204 @@
+You are a full-stack developer. Generate a complete Replit project that implements a web application for musicians to upload audio tracks, view a time-coded waveform with optional BPM grid, and receive time-synchronized feedback comments. The UI should have a crisp, high-resolution Windows 95 aesthetic. Follow these requirements:
+
+---
+TECH STACK
+1. Frontend:
+   • Use React for the user interface.
+   • Use the “98.css” library (https://github.com/jdan/98.css) to achieve a Windows 95 look.
+   • Use WaveSurfer.js (https://wavesurfer-js.org/) to display audio waveforms.
+   • Use React Router for navigation between pages (login/register, dashboard, player page).
+   • Use Axios for HTTP requests.
+2. Backend:
+   • Use Node.js with Express.
+   • Use MongoDB (e.g. via mongoose) for data storage.
+   • Store user accounts (email, hashed password), team invites, track metadata, comments, and public-link tokens.
+   • Use JSON Web Tokens for session authentication. Store JWT in an HttpOnly cookie.
+3. Storage:
+   • Store uploaded audio files in Replit’s built-in file system under a folder named `/uploads`.
+   • Save file metadata (filename, uploader’s user ID, BPM if provided, upload timestamp) in MongoDB.
+4. Email:
+   • Implement invitation via email using a “fake” SMTP service (e.g. nodemailer configured to log to console or Replit’s email stub). When a user A invites teammate B, send an email to B with a registration link that ties them to A’s team.
+5. Hosting & Routing:
+   • Single Express server serving API routes under `/api/*`.
+   • Serve React build from Express when in production mode.
+   • Public-link route: `/share/:shareToken` loads a read-only player page without requiring login.
+
+---
+FEATURES & USER FLOWS
+
+1. Registration / Login / Authentication
+   • Registration page: email + password. On successful registration, send a verification email (simulate with console log). After verifying (automatically accept for this demo), allow login.
+   • Login page: email + password. After login, redirect to Dashboard.
+   • Dashboard: shows list of uploaded tracks and an “Upload New Track” button.
+   • “Invite Teammate” form: enter an email; send an invitation link containing a JWT that grants access to the same “team” namespace. Invited teammates can register and automatically join the inviter’s team.
+   • Team membership: Each user belongs to exactly one “team” (unless solo). A team can have multiple users. Permissions: All team members see all uploaded tracks under that team.
+
+2. Upload Audio Track
+   • “Upload New Track” modal or page:
+     – File input field (accept only audio: .mp3, .wav, .ogg).
+     – Optional numeric input for BPM (integer > 0). If empty, treat as no BPM.
+     – “Submit” button: upload file to server, store metadata in MongoDB with fields: { teamId, uploaderUserId, filename, originalFilePath, bpm (nullable), uploadDate }.
+     – After upload, redirect to Track Player page for that track.
+
+3. Track Player Page
+   • URL: `/tracks/:trackId`, accessible only to logged-in team members. If not a team member, return 403.
+   • Display:
+     – Top bar showing track title (filename) and “Share” button.
+     – Waveform area: use WaveSurfer.js to load `/uploads/<filename>`.
+       1. If BPM was provided:
+          • Overlay a vertical grid aligned to beats and bars. Show beat numbers/ bar numbers along the top in small text (“Bar 1: Beats 1–4”, etc.). Show timecode (mm:ss) spaced evenly along the bottom.
+          • Calculate grid spacing from BPM: seconds per beat = 60/BPM. Bars assumed 4/4 time (4 beats per bar). Display a light grey grid line each beat; a darker grey line and a label each bar.
+       2. If no BPM:
+          • Show a time-based grid: vertical lines every 5 seconds (lighter lines every second), label mm:ss at bottom.
+     – Enable waveform zoom/pan horizontally.
+     – When a viewer clicks on a point in the waveform, capture the time in seconds, and open a small Windows 95 style popup form positioned near the click. The form asks: “Username:” (text input), “Comment:” (textarea), and a “Post” button.
+       • If the viewer has already entered a username in this browser session, reuse that username; otherwise require them to type a username once, then store in localStorage so subsequent comments don’t prompt for username again.
+       • On “Post,” send POST `/api/tracks/:trackId/comments` with body: { time: <seconds>, username: <string>, text: <string> }. Server stores comment tied to trackId, time, username, text, and timestamp.
+       • After posting, close the popup and display the comment marker on the waveform at that time.
+     – Comments display: below waveform, list comments sorted by time. Each comment shows:
+       [mm:ss] <username>: <text>
+       Clicking the timestamp in the list jumps the waveform to that position.
+     – Clicking a comment marker on the waveform shows a small tooltip with username and text, and a “Delete” button if the current user is the original uploader or the comment’s author (for simplicity, treat any same-username match as the author).
+
+4. Share Public Link
+   • On Track Player page, “Share” button generates a random 16-character alphanumeric token, saves `{ trackId, token, createdAt }` in MongoDB in a “shares” collection. Display a read-only URL: `https://<your-replit-domain>/share/<token>`. Copy to clipboard.
+   • Route `/share/:token`: look up token in “shares.” If found and not expired (no expiration needed), render the same Track Player UI but without:
+     – Upload, Invite, or Delete capabilities.
+     – Only allow anonymous commenters (no login needed), but still capture a “Username” when they first click to comment (store in localStorage).
+     – No grid grid editing or BPM editing.
+   • Clicking any comment marker or time in list still works. Comments posted via public link go to the same database, flagged with a field `isPublic: true`.
+
+5. BPM Grid & Timecode Logic
+   • If BPM provided on upload: calculate `beatInterval = 60 / bpm`. Draw vertical grid lines every `beatInterval` seconds across the waveform. Draw a thicker line every 4 beats, label “Bar N” above that thick line. Also show beat numbers inside each bar (“1, 2, 3, 4”) between the bars if you want.
+   • If no BPM: draw light vertical line every second; darker lines every 5 seconds. Label every 5 seconds in “mm:ss” at bottom.
+
+6. Windows 95 Aesthetic
+   • Use “98.css” for all buttons, inputs, modals, scrollbars, panels, etc. All elements should look like high-resolution Windows 95 windows and controls.
+   • For the waveform and comment markers, create custom styled elements that appear as shaded 3D windows or tooltips in the same style (e.g., grey backgrounds, beveled edges).
+   • Use System font stack similar to Windows 95: `font-family: "MS Sans Serif", "Tahoma", sans-serif;` for all text.
+   • Colors: light grey backgrounds (#C0C0C0), window borders in darker grey, text in black. Buttons appear with sunken/raised 3D effect.
+
+7. Database Schemas (Mongoose models)
+   • User: `{ _id, email (unique), passwordHash, teamId }`
+   • Team: `{ _id, name, members: [userId], invites: [inviteToken] }`
+   • Track: `{ _id, teamId, uploaderUserId, filename, originalName, bpm (Number or null), uploadDate }`
+   • Comment: `{ _id, trackId, time (Number, seconds), username (String), text (String), timestamp (Date), isPublic (Boolean), authorUserId (nullable) }`
+   • Share: `{ _id, trackId, token (String), createdAt }`
+   • Invite: `{ _id, teamId, email, token, createdAt, accepted (Boolean) }`
+
+8. API Routes
+   • `POST /api/auth/register` – register new user. Create or assign to a team if invited or create a new team if first user.
+   • `POST /api/auth/login` – login, return JWT in cookie.
+   • `POST /api/auth/logout` – clear JWT cookie.
+   • `POST /api/invite` – (protected) send an invite to email for current user’s team.
+   • `GET /api/invite/accept/:token` – verify invite token, mark invite accepted, allow registration.
+   • `POST /api/tracks` – (protected) handle file upload with FormData: audio file + optional bpm. Save file under `/uploads` with a unique filename (e.g. `<trackId>_<originalName>`). Respond with track metadata.
+   • `GET /api/tracks` – (protected) list all tracks for current user’s team.
+   • `GET /api/tracks/:trackId` – (protected) fetch track metadata, comments, and whether user can edit.
+   • `POST /api/tracks/:trackId/comments` – accept `{ time, username, text }`. If authenticated, set `authorUserId` to current user’s ID; else `authorUserId = null` and `isPublic = true`.
+   • `GET /api/tracks/:trackId/comments` – return all comments for that track sorted by time.
+   • `POST /api/tracks/:trackId/share` – (protected) generate a unique token and return the public URL.
+   • `GET /api/share/:token` – fetch track metadata and comments (public and private).
+   • [Optional] `DELETE /api/tracks/:trackId/comments/:commentId` – delete a comment if current user is allowed.
+   • `GET /api/me` – return current logged-in user’s info (email, teamId).
+
+9. Frontend Pages & Components
+   1. **LoginPage.jsx**: Email/password form styled in Windows 95 theme.
+   2. **RegisterPage.jsx**: Email/password + optional invite token handling.
+   3. **Dashboard.jsx**: 
+      • “Upload New Track” button/drag-and-drop area.
+      • “Invite Teammate” button that opens a modal to enter email.
+      • List of TrackCards: each card shows filename, upload date, BPM (if any), and a “View” button.
+   4. **TrackPlayer.jsx**:
+      • Use WaveSurfer.js to render waveform.
+      • Overlay BPM or time grid as described.
+      • Handle click events on waveform to open comment popup.
+      • Display comment list below waveform.
+      • “Share” button at top right.
+   5. **PublicPlayer.jsx** (similar to TrackPlayer but read-only, no metadata editing).
+   6. **Components**:
+      • **WaveformGrid.jsx**: wraps WaveSurfer instance, draws the grid lines on canvas overlay.
+      • **CommentPopup.jsx**: a small draggable Windows 95 style window with input fields.
+      • **CommentList.jsx**: renders comments sorted by time, with click-to-seek.
+      • **Modal.jsx**: generic Windows 95 style modal.
+      • **Button.jsx**, **Input.jsx**, etc. – styled using 98.css classes (e.g. `className="window body bgwindow"` for containers, `className="btn"` for buttons, etc.).
+      • **Navbar.jsx**: simple top menu bar with “Dashboard”, “Logout”.
+   7. **CSS**:
+      • Import `98.css/98.css` in `index.html`.
+      • Add custom CSS to adjust WaveSurfer container to fit inside a “`<div className="window" style={{ width: '800px', height: '300px' }}>`.”
+      • Style comment markers as small vertical lines or dots in dark grey over the waveform. On hover, display a tooltip styled like a Windows 95 help bubble.
+
+10. WAVEFORM + GRID IMPLEMENTATION NOTES
+    • Upon loading `/api/tracks/:trackId`, fetch the audio URL, BPM value, and comments via separate GET requests. Use WaveSurfer to load and render audio.
+    • After WaveSurfer is ready, compute duration. If BPM:
+      – Compute beatIntervalSec = 60 / bpm.
+      – For each beat (i = 0; i < duration / beatInterval; i++), draw a vertical line at x = (i * beatInterval) / duration * canvasWidth. Use a light grey 1px line. If i % 4 == 0, draw a slightly darker/thicker line and label “Bar <i/4 + 1>” above.
+      – At bottom, label every 4th beat with its time in mm:ss (optional).
+    • If no BPM:
+      – Draw a vertical line every second, using a light grey 1px line.
+      – Every 5 seconds draw a darker 2px line and label mm:ss at bottom.
+    • Add click listener on WaveSurfer’s container: get `wavesurfer.getCurrentTime()` based on click position then open CommentPopup at that pixel X.
+
+11. DATABASE ACCESS & SECURITY
+    • Protect all `/api/*` except `/api/share/:token` and `/api/tracks/:trackId/comments` for public users. Use middleware to verify JWT for protected routes.
+    • On comment POST via public share, do not require JWT. Accept `username` from request body; save it, setting `isPublic = true`.
+    • On delete comment, verify current user is uploader or `comment.username === currentUser.username`.
+
+12. PROJECT STRUCTURE
+    ```
+    / (root)
+    ├── package.json
+    ├── server.js             # Express entry point
+    ├── /models
+    │   ├── User.js
+    │   ├── Team.js
+    │   ├── Track.js
+    │   ├── Comment.js
+    │   └── Share.js
+    ├── /routes
+    │   ├── auth.js
+    │   ├── invite.js
+    │   ├── tracks.js
+    │   ├── comments.js
+    │   ├── share.js
+    │   └── me.js
+    ├── /uploads              # folder for audio files
+    ├── /client
+    │   ├── package.json
+    │   ├── public
+    │   │   └── index.html
+    │   ├── src
+    │   │   ├── App.jsx
+    │   │   ├── index.jsx
+    │   │   ├── components
+    │   │   │   ├── Navbar.jsx
+    │   │   │   ├── Modal.jsx
+    │   │   │   ├── WaveformGrid.jsx
+    │   │   │   ├── CommentPopup.jsx
+    │   │   │   ├── CommentList.jsx
+    │   │   │   └── UIElements.jsx  # e.g. Button, Input wrappers
+    │   │   ├── pages
+    │   │   │   ├── LoginPage.jsx
+    │   │   │   ├── RegisterPage.jsx
+    │   │   │   ├── Dashboard.jsx
+    │   │   │   ├── TrackPlayer.jsx
+    │   │   │   └── PublicPlayer.jsx
+    │   │   ├── utils
+    │   │   │   ├── api.js       # Axios instance with baseURL and JWT handling
+    │   │   │   └── auth.js      # helper to read/write username to localStorage
+    │   │   └── styles.css       # custom CSS overrides
+    └── README.md
+    ```
+
+13. IMPLEMENTATION & COMMENTS
+    • In README.md, include instructions: “Run `npm install` in root, then `npm install` in `/client`, then set up a MongoDB database URI in an environment variable named `MONGODB_URI`, and `JWT_SECRET`. Then run `node server.js`. The React app should auto-build if you add a Replit run script like `npm run dev` that concurrently runs `nodemon server.js` and `npm start` in `/client`.”
+    • Use environment variables for `MONGODB_URI`, `JWT_SECRET`, and an “EMAIL_FROM” for nodemailer.
+    • Document any assumptions: assume 4/4 time signature for BPM grids.
+    • Style all modals and popups using 98.css classes: e.g. `<div className="window" style={{ width: '250px', height: '150px' }}>`.
+    • Ensure audio files load from `/uploads/<filename>` and serve statically via Express (`app.use('/uploads', express.static(__dirname + '/uploads'))`).
+
+14. TEST DATA
+    • Prepopulate the database with one test user (email: “test@example.com”, password: “password123”), one test track with sample BPM = 120, and one test comment at time 10 seconds by username “DemoUser”. This helps verify the waveform, grid, and comment display work immediately.
+
+---
+END OF PROMPT
