@@ -8,6 +8,7 @@ import path from "path";
 import fs from "fs";
 import { nanoid } from "nanoid";
 import express from "express";
+import cookieParser from "cookie-parser";
 import { insertUserSchema, insertTrackSchema, insertCommentSchema, insertInviteSchema } from "@shared/schema";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
@@ -61,7 +62,7 @@ const authenticateToken = async (req: any, res: any, next: any) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
-  app.use(express.cookieParser());
+  app.use(cookieParser());
 
   // Serve uploaded files
   app.use('/uploads', express.static(uploadsDir));

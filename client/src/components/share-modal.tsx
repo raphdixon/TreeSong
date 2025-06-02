@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -43,9 +43,9 @@ export default function ShareModal({ trackId, onClose }: ShareModalProps) {
   };
 
   // Generate share link on modal open
-  useState(() => {
+  useEffect(() => {
     createShareMutation.mutate();
-  });
+  }, []);
 
   return (
     <div className="modal-backdrop">
