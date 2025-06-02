@@ -38,23 +38,34 @@ const upload = multer({
 
 // Auth middleware
 const authenticateToken = async (req: any, res: any, next: any) => {
+  console.log("=== AUTH MIDDLEWARE ===");
+  console.log("Request path:", req.path);
+  console.log("Cookies:", req.cookies);
+  
   const token = req.cookies?.token;
   
   if (!token) {
+    console.log("No token found in cookies");
     return res.status(401).json({ message: "Access token required" });
   }
 
   try {
+    console.log("Verifying token:", token.substring(0, 20) + "...");
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    console.log("Token decoded, userId:", decoded.userId);
+    
     const user = await storage.getUser(decoded.userId);
     
     if (!user) {
+      console.log("User not found for userId:", decoded.userId);
       return res.status(401).json({ message: "User not found" });
     }
     
+    console.log("User authenticated:", user.email);
     req.user = user;
     next();
   } catch (error) {
+    console.log("Token verification failed:", error.message);
     return res.status(403).json({ message: "Invalid token" });
   }
 };
@@ -155,21 +166,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/tracks", authenticateToken, upload.single('audio'), async (req, res) => {
+    console.log("=== UPLOAD TRACK REQUEST ===");
+    console.log("User:", req.user ? req.user.email : "No user");
+    console.log("Request body:", req.body);
+    console.log("File:", req.file ? {
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      path: req.file.path
+    } : "No file");
+    
     try {
       if (!req.file) {
+        console.log("ERROR: No file provided");
         return res.status(400).json({ message: "Audio file is required" });
       }
 
+      console.log("Processing file upload...");
       const bpm = req.body.bpm ? parseInt(req.body.bpm) : undefined;
       const duration = parseFloat(req.body.duration) || 180; // Default 3 minutes if not provided
+      
+      console.log("BPM:", bpm, "Duration:", duration);
       
       // Generate unique filename
       const ext = path.extname(req.file.originalname);
       const filename = `${nanoid()}${ext}`;
       const newPath = path.join(uploadsDir, filename);
       
+      console.log("Moving file from", req.file.path, "to", newPath);
+      
       // Move file to permanent location
       fs.renameSync(req.file.path, newPath);
+      
+      console.log("File moved successfully");
 
       const trackData = insertTrackSchema.parse({
         teamId: req.user.teamId,
@@ -180,10 +209,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         duration
       });
 
+      console.log("Creating track with data:", trackData);
       const track = await storage.createTrack(trackData);
+      console.log("Track created successfully:", track.id);
+      
       res.json(track);
     } catch (error) {
-      res.status(400).json({ message: "Failed to upload track" });
+      console.error("Upload error:", error);
+      res.status(400).json({ message: "Failed to upload track", error: error.message });
     }
   });
 
