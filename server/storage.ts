@@ -1,19 +1,22 @@
 import {
-  User,
-  InsertUser,
-  Team,
-  InsertTeam,
-  Track,
-  InsertTrack,
-  Comment,
-  InsertComment,
-  Share,
-  InsertShare,
-  Invite,
-  InsertInvite
+  users, teams, tracks, comments, shares, invites, teamMembers,
+  type User,
+  type InsertUser,
+  type Team,
+  type InsertTeam,
+  type Track,
+  type InsertTrack,
+  type Comment,
+  type InsertComment,
+  type Share,
+  type InsertShare,
+  type Invite,
+  type InsertInvite
 } from "@shared/schema";
 import { nanoid } from "nanoid";
 import bcrypt from "bcrypt";
+import { eq } from "drizzle-orm";
+import { db } from "./db";
 
 export interface IStorage {
   // User methods
@@ -47,164 +50,157 @@ export interface IStorage {
   acceptInvite(token: string): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User> = new Map();
-  private teams: Map<string, Team> = new Map();
-  private tracks: Map<string, Track> = new Map();
-  private comments: Map<string, Comment> = new Map();
-  private shares: Map<string, Share> = new Map();
-  private invites: Map<string, Invite> = new Map();
-
+export class DatabaseStorage implements IStorage {
   // User methods
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.email === email);
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = nanoid();
     const passwordHash = await bcrypt.hash(insertUser.password, 10);
     
-    let teamId = insertUser.teamId;
-    if (!teamId) {
-      // Create a new team for the user
-      const team = await this.createTeam({ name: `${insertUser.email}'s Team` });
-      teamId = team.id;
-    }
-
-    const user: User = {
-      id,
-      email: insertUser.email,
-      passwordHash,
-      teamId,
-      createdAt: new Date()
-    };
-
-    this.users.set(id, user);
-    await this.addUserToTeam(teamId, id);
+    const [user] = await db
+      .insert(users)
+      .values({
+        id,
+        email: insertUser.email,
+        passwordHash,
+        teamId: insertUser.teamId || 'default-team'
+      })
+      .returning();
+      
     return user;
   }
 
   // Team methods
   async getTeam(id: string): Promise<Team | undefined> {
-    return this.teams.get(id);
+    const [team] = await db.select().from(teams).where(eq(teams.id, id));
+    return team;
   }
 
-  async createTeam(team: InsertTeam): Promise<Team> {
+  async createTeam(insertTeam: InsertTeam): Promise<Team> {
     const id = nanoid();
-    const newTeam: Team = {
-      id,
-      name: team.name,
-      members: [],
-      createdAt: new Date()
-    };
-    this.teams.set(id, newTeam);
-    return newTeam;
+    
+    const [team] = await db
+      .insert(teams)
+      .values({
+        id,
+        name: insertTeam.name
+      })
+      .returning();
+      
+    return team;
   }
 
   async addUserToTeam(teamId: string, userId: string): Promise<void> {
-    const team = this.teams.get(teamId);
-    if (team && !team.members.includes(userId)) {
-      team.members.push(userId);
-      this.teams.set(teamId, team);
-    }
+    await db.insert(teamMembers).values({
+      id: nanoid(),
+      teamId,
+      userId
+    });
   }
 
   // Track methods
   async getTrack(id: string): Promise<Track | undefined> {
-    return this.tracks.get(id);
+    const [track] = await db.select().from(tracks).where(eq(tracks.id, id));
+    return track;
   }
 
   async getTracksByTeam(teamId: string): Promise<Track[]> {
-    return Array.from(this.tracks.values()).filter(track => track.teamId === teamId);
+    return await db.select().from(tracks).where(eq(tracks.teamId, teamId));
   }
 
-  async createTrack(track: InsertTrack): Promise<Track> {
+  async createTrack(insertTrack: InsertTrack): Promise<Track> {
     const id = nanoid();
-    const newTrack: Track = {
-      id,
-      ...track,
-      bpm: track.bpm || null,
-      uploadDate: new Date()
-    };
-    this.tracks.set(id, newTrack);
-    return newTrack;
+    
+    const [track] = await db
+      .insert(tracks)
+      .values({
+        id,
+        ...insertTrack
+      })
+      .returning();
+      
+    return track;
   }
 
   async deleteTrack(id: string): Promise<void> {
-    this.tracks.delete(id);
-    // Also delete associated comments
-    const trackComments = Array.from(this.comments.entries())
-      .filter(([_, comment]) => comment.trackId === id);
-    trackComments.forEach(([commentId]) => this.comments.delete(commentId));
+    await db.delete(tracks).where(eq(tracks.id, id));
   }
 
   // Comment methods
   async getCommentsByTrack(trackId: string): Promise<Comment[]> {
-    return Array.from(this.comments.values())
-      .filter(comment => comment.trackId === trackId)
-      .sort((a, b) => a.time - b.time);
+    return await db.select().from(comments).where(eq(comments.trackId, trackId));
   }
 
-  async createComment(comment: InsertComment): Promise<Comment> {
+  async createComment(insertComment: InsertComment): Promise<Comment> {
     const id = nanoid();
-    const newComment: Comment = {
-      id,
-      ...comment,
-      authorUserId: comment.authorUserId || null,
-      timestamp: new Date()
-    };
-    this.comments.set(id, newComment);
-    return newComment;
+    
+    const [comment] = await db
+      .insert(comments)
+      .values({
+        id,
+        ...insertComment
+      })
+      .returning();
+      
+    return comment;
   }
 
   async deleteComment(id: string): Promise<void> {
-    this.comments.delete(id);
+    await db.delete(comments).where(eq(comments.id, id));
   }
 
   // Share methods
   async getShareByToken(token: string): Promise<Share | undefined> {
-    return Array.from(this.shares.values()).find(share => share.token === token);
+    const [share] = await db.select().from(shares).where(eq(shares.token, token));
+    return share;
   }
 
-  async createShare(share: InsertShare): Promise<Share> {
+  async createShare(insertShare: InsertShare): Promise<Share> {
     const id = nanoid();
-    const newShare: Share = {
-      id,
-      ...share,
-      createdAt: new Date()
-    };
-    this.shares.set(id, newShare);
-    return newShare;
+    
+    const [share] = await db
+      .insert(shares)
+      .values({
+        id,
+        ...insertShare
+      })
+      .returning();
+      
+    return share;
   }
 
   // Invite methods
   async getInviteByToken(token: string): Promise<Invite | undefined> {
-    return Array.from(this.invites.values()).find(invite => invite.token === token);
+    const [invite] = await db.select().from(invites).where(eq(invites.token, token));
+    return invite;
   }
 
-  async createInvite(invite: InsertInvite): Promise<Invite> {
+  async createInvite(insertInvite: InsertInvite): Promise<Invite> {
     const id = nanoid();
-    const newInvite: Invite = {
-      id,
-      ...invite,
-      createdAt: new Date(),
-      accepted: false
-    };
-    this.invites.set(id, newInvite);
-    return newInvite;
+    
+    const [invite] = await db
+      .insert(invites)
+      .values({
+        id,
+        ...insertInvite
+      })
+      .returning();
+      
+    return invite;
   }
 
   async acceptInvite(token: string): Promise<void> {
-    const invite = Array.from(this.invites.values()).find(inv => inv.token === token);
-    if (invite) {
-      invite.accepted = true;
-      this.invites.set(invite.id, invite);
-    }
+    await db.update(invites).set({ accepted: true }).where(eq(invites.token, token));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
