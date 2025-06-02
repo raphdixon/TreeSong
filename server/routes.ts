@@ -136,6 +136,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Debug route to check authentication
+  app.get("/api/debug/auth", (req, res) => {
+    console.log("=== DEBUG AUTH CHECK ===");
+    console.log("Cookies:", req.cookies);
+    console.log("Headers:", req.headers);
+    res.json({
+      hasCookies: !!req.cookies,
+      cookieNames: Object.keys(req.cookies || {}),
+      hasToken: !!req.cookies?.token,
+      userAgent: req.headers['user-agent']
+    });
+  });
+
   // Track routes
   app.get("/api/tracks", authenticateToken, async (req, res) => {
     try {

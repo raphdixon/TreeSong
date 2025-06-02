@@ -18,14 +18,24 @@ export default function UploadModal({ onClose, teamId }: UploadModalProps) {
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
+      console.log("Starting upload with FormData:", formData);
+      
       const response = await fetch("/api/tracks", {
         method: "POST",
         body: formData,
-        credentials: "include"
+        credentials: "include",
+        headers: {
+          // Don't set Content-Type for FormData - let browser set it with boundary
+        }
       });
       
+      console.log("Upload response status:", response.status);
+      console.log("Upload response headers:", Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
-        throw new Error(await response.text());
+        const errorText = await response.text();
+        console.error("Upload failed:", errorText);
+        throw new Error(errorText);
       }
       
       return response.json();
