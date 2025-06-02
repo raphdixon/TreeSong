@@ -75,10 +75,13 @@ export default function PlayerPage() {
   return (
     <Windows95Layout>
       <div className="window" style={{ 
-        top: "60px", 
-        left: "100px", 
-        width: "900px",
-        minHeight: "700px"
+        top: "10px", 
+        left: "10px", 
+        right: "10px",
+        bottom: "10px",
+        position: "fixed",
+        width: "calc(100vw - 20px)",
+        height: "calc(100vh - 20px)"
       }}>
         <div className="title-bar">
           <div className="title-bar-text">WaveCollab - {track.originalName}</div>
