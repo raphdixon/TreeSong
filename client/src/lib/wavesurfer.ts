@@ -23,12 +23,14 @@ function loadWaveSurfer(): Promise<void> {
     }
 
     const script = document.createElement('script');
-    script.src = 'https://unpkg.com/wavesurfer.js@7';
+    script.src = 'https://unpkg.com/wavesurfer.js@6.6.4/dist/wavesurfer.min.js';
     script.onload = () => {
+      console.log('WaveSurfer.js loaded successfully');
       waveSurferLoaded = true;
       resolve();
     };
     script.onerror = () => {
+      console.error('Failed to load WaveSurfer.js');
       reject(new Error('Failed to load WaveSurfer.js'));
     };
     document.head.appendChild(script);

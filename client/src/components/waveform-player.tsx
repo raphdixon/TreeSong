@@ -36,35 +36,45 @@ export default function WaveformPlayer({
   // Initialize WaveSurfer
   useEffect(() => {
     if (waveformRef.current) {
-      const waveSurfer = initializeWaveSurfer(waveformRef.current, audioUrl);
-      waveSurferRef.current = waveSurfer;
+      initializeWaveSurfer(waveformRef.current, audioUrl)
+        .then((waveSurfer) => {
+          console.log('WaveSurfer initialized successfully');
+          waveSurferRef.current = waveSurfer;
 
-      // Event listeners
-      waveSurfer.on('ready', () => {
-        console.log('WaveSurfer ready');
-      });
+          // Event listeners
+          waveSurfer.on('ready', () => {
+            console.log('WaveSurfer ready');
+          });
 
-      waveSurfer.on('audioprocess', (time: number) => {
-        setCurrentTime(time);
-      });
+          waveSurfer.on('audioprocess', (time: number) => {
+            setCurrentTime(time);
+          });
 
-      waveSurfer.on('play', () => setIsPlaying(true));
-      waveSurfer.on('pause', () => setIsPlaying(false));
+          waveSurfer.on('play', () => setIsPlaying(true));
+          waveSurfer.on('pause', () => setIsPlaying(false));
 
-      // Click to comment
-      waveSurfer.on('click', (progress: number) => {
-        const clickTime = progress * duration;
-        setCommentTime(clickTime);
-        
-        // Calculate position for popup
-        const rect = waveformRef.current!.getBoundingClientRect();
-        setCommentPosition({
-          x: rect.left + (progress * rect.width),
-          y: rect.top + rect.height / 2
+          // Click to comment
+          waveSurfer.on('click', (progress: number) => {
+            const clickTime = progress * duration;
+            setCommentTime(clickTime);
+            
+            // Calculate position for popup
+            const rect = waveformRef.current!.getBoundingClientRect();
+            setCommentPosition({
+              x: rect.left + (progress * rect.width),
+              y: rect.top + rect.height / 2
+            });
+            
+            setShowCommentPopup(true);
+          });
+        })
+        .catch((error) => {
+          console.error('Failed to initialize WaveSurfer:', error);
+          toast({ 
+            title: "Audio Player Error", 
+            description: "Failed to load the audio player. Please try refreshing the page."
+          });
         });
-        
-        setShowCommentPopup(true);
-      });
 
       return () => {
         if (waveSurferRef.current) {
