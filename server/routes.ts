@@ -339,15 +339,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Share routes
-  app.post("/api/tracks/:trackId/share", authenticateToken, async (req, res) => {
+  app.post("/api/tracks/:trackId/share", async (req, res) => {
     try {
       const track = await storage.getTrack(req.params.trackId);
       if (!track) {
         return res.status(404).json({ message: "Track not found" });
-      }
-
-      if (track.teamId !== req.user.teamId) {
-        return res.status(403).json({ message: "Access denied" });
       }
 
       const token = nanoid(16);
