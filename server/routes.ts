@@ -92,7 +92,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser(userData);
       const token = jwt.sign({ userId: user.id }, JWT_SECRET);
       
-      res.cookie("token", token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+      res.cookie("token", token, { 
+        httpOnly: true, 
+        secure: false, 
+        sameSite: "lax",
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60 * 1000 
+      });
+      console.log("Register: Setting cookie with token:", token.substring(0, 20) + "...");
       res.json({ user: { id: user.id, email: user.email, teamId: user.teamId } });
     } catch (error) {
       res.status(400).json({ message: "Invalid registration data" });
@@ -114,7 +121,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const token = jwt.sign({ userId: user.id }, JWT_SECRET);
-      res.cookie("token", token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+      res.cookie("token", token, { 
+        httpOnly: true, 
+        secure: false, 
+        sameSite: "lax",
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60 * 1000 
+      });
+      console.log("Login: Setting cookie with token:", token.substring(0, 20) + "...");
       res.json({ user: { id: user.id, email: user.email, teamId: user.teamId } });
     } catch (error) {
       res.status(500).json({ message: "Login failed" });
