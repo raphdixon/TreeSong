@@ -53,9 +53,13 @@ export default function WaveformPlayer({
           waveSurfer.on('play', () => setIsPlaying(true));
           waveSurfer.on('pause', () => setIsPlaying(false));
 
-          // Click to comment
+          // Click to seek and comment
           waveSurfer.on('click', (progress: number) => {
             const clickTime = progress * duration;
+            
+            // Immediately seek to clicked position
+            waveSurfer.seekTo(progress);
+            setCurrentTime(clickTime);
             setCommentTime(clickTime);
             
             // Calculate position for popup relative to viewport
@@ -122,47 +126,24 @@ export default function WaveformPlayer({
     const lines = [];
     const containerWidth = 100; // percentage
 
-    if (bpm) {
-      // BPM-based grid - only show bars (every 4 beats) to reduce clutter
-      const beatInterval = 60 / bpm; // seconds per beat
-      const barInterval = beatInterval * 4; // seconds per bar (4 beats)
-      const barsInDuration = Math.floor(duration / barInterval);
+    // Simplified grid - show major time markers every 10-15 seconds regardless of BPM
+    const interval = Math.max(10, Math.floor(duration / 10)); // Show 6-10 major markers
+    const numLines = Math.floor(duration / interval);
+    
+    for (let i = 0; i <= numLines; i++) {
+      const position = (i * interval / duration) * containerWidth;
       
-      for (let i = 0; i <= barsInDuration; i++) {
-        const position = (i * barInterval / duration) * containerWidth;
-        
-        lines.push(
-          <div
-            key={`bar-${i}`}
-            className="grid-line bar"
-            style={{ left: `${position}%` }}
-          >
-            <div className="grid-label">
-              Bar {i + 1}
-            </div>
+      lines.push(
+        <div
+          key={`time-${i}`}
+          className="grid-line major"
+          style={{ left: `${position}%` }}
+        >
+          <div className="time-label">
+            {formatTime(i * interval)}
           </div>
-        );
-      }
-    } else {
-      // Time-based grid (every 5 seconds)
-      const interval = 5; // seconds
-      const numLines = Math.floor(duration / interval);
-      
-      for (let i = 0; i <= numLines; i++) {
-        const position = (i * interval / duration) * containerWidth;
-        
-        lines.push(
-          <div
-            key={`time-${i}`}
-            className="grid-line"
-            style={{ left: `${position}%` }}
-          >
-            <div className="time-label">
-              {formatTime(i * interval)}
-            </div>
-          </div>
-        );
-      }
+        </div>
+      );
     }
 
     return lines;
