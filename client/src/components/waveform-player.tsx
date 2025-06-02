@@ -55,7 +55,9 @@ export default function WaveformPlayer({
 
           // Click to seek and comment
           waveSurfer.on('click', (progress: number) => {
+            console.log('WaveSurfer click - progress:', progress, 'duration:', duration);
             const clickTime = progress * duration;
+            console.log('Calculated click time:', clickTime);
             
             // Immediately seek to clicked position
             waveSurfer.seekTo(progress);
@@ -70,6 +72,13 @@ export default function WaveformPlayer({
             });
             
             setShowCommentPopup(true);
+          });
+
+          // Alternative: Use seek event to ensure we get the actual time
+          waveSurfer.on('seek', (progress: number) => {
+            const seekTime = progress * duration;
+            console.log('WaveSurfer seek - progress:', progress, 'seekTime:', seekTime);
+            setCurrentTime(seekTime);
           });
         })
         .catch((error) => {
