@@ -41,11 +41,24 @@ const authenticateToken = async (req: any, res: any, next: any) => {
   console.log("=== AUTH MIDDLEWARE ===");
   console.log("Request path:", req.path);
   console.log("Cookies:", req.cookies);
+  console.log("Authorization header:", req.headers.authorization);
   
-  const token = req.cookies?.token;
+  // Try to get token from cookie first, then from Authorization header
+  let token = req.cookies?.token;
   
   if (!token) {
-    console.log("No token found in cookies");
+    // Try Authorization header as fallback
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+      console.log("Found token in Authorization header");
+    }
+  } else {
+    console.log("Found token in cookies");
+  }
+  
+  if (!token) {
+    console.log("No token found in cookies or Authorization header");
     return res.status(401).json({ message: "Access token required" });
   }
 
@@ -100,7 +113,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxAge: 7 * 24 * 60 * 60 * 1000 
       });
       console.log("Register: Setting cookie with token:", token.substring(0, 20) + "...");
-      res.json({ user: { id: user.id, email: user.email, teamId: user.teamId } });
+      res.json({ 
+        user: { id: user.id, email: user.email, teamId: user.teamId },
+        token: token
+      });
     } catch (error) {
       res.status(400).json({ message: "Invalid registration data" });
     }
@@ -129,7 +145,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxAge: 7 * 24 * 60 * 60 * 1000 
       });
       console.log("Login: Setting cookie with token:", token.substring(0, 20) + "...");
-      res.json({ user: { id: user.id, email: user.email, teamId: user.teamId } });
+      res.json({ 
+        user: { id: user.id, email: user.email, teamId: user.teamId },
+        token: token
+      });
     } catch (error) {
       res.status(500).json({ message: "Login failed" });
     }

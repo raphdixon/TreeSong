@@ -10,7 +10,8 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (user: User) => void;
+  token: string | null;
+  login: (user: User, token: string) => void;
   logout: () => void;
   isLoading: boolean;
 }
@@ -19,6 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }): JSX.Element {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   // Check if user is logged in
   const { data, isLoading } = useQuery({
@@ -42,8 +44,9 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
     }
   }, [data]);
 
-  const login = (userData: User) => {
+  const login = (userData: User, userToken: string) => {
     setUser(userData);
+    setToken(userToken);
   };
 
   const logout = async () => {
@@ -53,11 +56,12 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
       console.error("Logout error:", error);
     } finally {
       setUser(null);
+      setToken(null);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
