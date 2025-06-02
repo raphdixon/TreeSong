@@ -20,22 +20,19 @@ export default function UploadModal({ onClose, teamId }: UploadModalProps) {
     mutationFn: async (formData: FormData) => {
       console.log("Starting upload with FormData:", formData);
       
+      // Use fetch with explicit credentials and proper headers for FormData
       const response = await fetch("/api/tracks", {
         method: "POST",
         body: formData,
-        credentials: "include",
-        headers: {
-          // Don't set Content-Type for FormData - let browser set it with boundary
-        }
+        credentials: "include"
       });
       
       console.log("Upload response status:", response.status);
-      console.log("Upload response headers:", Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Upload failed:", errorText);
-        throw new Error(errorText);
+        throw new Error(`Upload failed: ${errorText}`);
       }
       
       return response.json();
