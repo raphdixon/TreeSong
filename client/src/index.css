@@ -1,0 +1,426 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://unpkg.com/98.css');
+
+:root {
+  /* Windows 95 color scheme */
+  --background: 192 192 192; /* #C0C0C0 */
+  --foreground: 0 0 0; /* #000000 */
+  --muted: 128 128 128; /* #808080 */
+  --muted-foreground: 0 0 0; /* #000000 */
+  --popover: 192 192 192; /* #C0C0C0 */
+  --popover-foreground: 0 0 0; /* #000000 */
+  --card: 192 192 192; /* #C0C0C0 */
+  --card-foreground: 0 0 0; /* #000000 */
+  --border: 128 128 128; /* #808080 */
+  --input: 255 255 255; /* #FFFFFF */
+  --primary: 0 0 128; /* #000080 */
+  --primary-foreground: 255 255 255; /* #FFFFFF */
+  --secondary: 192 192 192; /* #C0C0C0 */
+  --secondary-foreground: 0 0 0; /* #000000 */
+  --accent: 255 255 0; /* #FFFF00 */
+  --accent-foreground: 0 0 0; /* #000000 */
+  --destructive: 255 0 0; /* #FF0000 */
+  --destructive-foreground: 255 255 255; /* #FFFFFF */
+  --ring: 0 0 128; /* #000080 */
+  --radius: 0px;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    font-family: "MS Sans Serif", "Tahoma", sans-serif;
+    background: #008080;
+    background-image: 
+      radial-gradient(circle at 25% 25%, #20b2aa 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, #4682b4 0%, transparent 50%);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    color: #000000;
+  }
+
+  .desktop {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .window {
+    position: absolute;
+    background: #C0C0C0;
+    border: 2px outset #C0C0C0;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+  }
+
+  .title-bar {
+    background: linear-gradient(to right, #000080, #4169E1);
+    color: white;
+    padding: 2px 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: bold;
+    font-size: 11px;
+  }
+
+  .title-bar-text {
+    flex: 1;
+    margin-left: 4px;
+  }
+
+  .title-bar-controls {
+    display: flex;
+    gap: 2px;
+  }
+
+  .title-bar-button {
+    width: 16px;
+    height: 14px;
+    background: #C0C0C0;
+    border: 1px outset #C0C0C0;
+    font-size: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .title-bar-button:active {
+    border: 1px inset #C0C0C0;
+  }
+
+  .window-body {
+    padding: 8px;
+    background: #C0C0C0;
+  }
+
+  .btn {
+    background: #C0C0C0;
+    border: 1px outset #C0C0C0;
+    padding: 4px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .btn:hover {
+    background: #D4D0C8;
+  }
+
+  .btn:active {
+    border: 1px inset #C0C0C0;
+  }
+
+  .btn:disabled {
+    background: #C0C0C0;
+    color: #808080;
+    cursor: not-allowed;
+  }
+
+  .textbox {
+    background: white;
+    border: 1px inset #C0C0C0;
+    padding: 2px 4px;
+    font-size: 11px;
+    font-family: inherit;
+  }
+
+  .textbox:focus {
+    outline: none;
+    border: 1px inset #000080;
+  }
+
+  .field-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+
+  .field-row label {
+    min-width: 80px;
+    font-size: 11px;
+  }
+
+  .waveform-container {
+    background: white;
+    border: 2px inset #C0C0C0;
+    height: 150px;
+    margin: 12px 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .waveform-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .grid-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: rgba(128, 128, 128, 0.3);
+  }
+
+  .grid-line.beat {
+    background: rgba(128, 128, 128, 0.5);
+  }
+
+  .grid-line.bar {
+    background: rgba(128, 128, 128, 0.8);
+    width: 2px;
+  }
+
+  .grid-label {
+    position: absolute;
+    top: 2px;
+    font-size: 9px;
+    color: #666;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 1px 2px;
+    border: 1px outset #C0C0C0;
+  }
+
+  .time-label {
+    position: absolute;
+    bottom: 2px;
+    font-size: 9px;
+    color: #666;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 1px 2px;
+    border: 1px outset #C0C0C0;
+  }
+
+  .comment-marker {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #FF0000;
+    cursor: pointer;
+    z-index: 3;
+    border: 1px outset #FF0000;
+  }
+
+  .comment-marker::after {
+    content: '💬';
+    position: absolute;
+    top: -2px;
+    left: -6px;
+    font-size: 12px;
+    background: #FFFF00;
+    border: 1px outset #FFFF00;
+    padding: 1px;
+  }
+
+  .comment-marker:hover {
+    background: #FF4040;
+  }
+
+  .track-card {
+    background: #C0C0C0;
+    border: 2px outset #C0C0C0;
+    padding: 12px;
+    margin-bottom: 12px;
+    min-height: 120px;
+  }
+
+  .track-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+
+  .track-info {
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 8px;
+  }
+
+  .track-actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+  }
+
+  .controls-panel {
+    background: #C0C0C0;
+    border: 1px inset #C0C0C0;
+    padding: 8px;
+    margin: 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .time-display {
+    background: #000;
+    color: #00FF00;
+    padding: 4px 8px;
+    font-family: monospace;
+    font-size: 14px;
+    border: 1px inset #C0C0C0;
+  }
+
+  .volume-slider {
+    width: 100px;
+  }
+
+  .comments-section {
+    margin-top: 16px;
+  }
+
+  .comments-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .comments-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px inset #C0C0C0;
+    background: white;
+    padding: 4px;
+  }
+
+  .comment-item {
+    padding: 4px;
+    border-bottom: 1px solid #E0E0E0;
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  .comment-item:hover {
+    background: #E0E0FF;
+  }
+
+  .comment-time {
+    color: #0000FF;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .comment-author {
+    color: #800080;
+    font-weight: bold;
+  }
+
+  .upload-area {
+    border: 2px dashed #808080;
+    padding: 40px;
+    text-align: center;
+    background: #F0F0F0;
+    margin: 12px 0;
+    cursor: pointer;
+  }
+
+  .upload-area:hover {
+    background: #E8E8E8;
+  }
+
+  .upload-area.dragover {
+    border-color: #000080;
+    background: #E0E0FF;
+  }
+
+  .taskbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background: #C0C0C0;
+    border-top: 1px solid #808080;
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    z-index: 2000;
+  }
+
+  .start-button {
+    background: #C0C0C0;
+    border: 1px outset #C0C0C0;
+    padding: 4px 12px;
+    font-weight: bold;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .start-button:active {
+    border: 1px inset #C0C0C0;
+  }
+
+  .taskbar-time {
+    margin-left: auto;
+    padding: 4px 8px;
+    border: 1px inset #C0C0C0;
+    font-size: 11px;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-window {
+    width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  .bpm-indicator {
+    background: #000080;
+    color: white;
+    padding: 2px 6px;
+    font-size: 10px;
+    border-radius: 2px;
+    display: inline-block;
+  }
+
+  .share-section {
+    background: #FFFFCC;
+    border: 1px solid #CCCC99;
+    padding: 8px;
+    margin: 8px 0;
+  }
+
+  .share-url {
+    background: white;
+    border: 1px inset #C0C0C0;
+    padding: 4px;
+    font-family: monospace;
+    font-size: 11px;
+    word-break: break-all;
+  }
+}

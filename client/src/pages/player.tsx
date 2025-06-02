@@ -1,0 +1,166 @@
+import { useParams, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/lib/auth";
+import Windows95Layout from "@/components/windows95-layout";
+import WaveformPlayer from "@/components/waveform-player";
+import ShareModal from "@/components/share-modal";
+import { useState } from "react";
+
+export default function PlayerPage() {
+  const { trackId } = useParams();
+  const [, setLocation] = useLocation();
+  const { user } = useAuth();
+  const [showShare, setShowShare] = useState(false);
+
+  // Redirect if not logged in
+  if (!user) {
+    setLocation("/login");
+    return null;
+  }
+
+  // Fetch track data
+  const { data, isLoading, error } = useQuery({
+    queryKey: [`/api/tracks/${trackId}`],
+    enabled: !!trackId,
+  });
+
+  if (isLoading) {
+    return (
+      <Windows95Layout>
+        <div className="window" style={{ 
+          top: "50%", 
+          left: "50%", 
+          transform: "translate(-50%, -50%)",
+          width: "400px"
+        }}>
+          <div className="title-bar">
+            <div className="title-bar-text">Loading...</div>
+          </div>
+          <div className="window-body">
+            <p>Loading track...</p>
+          </div>
+        </div>
+      </Windows95Layout>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <Windows95Layout>
+        <div className="window" style={{ 
+          top: "50%", 
+          left: "50%", 
+          transform: "translate(-50%, -50%)",
+          width: "400px"
+        }}>
+          <div className="title-bar">
+            <div className="title-bar-text">Error</div>
+          </div>
+          <div className="window-body">
+            <p>Track not found or access denied.</p>
+            <button 
+              className="btn"
+              onClick={() => setLocation("/dashboard")}
+            >
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
+      </Windows95Layout>
+    );
+  }
+
+  const { track, comments } = data;
+
+  return (
+    <Windows95Layout>
+      <div className="window" style={{ 
+        top: "60px", 
+        left: "100px", 
+        width: "900px",
+        minHeight: "700px"
+      }}>
+        <div className="title-bar">
+          <div className="title-bar-text">WaveCollab - {track.originalName}</div>
+          <div className="title-bar-controls">
+            <div className="title-bar-button">_</div>
+            <div className="title-bar-button">□</div>
+            <div className="title-bar-button" onClick={() => setLocation("/dashboard")}>×</div>
+          </div>
+        </div>
+        
+        {/* Toolbar */}
+        <div style={{ 
+          background: "#C0C0C0", 
+          borderBottom: "1px solid #808080", 
+          padding: "4px",
+          display: "flex",
+          gap: "2px"
+        }}>
+          <button className="btn">▶️ Play</button>
+          <button className="btn">⏹️ Stop</button>
+          <button 
+            className="btn"
+            onClick={() => setShowShare(true)}
+            style={{ marginLeft: "auto" }}
+          >
+            🔗 Share Track
+          </button>
+          <button 
+            className="btn"
+            onClick={() => setLocation("/dashboard")}
+          >
+            📋 Dashboard
+          </button>
+        </div>
+
+        <div className="window-body" style={{ padding: "10px" }}>
+          {/* Track Info */}
+          <div className="field-row">
+            <label>Track:</label>
+            <span>{track.originalName}</span>
+            <span style={{ marginLeft: "20px" }}>BPM:</span>
+            <span>{track.bpm || "Not set"}</span>
+            <span style={{ marginLeft: "20px" }}>Duration:</span>
+            <span>{Math.floor(track.duration / 60)}:{Math.floor(track.duration % 60).toString().padStart(2, '0')}</span>
+          </div>
+
+          {/* Waveform Player */}
+          <WaveformPlayer 
+            trackId={track.id}
+            audioUrl={`/uploads/${track.filename}`}
+            bpm={track.bpm}
+            duration={track.duration}
+            comments={comments}
+            isPublic={false}
+          />
+        </div>
+
+        {/* Status Bar */}
+        <div style={{ 
+          background: "#C0C0C0", 
+          borderTop: "1px inset #C0C0C0", 
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "flex",
+          justifyContent: "space-between",
+          position: "absolute",
+          bottom: "0",
+          left: "0",
+          right: "0"
+        }}>
+          <span>BPM Grid: {track.bpm ? `Enabled (${track.bpm} BPM)` : "Disabled"} | Time Scale: 4/4</span>
+          <span>Comments: {comments.length} | Share Link: Available</span>
+        </div>
+      </div>
+
+      {/* Share Modal */}
+      {showShare && (
+        <ShareModal 
+          trackId={track.id}
+          onClose={() => setShowShare(false)}
+        />
+      )}
+    </Windows95Layout>
+  );
+}
