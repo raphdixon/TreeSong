@@ -58,11 +58,11 @@ export default function WaveformPlayer({
             const clickTime = progress * duration;
             setCommentTime(clickTime);
             
-            // Calculate position for popup
+            // Calculate position for popup relative to viewport
             const rect = waveformRef.current!.getBoundingClientRect();
             setCommentPosition({
               x: rect.left + (progress * rect.width),
-              y: rect.top + rect.height / 2
+              y: rect.top - 10 // Position popup above the waveform
             });
             
             setShowCommentPopup(true);
@@ -86,7 +86,7 @@ export default function WaveformPlayer({
 
   // Update volume
   useEffect(() => {
-    if (waveSurferRef.current) {
+    if (waveSurferRef.current && waveSurferRef.current.backend) {
       waveSurferRef.current.setVolume(volume / 100);
     }
   }, [volume]);
@@ -123,25 +123,23 @@ export default function WaveformPlayer({
     const containerWidth = 100; // percentage
 
     if (bpm) {
-      // BPM-based grid
+      // BPM-based grid - only show bars (every 4 beats) to reduce clutter
       const beatInterval = 60 / bpm; // seconds per beat
-      const beatsInDuration = Math.floor(duration / beatInterval);
+      const barInterval = beatInterval * 4; // seconds per bar (4 beats)
+      const barsInDuration = Math.floor(duration / barInterval);
       
-      for (let i = 0; i <= beatsInDuration; i++) {
-        const position = (i * beatInterval / duration) * containerWidth;
-        const isBar = i % 4 === 0;
+      for (let i = 0; i <= barsInDuration; i++) {
+        const position = (i * barInterval / duration) * containerWidth;
         
         lines.push(
           <div
-            key={`beat-${i}`}
-            className={`grid-line ${isBar ? 'bar' : 'beat'}`}
+            key={`bar-${i}`}
+            className="grid-line bar"
             style={{ left: `${position}%` }}
           >
-            {isBar && (
-              <div className="grid-label">
-                Bar {Math.floor(i / 4) + 1}
-              </div>
-            )}
+            <div className="grid-label">
+              Bar {i + 1}
+            </div>
           </div>
         );
       }
