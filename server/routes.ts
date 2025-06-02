@@ -193,16 +193,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/tracks/:trackId", authenticateToken, async (req, res) => {
+  app.get("/api/tracks/:trackId", async (req, res) => {
     try {
       const track = await storage.getTrack(req.params.trackId);
       if (!track) {
         return res.status(404).json({ message: "Track not found" });
-      }
-
-      // Check if user has access to this track
-      if (track.teamId !== req.user.teamId) {
-        return res.status(403).json({ message: "Access denied" });
       }
 
       const comments = await storage.getCommentsByTrack(track.id);
