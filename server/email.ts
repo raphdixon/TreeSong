@@ -192,7 +192,7 @@ export function createTeamInviteEmail(
               This invitation was sent by TreeNote, a product by <a href="https://themeetingtree.com">The Meeting Tree</a>.
             </div>
             <div class="field-row" style="font-size: 10px; color: #666;">
-              Your files will be deleted after 10 days, so please make note of any important comments!
+              Audio files are automatically deleted after 21 days, but comments and waveforms remain available for collaboration!
             </div>
           </div>
           
@@ -380,7 +380,7 @@ export function createCommentNotificationEmail(
               This notification was sent by TreeNote, a product by <a href="https://themeetingtree.com">The Meeting Tree</a>.
             </div>
             <div class="field-row" style="font-size: 10px; color: #666;">
-              Your files will be deleted after 10 days, so please make note of any important comments!
+              Audio files are automatically deleted after 21 days, but comments and waveforms remain available for collaboration!
             </div>
           </div>
           

@@ -125,7 +125,7 @@ export default function LandingPage() {
               </a>
               , a boutique global sonic house.
               <br /><br />
-              Your files will likely be deleted after 10 days, so please make a note of any comments!
+              Your audio files will be automatically deleted after 21 days, but comments and waveform visualizations remain available for collaboration!
             </div>
           </div>
         </div>

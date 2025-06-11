@@ -97,6 +97,7 @@ export default function PublicPlayerPage() {
             duration={track.duration}
             comments={comments}
             isPublic={true}
+            fileDeletedAt={track.fileDeletedAt}
           />
         </div>
       </div>
