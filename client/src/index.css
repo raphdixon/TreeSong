@@ -274,7 +274,43 @@
   .track-actions {
     display: flex;
     gap: 4px;
-    margin-top: 8px;
+    margin-top: auto;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 600px) {
+    .track-actions {
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .track-actions .btn {
+      width: 100%;
+      text-align: center;
+    }
+
+    /* Responsive dashboard window */
+    .window {
+      top: 10px !important;
+      left: 10px !important;
+      right: 10px !important;
+      bottom: 50px !important;
+      width: auto !important;
+      max-width: none !important;
+      margin: 0 !important;
+    }
+
+    /* Responsive menu bar */
+    .window .title-bar-text {
+      font-size: 10px;
+    }
+
+    /* Make team info responsive */
+    .window-body > div:first-child {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 4px !important;
+    }
   }
 
   .controls-panel {
