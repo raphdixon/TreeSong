@@ -94,15 +94,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.post("/api/auth/register", async (req, res) => {
     try {
-      const userData = insertUserSchema.parse(req.body);
+      console.log("Registration request body:", req.body);
+      
+      const { email, password, teamId } = req.body;
+      
+      // Basic validation
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+      
+      if (password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters" });
+      }
       
       // Check if user already exists
-      const existingUser = await storage.getUserByEmail(userData.email);
+      const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
         return res.status(400).json({ message: "User already exists" });
       }
 
+      // Create team for new user if no teamId provided
+      let userTeamId = teamId;
+      if (!userTeamId) {
+        const team = await storage.createTeam({ name: `${email}'s Team` });
+        userTeamId = team.id;
+      }
+
+      const userData = { email, password, teamId: userTeamId };
       const user = await storage.createUser(userData);
+      
+      // Add user to the team
+      await storage.addUserToTeam(userTeamId, user.id);
+      
       const token = jwt.sign({ userId: user.id }, JWT_SECRET);
       
       res.cookie("token", token, { 
@@ -118,7 +141,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         token: token
       });
     } catch (error) {
-      res.status(400).json({ message: "Invalid registration data" });
+      console.error("Registration error:", error);
+      res.status(400).json({ message: "Registration failed: " + error.message });
     }
   });
 
