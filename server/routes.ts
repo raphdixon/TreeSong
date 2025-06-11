@@ -10,6 +10,7 @@ import { nanoid } from "nanoid";
 import express from "express";
 import cookieParser from "cookie-parser";
 import { insertUserSchema, insertTrackSchema, insertCommentSchema, insertInviteSchema } from "@shared/schema";
+import { sendEmail, createTeamInviteEmail, createCommentNotificationEmail } from "./email";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -334,6 +335,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const comment = await storage.createComment(commentData);
+      
+      // Send notification email to track owner
+      try {
+        const track = await storage.getTrack(req.params.trackId);
+        if (track && track.uploaderUserId) {
+          const trackOwner = await storage.getUser(track.uploaderUserId);
+          
+          // Don't send notification if commenter is the track owner
+          if (trackOwner && trackOwner.id !== req.user?.id) {
+            const baseUrl = process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:5000';
+            const trackUrl = `https://${baseUrl}/tracks/${track.id}`;
+            
+            const emailTemplate = createCommentNotificationEmail(
+              track.originalName,
+              username || 'Anonymous',
+              text,
+              parseFloat(time),
+              trackUrl
+            );
+            emailTemplate.to = trackOwner.email;
+            
+            const emailSent = await sendEmail(emailTemplate);
+            if (emailSent) {
+              console.log(`Comment notification sent to ${trackOwner.email} for track ${track.originalName}`);
+            } else {
+              console.error(`Failed to send comment notification to ${trackOwner.email}`);
+            }
+          }
+        }
+      } catch (emailError) {
+        console.error('Error sending comment notification:', emailError);
+        // Don't fail the comment creation if email fails
+      }
+      
       res.json(comment);
     } catch (error) {
       res.status(400).json({ message: "Failed to create comment" });
@@ -407,18 +442,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { email } = req.body;
       const token = nanoid(32);
       
+      // Get team info for email
+      const team = await storage.getTeam(req.user.teamId);
+      const teamName = team?.name || "Unknown Team";
+      
       const invite = await storage.createInvite({
         teamId: req.user.teamId,
         email,
         token
       });
 
-      // In a real implementation, send email here
-      console.log(`Invitation email would be sent to ${email} with token: ${token}`);
-      console.log(`Registration link: /register?invite=${token}`);
+      // Send invitation email
+      const baseUrl = process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:5000';
+      const emailTemplate = createTeamInviteEmail(
+        req.user.email,
+        teamName,
+        token,
+        `https://${baseUrl}`
+      );
+      emailTemplate.to = email;
       
+      const emailSent = await sendEmail(emailTemplate);
+      if (!emailSent) {
+        console.error("Failed to send invitation email to", email);
+        return res.status(500).json({ message: "Failed to send invitation email" });
+      }
+      
+      console.log(`Invitation email sent to ${email} with token: ${token}`);
       res.json({ message: "Invitation sent successfully" });
     } catch (error) {
+      console.error("Invitation error:", error);
       res.status(500).json({ message: "Failed to send invitation" });
     }
   });
