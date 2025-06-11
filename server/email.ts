@@ -6,7 +6,8 @@ if (!process.env.SENDGRID_API_KEY) {
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-const FROM_EMAIL = 'noreply@replit.dev'; // Using replit.dev as it's more likely to be allowed
+// Use the user's email from environment or a default that should work with SendGrid
+const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'test@example.com';
 
 interface EmailTemplate {
   to: string;
