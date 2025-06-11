@@ -12,6 +12,7 @@ interface WaveformPlayerProps {
   duration: number;
   comments: any[];
   isPublic: boolean;
+  fileDeletedAt?: string | null;
 }
 
 export default function WaveformPlayer({ 
@@ -20,7 +21,8 @@ export default function WaveformPlayer({
   bpm, 
   duration, 
   comments, 
-  isPublic 
+  isPublic,
+  fileDeletedAt
 }: WaveformPlayerProps) {
   const waveformRef = useRef<HTMLDivElement>(null);
   const waveSurferRef = useRef<any>(null);
@@ -197,10 +199,31 @@ export default function WaveformPlayer({
     }
   });
 
+  const isFileDeleted = fileDeletedAt !== null && fileDeletedAt !== undefined;
+
   return (
     <div>
+      {/* File Deleted Notice */}
+      {isFileDeleted && (
+        <div style={{ 
+          background: "#FFEEEE", 
+          border: "2px inset #C0C0C0", 
+          padding: "12px", 
+          marginBottom: "16px",
+          textAlign: "center"
+        }}>
+          <h3 style={{ color: "#CC0000", marginBottom: "8px" }}>📁 Audio File Deleted</h3>
+          <p style={{ marginBottom: "4px" }}>
+            This audio file was automatically deleted after 21 days as per our storage policy.
+          </p>
+          <p style={{ fontSize: "11px", color: "#666" }}>
+            Comments and waveform visualization remain available for collaboration.
+          </p>
+        </div>
+      )}
+
       {/* Waveform Container */}
-      <div className="waveform-container">
+      <div className="waveform-container" style={{ opacity: isFileDeleted ? 0.5 : 1 }}>
         <div ref={waveformRef} style={{ width: "100%", height: "100%" }} />
         
         {/* Grid Overlay */}
@@ -211,13 +234,13 @@ export default function WaveformPlayer({
       </div>
 
       {/* Controls */}
-      <div className="controls-panel">
-        <button className="btn" onClick={togglePlay}>
+      <div className="controls-panel" style={{ opacity: isFileDeleted ? 0.5 : 1 }}>
+        <button className="btn" onClick={togglePlay} disabled={isFileDeleted}>
           {isPlaying ? "⏸️" : "▶️"}
         </button>
-        <button className="btn" onClick={stop}>⏹️</button>
-        <button className="btn">⏮️</button>
-        <button className="btn">⏭️</button>
+        <button className="btn" onClick={stop} disabled={isFileDeleted}>⏹️</button>
+        <button className="btn" disabled={isFileDeleted}>⏮️</button>
+        <button className="btn" disabled={isFileDeleted}>⏭️</button>
         
         <div className="time-display">{formatTime(currentTime)}</div>
         <span style={{ margin: "0 8px" }}>/</span>
