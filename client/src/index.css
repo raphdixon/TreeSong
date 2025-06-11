@@ -231,12 +231,32 @@
     background: #FF4040;
   }
 
+  .tracks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+
+  @media (max-width: 768px) {
+    .tracks-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .tracks-grid {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+  }
+
   .track-card {
     background: #C0C0C0;
     border: 2px outset #C0C0C0;
     padding: 12px;
-    margin-bottom: 12px;
     min-height: 120px;
+    display: flex;
+    flex-direction: column;
   }
 
   .track-title {

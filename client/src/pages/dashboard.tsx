@@ -49,10 +49,14 @@ export default function DashboardPage() {
   return (
     <Windows95Layout>
       <div className="window" style={{ 
-        top: "30px", 
-        left: "30px", 
-        width: "800px",
-        minHeight: "600px"
+        top: "20px", 
+        left: "20px", 
+        right: "20px",
+        bottom: "60px",
+        width: "auto",
+        minHeight: "calc(100vh - 120px)",
+        maxWidth: "1200px",
+        margin: "0 auto"
       }}>
         <div className="title-bar">
           <div className="title-bar-text">TreeNote - Dashboard</div>
@@ -69,50 +73,62 @@ export default function DashboardPage() {
           borderBottom: "1px solid #808080", 
           padding: "4px 8px",
           display: "flex",
+          flexWrap: "wrap",
           alignItems: "center",
-          gap: "10px"
+          gap: "8px",
+          minHeight: "36px"
         }}>
           <button 
             className="btn"
             onClick={() => setShowUpload(true)}
+            style={{ fontSize: "11px", padding: "2px 8px" }}
           >
             📁 Upload Track
           </button>
           <button 
             className="btn"
             onClick={() => setShowInvite(true)}
+            style={{ fontSize: "11px", padding: "2px 8px" }}
           >
             ✉️ Invite Teammate
           </button>
           <button 
             className="btn"
             onClick={handleLogout}
-            style={{ marginLeft: "auto" }}
+            style={{ marginLeft: "auto", fontSize: "11px", padding: "2px 8px" }}
           >
             Logout
           </button>
         </div>
 
-        <div className="window-body" style={{ height: "500px", overflowY: "auto" }}>
+        <div className="window-body" style={{ 
+          height: "calc(100% - 120px)", 
+          overflowY: "auto",
+          padding: "12px"
+        }}>
           {/* Team Info */}
           <div style={{ 
             background: "#C0C0C0", 
             border: "1px inset #C0C0C0", 
             padding: "8px", 
-            marginBottom: "16px"
+            marginBottom: "16px",
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: "8px"
           }}>
-            <strong>Team: {userData?.team?.name || "Loading..."}</strong>
-            <span style={{ float: "right", fontSize: "11px" }}>
+            <strong>Team: {(userData as any)?.team?.name || "Loading..."}</strong>
+            <span style={{ fontSize: "11px" }}>
               Logged in as: {user.email}
             </span>
-            <div style={{ clear: "both" }}></div>
           </div>
 
           <h3>Your Team's Tracks</h3>
           
           {tracksLoading ? (
             <div>Loading tracks...</div>
-          ) : tracks.length === 0 ? (
+          ) : (tracks as any[]).length === 0 ? (
             <div style={{ 
               textAlign: "center", 
               padding: "40px",
@@ -128,8 +144,8 @@ export default function DashboardPage() {
               </button>
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "12px" }}>
-              {tracks.map((track: any) => (
+            <div className="tracks-grid">
+              {(tracks as any[]).map((track: any) => (
                 <div key={track.id} className="track-card">
                   <div className="track-title">🎵 {track.originalName}</div>
                   <div className="track-info">
@@ -173,7 +189,7 @@ export default function DashboardPage() {
           right: "0"
         }}>
           <span>Ready</span>
-          <span>Team: {userData?.team?.name}</span>
+          <span>Team: {(userData as any)?.team?.name}</span>
         </div>
       </div>
 
