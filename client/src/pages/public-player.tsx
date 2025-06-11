@@ -63,7 +63,7 @@ export default function PublicPlayerPage() {
         minHeight: "600px"
       }}>
         <div className="title-bar">
-          <div className="title-bar-text">WaveCollab - {track.originalName} (Public View)</div>
+          <div className="title-bar-text">TreeNote - {track.originalName} (Public View)</div>
           <div className="title-bar-controls">
             <div className="title-bar-button">_</div>
             <div className="title-bar-button">□</div>

@@ -35,7 +35,7 @@ export default function RegisterPage() {
       return response.json();
     },
     onSuccess: (data) => {
-      login(data.user);
+      login(data.user, data.token || "");
       toast({ title: "Welcome!", description: "Your account has been created successfully." });
       setLocation("/dashboard");
     },
@@ -68,7 +68,7 @@ export default function RegisterPage() {
         width: "450px"
       }}>
         <div className="title-bar">
-          <div className="title-bar-text">WaveCollab - Register</div>
+          <div className="title-bar-text">TreeNote - Register</div>
           <div className="title-bar-controls">
             <div className="title-bar-button">_</div>
             <div className="title-bar-button">□</div>

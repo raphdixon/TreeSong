@@ -55,7 +55,7 @@ export default function DashboardPage() {
         minHeight: "600px"
       }}>
         <div className="title-bar">
-          <div className="title-bar-text">WaveCollab - Dashboard</div>
+          <div className="title-bar-text">TreeNote - Dashboard</div>
           <div className="title-bar-controls">
             <div className="title-bar-button">_</div>
             <div className="title-bar-button">□</div>

@@ -84,7 +84,7 @@ export default function PlayerPage() {
         height: "calc(100vh - 20px)"
       }}>
         <div className="title-bar">
-          <div className="title-bar-text">WaveCollab - {track.originalName}</div>
+          <div className="title-bar-text">TreeNote - {track.originalName}</div>
           <div className="title-bar-controls">
             <div className="title-bar-button">_</div>
             <div className="title-bar-button">□</div>

@@ -19,7 +19,7 @@ export default function LoginPage() {
       return response.json();
     },
     onSuccess: (data) => {
-      login(data.user);
+      login(data.user, data.token || "");
       toast({ title: "Welcome back!", description: "You have been logged in successfully." });
       setLocation("/dashboard");
     },
@@ -48,7 +48,7 @@ export default function LoginPage() {
         width: "400px"
       }}>
         <div className="title-bar">
-          <div className="title-bar-text">WaveCollab - Login</div>
+          <div className="title-bar-text">TreeNote - Login</div>
           <div className="title-bar-controls">
             <div className="title-bar-button">_</div>
             <div className="title-bar-button">□</div>
