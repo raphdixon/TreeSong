@@ -132,6 +132,54 @@ export default function WaveformPlayer({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Generate beats and bars timeline when BPM is available
+  const generateBeatsAndBars = () => {
+    if (!bpm) return null;
+    
+    const beatsPerBar = 4; // Standard 4/4 time signature
+    const secondsPerBeat = 60 / bpm;
+    const secondsPerBar = secondsPerBeat * beatsPerBar;
+    
+    const totalBars = Math.ceil(duration / secondsPerBar);
+    const markers = [];
+    
+    for (let bar = 1; bar <= totalBars; bar++) {
+      const barStartTime = (bar - 1) * secondsPerBar;
+      const position = (barStartTime / duration) * 100;
+      
+      if (position <= 100) {
+        // Bar marker
+        markers.push(
+          <div
+            key={`bar-${bar}`}
+            className="bar-marker"
+            style={{ left: `${position}%` }}
+          >
+            <div className="bar-label">{bar}</div>
+          </div>
+        );
+        
+        // Beat markers within each bar
+        for (let beat = 1; beat <= beatsPerBar; beat++) {
+          const beatTime = barStartTime + (beat - 1) * secondsPerBeat;
+          const beatPosition = (beatTime / duration) * 100;
+          
+          if (beatPosition <= 100) {
+            markers.push(
+              <div
+                key={`beat-${bar}-${beat}`}
+                className={`beat-marker ${beat === 1 ? 'downbeat' : ''}`}
+                style={{ left: `${beatPosition}%` }}
+              />
+            );
+          }
+        }
+      }
+    }
+    
+    return markers;
+  };
+
   // Generate grid lines based on BPM or time
   const generateGridLines = () => {
     const lines = [];
@@ -219,6 +267,18 @@ export default function WaveformPlayer({
           <p style={{ fontSize: "11px", color: "#666" }}>
             Comments and waveform visualization remain available for collaboration.
           </p>
+        </div>
+      )}
+
+      {/* Beats and Bars Timeline */}
+      {bpm && (
+        <div className="beats-timeline">
+          <div className="timeline-header">
+            <span>Bars & Beats ({bpm} BPM, 4/4)</span>
+          </div>
+          <div className="timeline-markers">
+            {generateBeatsAndBars()}
+          </div>
         </div>
       )}
 

@@ -313,6 +313,65 @@
     }
   }
 
+  .beats-timeline {
+    background: #E0E0E0;
+    border: 1px inset #C0C0C0;
+    margin-bottom: 4px;
+    position: relative;
+  }
+
+  .timeline-header {
+    background: #C0C0C0;
+    border-bottom: 1px solid #808080;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: bold;
+    color: #000080;
+  }
+
+  .timeline-markers {
+    position: relative;
+    height: 24px;
+    background: #F0F0F0;
+  }
+
+  .bar-marker {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #000080;
+    z-index: 2;
+  }
+
+  .bar-label {
+    position: absolute;
+    top: -2px;
+    left: 3px;
+    font-size: 9px;
+    font-weight: bold;
+    color: #000080;
+    background: #F0F0F0;
+    padding: 0 2px;
+    border: 1px solid #C0C0C0;
+  }
+
+  .beat-marker {
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    width: 1px;
+    background: #666;
+    z-index: 1;
+  }
+
+  .beat-marker.downbeat {
+    background: #000080;
+    width: 2px;
+    top: 4px;
+    bottom: 4px;
+  }
+
   .controls-panel {
     background: #C0C0C0;
     border: 1px inset #C0C0C0;
