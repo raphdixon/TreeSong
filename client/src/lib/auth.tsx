@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "./queryClient";
 
 interface User {
@@ -21,6 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }): JSX.Element {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   // Check if user is logged in
   const { data, isLoading } = useQuery({
@@ -47,6 +48,8 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
   const login = (userData: User, userToken: string) => {
     setUser(userData);
     setToken(userToken);
+    // Invalidate and refetch user data to ensure consistency
+    queryClient.invalidateQueries({ queryKey: ["/api/me"] });
   };
 
   const logout = async () => {
