@@ -4,6 +4,7 @@ import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "./lib/auth";
 
+import LandingPage from "./pages/landing";
 import LoginPage from "./pages/login";
 import RegisterPage from "./pages/register";
 import DashboardPage from "./pages/dashboard";
@@ -14,7 +15,7 @@ import NotFound from "./pages/not-found";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={LoginPage} />
+      <Route path="/" component={LandingPage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/register" component={RegisterPage} />
       <Route path="/dashboard" component={DashboardPage} />
