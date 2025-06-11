@@ -1,5 +1,9 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/lib/auth";
+import { useToast } from "@/hooks/use-toast";
 import Windows95Layout from "@/components/windows95-layout";
 
 export default function LandingPage() {
@@ -7,9 +11,33 @@ export default function LandingPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [notepadOpen, setNotepadOpen] = useState(true);
+  const { login } = useAuth();
+  const { toast } = useToast();
 
-  const handleLogin = () => {
-    setLocation("/login");
+  const loginMutation = useMutation({
+    mutationFn: async (data: { email: string; password: string }) => {
+      const response = await apiRequest("POST", "/api/auth/login", data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      login(data.user, data.token || "");
+      toast({ title: "Welcome back!", description: "You have been logged in successfully." });
+      setLocation("/dashboard");
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Login failed", 
+        description: error.message || "Invalid credentials",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email && password) {
+      loginMutation.mutate({ email, password });
+    }
   };
 
   const handleRegister = () => {
@@ -138,7 +166,7 @@ export default function LandingPage() {
         </div>
         
         <div className="window-body">
-          <form>
+          <form onSubmit={handleLogin}>
             <div className="field-row">
               <label htmlFor="email">Email:</label>
               <input
@@ -149,6 +177,7 @@ export default function LandingPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 style={{ flex: 1 }}
+                required
               />
             </div>
             
@@ -162,16 +191,17 @@ export default function LandingPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
                 style={{ flex: 1 }}
+                required
               />
             </div>
             
             <div className="field-row" style={{ justifyContent: "center", marginTop: "20px" }}>
               <button 
-                type="button" 
+                type="submit" 
                 className="btn"
-                onClick={handleLogin}
+                disabled={loginMutation.isPending}
               >
-                Login
+                {loginMutation.isPending ? "Logging in..." : "Login"}
               </button>
               
               <button
