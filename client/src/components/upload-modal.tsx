@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 interface UploadModalProps {
   onClose: () => void;
@@ -14,6 +15,7 @@ export default function UploadModal({ onClose, teamId }: UploadModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -30,10 +32,12 @@ export default function UploadModal({ onClose, teamId }: UploadModalProps) {
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
       toast({ title: "Upload successful!", description: "Your track has been uploaded." });
       onClose();
+      // Navigate to the newly uploaded track
+      setLocation(`/player/${data.id}`);
     },
     onError: (error) => {
       toast({
