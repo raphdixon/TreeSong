@@ -4,6 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import CommentPopup from "./comment-popup";
 import { initializeWaveSurfer } from "@/lib/wavesurfer";
+import { BPMAnalyzer, type BPMAnalysisProgress } from "@/lib/bpmAnalyzer";
 
 interface WaveformPlayerProps {
   trackId: string;
