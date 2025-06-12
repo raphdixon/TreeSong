@@ -95,6 +95,34 @@ export default function WaveformPlayer({
             console.log('WaveSurfer seek - progress:', progress, 'seekTime:', seekTime);
             setCurrentTime(seekTime);
           });
+
+          // Update time display when user interacts with waveform
+          const updateTimeDisplay = () => {
+            if (waveSurfer.isReady) {
+              const currentTime = waveSurfer.getCurrentTime();
+              setCurrentTime(currentTime);
+            }
+          };
+
+          // Listen for various events that should update time display
+          waveSurfer.on('interaction', updateTimeDisplay);
+          waveSurfer.on('scroll', updateTimeDisplay);
+          waveSurfer.on('zoom', updateTimeDisplay);
+          
+          // Also update time on mouse move over waveform for better responsiveness
+          const waveformElement = waveformRef.current;
+          if (waveformElement) {
+            waveformElement.addEventListener('mousemove', (e) => {
+              const rect = waveformElement.getBoundingClientRect();
+              const relativeX = e.clientX - rect.left;
+              const progress = relativeX / rect.width;
+              const hoverTime = progress * duration;
+              // Only update if not playing to avoid conflicts
+              if (!isPlaying) {
+                setCurrentTime(Math.max(0, Math.min(duration, hoverTime)));
+              }
+            });
+          }
         })
         .catch((error) => {
           console.error('Failed to initialize WaveSurfer:', error);
@@ -541,44 +569,47 @@ export default function WaveformPlayer({
         </div>
       </div>
 
-      {/* Beats and Bars Timeline */}
-      {(detectedBpm || bpm) && (
-        <div className="beats-timeline">
-          <div className="timeline-header">
-            <span>Bars & Beats ({detectedBpm || bpm} BPM, 4/4)</span>
-            <div className="zoom-controls">
-              <button 
-                className="zoom-btn" 
-                onClick={handleZoomOut}
-                disabled={zoomLevel <= 1}
-                title="Zoom Out"
-              >
-                -
-              </button>
-              <span className="zoom-level">{zoomLevel}x</span>
-              <button 
-                className="zoom-btn" 
-                onClick={handleZoomIn}
-                disabled={zoomLevel >= 16}
-                title="Zoom In"
-              >
-                +
-              </button>
-              <button 
-                className="zoom-btn reset" 
-                onClick={handleZoomReset}
-                disabled={zoomLevel === 1}
-                title="Reset Zoom"
-              >
-                Reset
-              </button>
-            </div>
-          </div>
-          <div className="timeline-markers">
-            {generateBeatsAndBars()}
+      {/* Waveform Timeline with Zoom Controls */}
+      <div className="beats-timeline">
+        <div className="timeline-header">
+          <span>
+            {(detectedBpm || bpm) ? 
+              `Bars & Beats (${detectedBpm || bpm} BPM, 4/4)` : 
+              'Waveform Timeline'
+            }
+          </span>
+          <div className="zoom-controls">
+            <button 
+              className="zoom-btn" 
+              onClick={handleZoomOut}
+              disabled={zoomLevel <= 1}
+              title="Zoom Out"
+            >
+              -
+            </button>
+            <span className="zoom-level">{zoomLevel}x</span>
+            <button 
+              className="zoom-btn" 
+              onClick={handleZoomIn}
+              disabled={zoomLevel >= 16}
+              title="Zoom In"
+            >
+              +
+            </button>
+            <button 
+              className="zoom-btn reset" 
+              onClick={handleZoomReset}
+              disabled={zoomLevel === 1}
+              title="Reset Zoom"
+            >
+              Reset
+            </button>
           </div>
         </div>
-      )}
+        <div className="timeline-markers">
+          {generateBeatsAndBars()}
+        </div>
+      </div>
 
       {/* Waveform Container */}
       <div className="waveform-container" style={{ opacity: isFileDeleted ? 0.5 : 1 }}>
