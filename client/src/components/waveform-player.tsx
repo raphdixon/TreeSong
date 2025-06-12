@@ -35,6 +35,11 @@ export default function WaveformPlayer({
   const [commentPosition, setCommentPosition] = useState({ x: 0, y: 0 });
   const [zoomLevel, setZoomLevel] = useState(1);
   const [viewOffset, setViewOffset] = useState(0);
+  const [detectedBpm, setDetectedBpm] = useState<number | null>(bpm);
+  const [isAnalyzingBpm, setIsAnalyzingBpm] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState<BPMAnalysisProgress | null>(null);
+  const [showManualBpm, setShowManualBpm] = useState(false);
+  const [manualBpmValue, setManualBpmValue] = useState(bpm?.toString() || "");
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -49,6 +54,11 @@ export default function WaveformPlayer({
           // Event listeners
           waveSurfer.on('ready', () => {
             console.log('WaveSurfer ready');
+            
+            // Start background BPM detection if no BPM is set
+            if (!bpm && !detectedBpm) {
+              detectBpmInBackground();
+            }
           });
 
           waveSurfer.on('audioprocess', (time: number) => {
@@ -109,6 +119,88 @@ export default function WaveformPlayer({
     }
   }, [volume]);
 
+  // Background BPM detection
+  const detectBpmInBackground = async () => {
+    try {
+      setIsAnalyzingBpm(true);
+      setAnalysisProgress({ stage: 'loading', progress: 0, message: 'Starting BPM analysis...' });
+      
+      // Fetch the audio file for analysis
+      const response = await fetch(audioUrl);
+      const arrayBuffer = await response.arrayBuffer();
+      const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
+      const file = new File([blob], 'track.mp3', { type: 'audio/mpeg' });
+      
+      const analyzer = new BPMAnalyzer((progress) => {
+        setAnalysisProgress(progress);
+      });
+      
+      const result = await analyzer.analyzeFile(file);
+      
+      if (result.processed && result.bpm > 0) {
+        setDetectedBpm(result.bpm);
+        setManualBpmValue(result.bpm.toString());
+        
+        // Update the track in the database
+        updateBpmMutation.mutate(result.bpm);
+        
+        toast({
+          title: "BPM Detected",
+          description: `Automatically detected ${result.bpm} BPM`,
+        });
+      } else {
+        console.log('BPM detection failed');
+        setAnalysisProgress({ stage: 'error', progress: 0, message: 'Could not detect BPM automatically' });
+      }
+    } catch (error) {
+      console.error('Background BPM detection failed:', error);
+      setAnalysisProgress({ stage: 'error', progress: 0, message: 'BPM analysis failed' });
+    } finally {
+      setIsAnalyzingBpm(false);
+      setTimeout(() => setAnalysisProgress(null), 3000); // Clear progress after 3 seconds
+    }
+  };
+
+  // Update track BPM mutation
+  const updateBpmMutation = useMutation({
+    mutationFn: async (newBpm: number) => {
+      return await apiRequest(`/api/tracks/${trackId}/bpm`, 'PATCH', { bpm: newBpm });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/tracks', trackId] });
+    },
+    onError: (error) => {
+      console.error('Failed to update track BPM:', error);
+      toast({
+        title: "Failed to update BPM",
+        description: "Could not save BPM to database",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Handle manual BPM submission
+  const handleManualBpmSubmit = async () => {
+    const bpmValue = parseInt(manualBpmValue);
+    if (isNaN(bpmValue) || bpmValue < 60 || bpmValue > 200) {
+      toast({
+        title: "Invalid BPM",
+        description: "Please enter a BPM between 60 and 200",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setDetectedBpm(bpmValue);
+    updateBpmMutation.mutate(bpmValue);
+    setShowManualBpm(false);
+    
+    toast({
+      title: "BPM Updated",
+      description: `Track BPM set to ${bpmValue}`,
+    });
+  };
+
   const togglePlay = () => {
     if (waveSurferRef.current) {
       waveSurferRef.current.playPause();
@@ -137,7 +229,8 @@ export default function WaveformPlayer({
 
   // Generate beats and bars timeline with adaptive density
   const generateBeatsAndBars = () => {
-    if (!bpm) return null;
+    const currentBpm = detectedBpm || bpm;
+    if (!currentBpm) return null;
     
     const beatsPerBar = 4; // Standard 4/4 time signature
     const secondsPerBeat = 60 / bpm;
