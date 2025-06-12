@@ -211,6 +211,22 @@ export default function UploadModal({ onClose, teamId }: UploadModalProps) {
               <div style={{ fontSize: "11px", color: "#666", marginTop: "4px" }}>
                 Supported formats: MP3, WAV, OGG (Max 50MB)
               </div>
+              
+              {/* Auto BPM Detection Checkbox */}
+              <div style={{ marginTop: "12px", padding: "8px", background: "#E8E8E8", border: "1px solid #C0C0C0" }}>
+                <label style={{ fontSize: "11px", display: "flex", alignItems: "center" }}>
+                  <input
+                    type="checkbox"
+                    checked={autoBpmEnabled}
+                    onChange={(e) => setAutoBpmEnabled(e.target.checked)}
+                    style={{ marginRight: "8px" }}
+                  />
+                  Automatic BPM detection
+                </label>
+                <div style={{ fontSize: "10px", color: "#666", marginTop: "2px" }}>
+                  Uncheck to manually enter BPM without automatic analysis
+                </div>
+              </div>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -223,22 +239,6 @@ export default function UploadModal({ onClose, teamId }: UploadModalProps) {
                   }
                 }}
               />
-            </div>
-
-            {/* Auto BPM Detection Checkbox */}
-            <div className="field-row">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={autoBpmEnabled}
-                  onChange={(e) => setAutoBpmEnabled(e.target.checked)}
-                  style={{ marginRight: "8px" }}
-                />
-                Automatic BPM detection
-              </label>
-            </div>
-            <div style={{ fontSize: "10px", color: "#666", marginTop: "-4px", marginBottom: "8px" }}>
-              Uncheck to manually enter BPM without automatic analysis
             </div>
 
             {/* BPM Analysis Progress */}
@@ -309,11 +309,7 @@ export default function UploadModal({ onClose, teamId }: UploadModalProps) {
               </div>
             )}
             
-            {!file && (
-              <div style={{ fontSize: "10px", color: "#666", marginTop: "2px" }}>
-                Upload a file to automatically detect BPM or enter manually.
-              </div>
-            )}
+
 
             <div className="field-row" style={{ justifyContent: "center", marginTop: "20px" }}>
               <button 
