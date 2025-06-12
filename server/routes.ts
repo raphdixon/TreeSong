@@ -232,7 +232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/tracks", upload.single('audio'), async (req, res) => {
+  app.post("/api/tracks", authenticateToken, upload.single('audio'), async (req: any, res) => {
     console.log("=== UPLOAD TRACK REQUEST ===");
     console.log("Request body:", req.body);
     console.log("File:", req.file ? {
@@ -267,8 +267,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("File moved successfully");
 
       const trackData = insertTrackSchema.parse({
-        teamId: req.body.teamId || "default-team",
-        uploaderUserId: "default-user",
+        teamId: req.user.teamId,
+        uploaderUserId: req.user.id,
         filename,
         originalName: req.file.originalname,
         bpm,

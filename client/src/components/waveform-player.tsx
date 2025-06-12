@@ -170,6 +170,7 @@ export default function WaveformPlayer({
         setManualBpmValue(result.bpm.toString());
         
         // Update the track in the database
+        console.log('About to trigger BPM update mutation with:', result.bpm);
         updateBpmMutation.mutate(result.bpm);
         
         toast({
