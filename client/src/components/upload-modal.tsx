@@ -1,7 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { BPMAnalyzer, type BPMAnalysisProgress, type BPMAnalysisResult } from "@/lib/bpmAnalyzer";
 
 interface UploadModalProps {
   onClose: () => void;
@@ -12,6 +13,10 @@ export default function UploadModal({ onClose, teamId }: UploadModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [bpm, setBpm] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState<BPMAnalysisProgress | null>(null);
+  const [detectedBpm, setDetectedBpm] = useState<number | null>(null);
+  const [manualBpm, setManualBpm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -51,16 +56,82 @@ export default function UploadModal({ onClose, teamId }: UploadModalProps) {
     }
   });
 
-  const handleFileSelect = (selectedFile: File) => {
-    const allowedTypes = ['audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mpeg'];
-    if (allowedTypes.includes(selectedFile.type) || selectedFile.name.match(/\.(mp3|wav|ogg)$/i)) {
-      setFile(selectedFile);
-    } else {
+  const handleFileSelect = async (selectedFile: File) => {
+    // Basic file type validation
+    const allowedTypes = ['audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mpeg', 'audio/flac'];
+    if (!allowedTypes.includes(selectedFile.type) && !selectedFile.name.match(/\.(mp3|wav|ogg|flac)$/i)) {
       toast({ 
         title: "Invalid file type", 
-        description: "Please select an MP3, WAV, or OGG file.",
+        description: "Please select an MP3, WAV, FLAC, or OGG file.",
         variant: "destructive"
       });
+      return;
+    }
+
+    setFile(selectedFile);
+    setDetectedBpm(null);
+    setManualBpm(false);
+    setBpm("");
+    
+    // Validate file for BPM analysis
+    const validation = BPMAnalyzer.validateAudioFile(selectedFile);
+    if (!validation.valid) {
+      toast({
+        title: "File Error",
+        description: validation.error,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check browser compatibility
+    const compatibility = BPMAnalyzer.checkBrowserCompatibility();
+    if (!compatibility.supported) {
+      toast({
+        title: "Browser Not Supported", 
+        description: compatibility.error,
+        variant: "destructive",
+      });
+      // Still allow manual BPM entry
+      setManualBpm(true);
+      return;
+    }
+
+    // Start automatic BPM analysis
+    try {
+      setIsAnalyzing(true);
+      const analyzer = new BPMAnalyzer((progress) => {
+        setAnalysisProgress(progress);
+      });
+      
+      const result = await analyzer.analyzeFile(selectedFile);
+      
+      if (result.processed && result.bpm > 0) {
+        setDetectedBpm(result.bpm);
+        setBpm(result.bpm.toString());
+        toast({
+          title: "BPM Detected",
+          description: `Automatically detected ${result.bpm} BPM`,
+        });
+      } else {
+        setManualBpm(true);
+        toast({
+          title: "BPM Detection Failed",
+          description: "Could not detect BPM automatically. Please enter manually.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('BPM analysis failed:', error);
+      setManualBpm(true);
+      toast({
+        title: "Analysis Error",
+        description: "BPM detection failed. Please enter BPM manually.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+      setAnalysisProgress(null);
     }
   };
 

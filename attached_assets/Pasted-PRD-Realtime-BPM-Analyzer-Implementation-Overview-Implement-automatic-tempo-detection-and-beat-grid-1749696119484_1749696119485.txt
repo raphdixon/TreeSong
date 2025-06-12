@@ -1,0 +1,106 @@
+PRD: Realtime BPM Analyzer Implementation
+Overview
+Implement automatic tempo detection and beat grid analysis for uploaded audio files using the Realtime BPM Analyzer JavaScript library.
+Core Requirements
+Functional Requirements
+
+Audio Upload: Accept MP3, WAV, and FLAC files up to 50MB
+Tempo Detection: Automatically detect BPM (beats per minute) from uploaded audio
+Beat Grid Creation: Identify the first beat/downbeat to establish a timing grid
+Offline Processing: Process files after upload (real-time streaming not required)
+Results Display: Show detected BPM and beat positions with confidence indicators
+
+Technical Implementation
+Library Setup
+bashnpm install realtime-bpm-analyzer
+Core Integration Pattern
+javascriptimport { createRealTimeBpmProcessor, getBiquadFilter } from 'realtime-bpm-analyzer';
+
+// Process uploaded audio file
+async function analyzeAudioFile(audioFile) {
+  const audioContext = new AudioContext();
+  const arrayBuffer = await audioFile.arrayBuffer();
+  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+  
+  // Create analyzer
+  const realtimeAnalyzerNode = await createRealTimeBpmProcessor(audioContext);
+  
+  // Set up processing chain
+  const source = audioContext.createBufferSource();
+  const lowpass = getBiquadFilter(audioContext);
+  source.buffer = audioBuffer;
+  
+  source.connect(lowpass).connect(realtimeAnalyzerNode);
+  
+  // Listen for results
+  realtimeAnalyzerNode.port.onmessage = (event) => {
+    if (event.data.message === 'BPM') {
+      console.log('Detected BPM:', event.data.data.bpm);
+      console.log('Beat positions:', event.data.data.beats);
+    }
+  };
+  
+  source.start();
+}
+UI Requirements
+
+File Drop Zone: Drag-and-drop or click to upload audio files
+Progress Indicator: Show analysis progress during processing
+Results Panel: Display BPM, confidence score, and detected beat positions
+Manual Override: Input field to manually adjust BPM if needed
+Beat Grid Visualization: Visual representation of detected beats over waveform
+
+Error Handling
+
+Unsupported Formats: Clear error messages for invalid file types
+File Size Limits: Warning for files exceeding 50MB limit
+Browser Compatibility: Fallback messaging for unsupported browsers
+Processing Failures: Retry mechanism and error reporting
+
+Performance Requirements
+
+Processing Time: Complete analysis within 2-8 seconds for files up to 50MB
+Memory Management: Automatic cleanup to prevent memory leaks
+Mobile Support: Functional on iOS Safari and Chrome Mobile
+
+Acceptance Criteria
+Must Have
+
+ Successfully detects BPM for electronic music with 85%+ accuracy
+ Identifies first beat position for grid alignment
+ Processes common audio formats (MP3, WAV)
+ Displays results in user-friendly format
+ Handles file upload errors gracefully
+
+Nice to Have
+
+ Real-time waveform visualization during analysis
+ Multiple tempo candidate suggestions
+ Export beat grid data as JSON
+ Batch processing for multiple files
+
+Technical Notes
+Browser Compatibility
+
+Requires modern browsers with Web Audio API support
+AudioWorklet support preferred (Chrome 66+, Firefox 76+)
+iOS Safari requires special memory management
+
+File Processing
+
+Decode audio to 44.1kHz for optimal processing
+Implement chunked processing for files >15MB
+Apply low-pass filtering to isolate kick drum frequencies
+
+Integration Points
+
+Audio file storage/retrieval system
+User session management
+Results persistence (database/local storage)
+
+Success Metrics
+
+Accuracy: >80% correct BPM detection across test audio library
+Performance: <5 second average processing time
+User Adoption: Users successfully analyze audio files without errors
+Mobile Usage: Functional performance on mobile devices
