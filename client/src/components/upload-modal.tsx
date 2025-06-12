@@ -37,7 +37,7 @@ export default function UploadModal({ onClose, teamId }: UploadModalProps) {
       toast({ title: "Upload successful!", description: "Your track has been uploaded." });
       onClose();
       // Navigate to the newly uploaded track
-      setLocation(`/player/${data.id}`);
+      setLocation(`/tracks/${data.id}`);
     },
     onError: (error) => {
       toast({
