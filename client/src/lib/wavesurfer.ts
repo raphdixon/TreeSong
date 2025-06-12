@@ -57,7 +57,9 @@ function createWaveSurfer(container: HTMLElement, audioUrl: string) {
     backend: 'WebAudio',
     mediaControls: false,
     interact: true,
-    scrollParent: true
+    scrollParent: true,
+    minPxPerSec: 50, // Minimum pixels per second for zoom
+    pixelRatio: window.devicePixelRatio || 1
   });
 
   waveSurfer.load(audioUrl);

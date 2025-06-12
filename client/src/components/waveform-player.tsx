@@ -134,7 +134,7 @@ export default function WaveformPlayer({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Generate beats and bars timeline when BPM is available
+  // Generate beats and bars timeline with adaptive density
   const generateBeatsAndBars = () => {
     if (!bpm) return null;
     
@@ -150,11 +150,25 @@ export default function WaveformPlayer({
     const startTime = viewOffset * duration;
     const endTime = startTime + visibleDuration;
     
+    // Adaptive display based on zoom level
+    const barsInView = visibleDuration / secondsPerBar;
+    let showBeats = zoomLevel >= 2; // Only show beats at 2x zoom or higher
+    let barInterval = 1; // Show every bar by default
+    
+    // At low zoom levels, show fewer bars to avoid clutter
+    if (barsInView > 50) {
+      barInterval = Math.ceil(barsInView / 20); // Show max 20 bars
+      showBeats = false;
+    } else if (barsInView > 20) {
+      barInterval = Math.ceil(barsInView / 15); // Show max 15 bars
+      showBeats = false;
+    }
+    
     // Only show bars that are in the visible range
     const startBar = Math.max(1, Math.floor(startTime / secondsPerBar));
     const endBar = Math.min(totalBars, Math.ceil(endTime / secondsPerBar) + 1);
     
-    for (let bar = startBar; bar <= endBar; bar++) {
+    for (let bar = startBar; bar <= endBar; bar += barInterval) {
       const barStartTime = (bar - 1) * secondsPerBar;
       
       // Calculate position relative to visible range
@@ -172,19 +186,21 @@ export default function WaveformPlayer({
           </div>
         );
         
-        // Beat markers within each bar
-        for (let beat = 1; beat <= beatsPerBar; beat++) {
-          const beatTime = barStartTime + (beat - 1) * secondsPerBeat;
-          const beatRelativePosition = ((beatTime - startTime) / visibleDuration) * 100;
-          
-          if (beatRelativePosition >= -5 && beatRelativePosition <= 105) {
-            markers.push(
-              <div
-                key={`beat-${bar}-${beat}`}
-                className={`beat-marker ${beat === 1 ? 'downbeat' : ''}`}
-                style={{ left: `${beatRelativePosition}%` }}
-              />
-            );
+        // Beat markers within each bar (only when zoomed in enough)
+        if (showBeats) {
+          for (let beat = 1; beat <= beatsPerBar; beat++) {
+            const beatTime = barStartTime + (beat - 1) * secondsPerBeat;
+            const beatRelativePosition = ((beatTime - startTime) / visibleDuration) * 100;
+            
+            if (beatRelativePosition >= -5 && beatRelativePosition <= 105) {
+              markers.push(
+                <div
+                  key={`beat-${bar}-${beat}`}
+                  className={`beat-marker ${beat === 1 ? 'downbeat' : ''}`}
+                  style={{ left: `${beatRelativePosition}%` }}
+                />
+              );
+            }
           }
         }
       }
@@ -193,22 +209,16 @@ export default function WaveformPlayer({
     return markers;
   };
 
-  // Zoom controls
+  // Zoom controls using WaveSurfer's native zoom
   const handleZoomIn = () => {
-    const newZoom = Math.min(zoomLevel * 2, 16);
-    setZoomLevel(newZoom);
-    // Adjust offset to keep current time centered
-    const centerTime = currentTime / duration;
-    const newOffset = Math.max(0, Math.min(1 - 1/newZoom, centerTime - 0.5/newZoom));
-    setViewOffset(newOffset);
-  };
-
-  const handleZoomOut = () => {
-    const newZoom = Math.max(zoomLevel / 2, 1);
-    setZoomLevel(newZoom);
-    if (newZoom === 1) {
-      setViewOffset(0);
-    } else {
+    if (waveSurferRef.current) {
+      const newZoom = Math.min(zoomLevel * 2, 16);
+      setZoomLevel(newZoom);
+      
+      // Calculate pixels per second for WaveSurfer zoom
+      const pxPerSec = Math.max(50, (newZoom * 50));
+      waveSurferRef.current.zoom(pxPerSec);
+      
       // Adjust offset to keep current time centered
       const centerTime = currentTime / duration;
       const newOffset = Math.max(0, Math.min(1 - 1/newZoom, centerTime - 0.5/newZoom));
@@ -216,56 +226,112 @@ export default function WaveformPlayer({
     }
   };
 
-  const handleZoomReset = () => {
-    setZoomLevel(1);
-    setViewOffset(0);
+  const handleZoomOut = () => {
+    if (waveSurferRef.current) {
+      const newZoom = Math.max(zoomLevel / 2, 1);
+      setZoomLevel(newZoom);
+      
+      if (newZoom === 1) {
+        setViewOffset(0);
+        waveSurferRef.current.zoom(50); // Reset to default zoom
+      } else {
+        // Calculate pixels per second for WaveSurfer zoom
+        const pxPerSec = Math.max(50, (newZoom * 50));
+        waveSurferRef.current.zoom(pxPerSec);
+        
+        // Adjust offset to keep current time centered
+        const centerTime = currentTime / duration;
+        const newOffset = Math.max(0, Math.min(1 - 1/newZoom, centerTime - 0.5/newZoom));
+        setViewOffset(newOffset);
+      }
+    }
   };
 
-  // Generate grid lines based on BPM or time
+  const handleZoomReset = () => {
+    if (waveSurferRef.current) {
+      setZoomLevel(1);
+      setViewOffset(0);
+      waveSurferRef.current.zoom(50); // Reset to default zoom
+    }
+  };
+
+  // Generate grid lines based on zoom level and time
   const generateGridLines = () => {
     const lines = [];
-    const containerWidth = 100; // percentage
-
-    // Simplified grid - show major time markers every 10-15 seconds regardless of BPM
-    const interval = Math.max(10, Math.floor(duration / 10)); // Show 6-10 major markers
-    const numLines = Math.floor(duration / interval);
     
-    for (let i = 0; i <= numLines; i++) {
-      const position = (i * interval / duration) * containerWidth;
-      
-      lines.push(
-        <div
-          key={`time-${i}`}
-          className="grid-line major"
-          style={{ left: `${position}%` }}
-        >
-          <div className="time-label">
-            {formatTime(i * interval)}
-          </div>
-        </div>
-      );
+    // Calculate visible time range based on zoom and offset
+    const visibleDuration = duration / zoomLevel;
+    const startTime = viewOffset * duration;
+    const endTime = startTime + visibleDuration;
+    
+    // Adaptive time intervals based on zoom level
+    let interval;
+    if (visibleDuration <= 10) {
+      interval = 1; // 1 second intervals for high zoom
+    } else if (visibleDuration <= 30) {
+      interval = 5; // 5 second intervals
+    } else if (visibleDuration <= 60) {
+      interval = 10; // 10 second intervals
+    } else if (visibleDuration <= 180) {
+      interval = 30; // 30 second intervals
+    } else {
+      interval = 60; // 1 minute intervals for low zoom
+    }
+    
+    // Calculate start and end markers
+    const startMarker = Math.floor(startTime / interval) * interval;
+    const endMarker = Math.ceil(endTime / interval) * interval;
+    
+    for (let time = startMarker; time <= endMarker; time += interval) {
+      if (time >= 0 && time <= duration) {
+        // Calculate position relative to visible range
+        const relativePosition = ((time - startTime) / visibleDuration) * 100;
+        
+        if (relativePosition >= -5 && relativePosition <= 105) {
+          lines.push(
+            <div
+              key={`time-${time}`}
+              className="grid-line major"
+              style={{ left: `${relativePosition}%` }}
+            >
+              <div className="time-label">
+                {formatTime(time)}
+              </div>
+            </div>
+          );
+        }
+      }
     }
 
     return lines;
   };
 
-  // Generate comment markers
+  // Generate comment markers based on zoom level
   const generateCommentMarkers = () => {
-    return comments.map((comment) => {
-      const position = (comment.time / duration) * 100;
-      return (
-        <div
-          key={comment.id}
-          className="comment-marker"
-          style={{ left: `${position}%` }}
-          title={`${comment.username}: ${comment.text}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            seekToTime(comment.time);
-          }}
-        />
-      );
-    });
+    // Calculate visible time range based on zoom and offset
+    const visibleDuration = duration / zoomLevel;
+    const startTime = viewOffset * duration;
+    const endTime = startTime + visibleDuration;
+    
+    return comments
+      .filter(comment => comment.time >= startTime && comment.time <= endTime)
+      .map((comment) => {
+        // Calculate position relative to visible range
+        const relativePosition = ((comment.time - startTime) / visibleDuration) * 100;
+        
+        return (
+          <div
+            key={comment.id}
+            className="comment-marker"
+            style={{ left: `${relativePosition}%` }}
+            title={`${comment.username}: ${comment.text}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              seekToTime(comment.time);
+            }}
+          />
+        );
+      });
   };
 
   const addCommentMutation = useMutation({
@@ -352,13 +418,7 @@ export default function WaveformPlayer({
 
       {/* Waveform Container */}
       <div className="waveform-container" style={{ opacity: isFileDeleted ? 0.5 : 1 }}>
-        <div 
-          className="waveform-wrapper"
-          style={{
-            transform: `scaleX(${zoomLevel}) translateX(${-viewOffset * 100}%)`,
-            transformOrigin: 'left center'
-          }}
-        >
+        <div className="waveform-wrapper">
           <div ref={waveformRef} style={{ width: "100%", height: "100%" }} />
         </div>
         
