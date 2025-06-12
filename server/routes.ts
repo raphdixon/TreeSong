@@ -312,25 +312,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update track BPM
-  app.patch("/api/tracks/:trackId/bpm", async (req, res) => {
+  app.patch("/api/tracks/:trackId/bpm", authenticateToken, async (req: any, res) => {
+    console.log('=== BPM UPDATE ROUTE ===');
+    console.log('Track ID:', req.params.trackId);
+    console.log('Request body:', req.body);
+    console.log('User:', req.user);
+    
     try {
       const { bpm } = req.body;
+      console.log('Extracted BPM:', bpm, 'Type:', typeof bpm);
       
       if (!bpm || isNaN(bpm) || bpm < 60 || bpm > 200) {
+        console.log('BPM validation failed:', { bpm, isNaN: isNaN(bpm) });
         return res.status(400).json({ message: "Invalid BPM value. Must be between 60 and 200." });
       }
 
       const track = await storage.getTrack(req.params.trackId);
+      console.log('Track found:', track ? 'Yes' : 'No');
+      
       if (!track) {
         return res.status(404).json({ message: "Track not found" });
       }
 
+      console.log('Calling storage.updateTrackBpm with:', req.params.trackId, parseInt(bpm));
+      
       // Update the track BPM
       await storage.updateTrackBpm(req.params.trackId, parseInt(bpm));
       
+      console.log('BPM update completed successfully');
       res.json({ message: "BPM updated successfully", bpm: parseInt(bpm) });
     } catch (error) {
-      console.error("Failed to update track BPM:", error);
+      console.error("=== BPM UPDATE ROUTE ERROR ===");
+      console.error("Error:", error);
+      console.error("Error message:", error instanceof Error ? error.message : 'Unknown error');
+      console.error("Error stack:", error instanceof Error ? error.stack : 'No stack');
       res.status(500).json({ message: "Failed to update track BPM" });
     }
   });

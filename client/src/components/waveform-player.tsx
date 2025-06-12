@@ -192,13 +192,25 @@ export default function WaveformPlayer({
   // Update track BPM mutation
   const updateBpmMutation = useMutation({
     mutationFn: async (newBpm: number) => {
-      return await apiRequest(`/api/tracks/${trackId}/bpm`, 'PATCH', { bpm: newBpm });
+      console.log('=== BPM UPDATE MUTATION ===');
+      console.log('Track ID:', trackId);
+      console.log('New BPM:', newBpm);
+      console.log('API URL:', `/api/tracks/${trackId}/bpm`);
+      console.log('Request body:', { bpm: newBpm });
+      
+      const result = await apiRequest(`/api/tracks/${trackId}/bpm`, 'PATCH', { bpm: newBpm });
+      console.log('BPM update response:', result);
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('BPM update successful:', data);
       queryClient.invalidateQueries({ queryKey: ['/api/tracks', trackId] });
     },
     onError: (error) => {
-      console.error('Failed to update track BPM:', error);
+      console.error('=== BPM UPDATE ERROR ===');
+      console.error('Error object:', error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
       toast({
         title: "Failed to update BPM",
         description: "Could not save BPM to database",

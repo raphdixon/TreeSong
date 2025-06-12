@@ -137,9 +137,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateTrackBpm(id: string, bpm: number): Promise<void> {
-    await db.update(tracks)
-      .set({ bpm })
-      .where(eq(tracks.id, id));
+    console.log('=== STORAGE: updateTrackBpm ===');
+    console.log('Track ID:', id);
+    console.log('BPM:', bpm);
+    console.log('BPM type:', typeof bpm);
+    
+    try {
+      const result = await db.update(tracks)
+        .set({ bpm })
+        .where(eq(tracks.id, id));
+      
+      console.log('Database update result:', result);
+      console.log('Update completed successfully');
+    } catch (error) {
+      console.error('=== STORAGE ERROR: updateTrackBpm ===');
+      console.error('Error:', error);
+      console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
+      throw error;
+    }
   }
 
   // Comment methods
