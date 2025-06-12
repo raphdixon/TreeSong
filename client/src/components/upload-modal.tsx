@@ -218,23 +218,79 @@ export default function UploadModal({ onClose, teamId }: UploadModalProps) {
               />
             </div>
 
-            <div className="field-row">
-              <label htmlFor="bpm">BPM (optional):</label>
-              <input
-                type="number"
-                id="bpm"
-                className="textbox"
-                value={bpm}
-                onChange={(e) => setBpm(e.target.value)}
-                placeholder="Enter BPM (e.g., 120)"
-                min="1"
-                max="300"
-                style={{ flex: 1 }}
-              />
-            </div>
-            <div style={{ fontSize: "10px", color: "#666", marginTop: "2px" }}>
-              Leave empty if unknown. This enables beat grid overlay.
-            </div>
+            {/* BPM Analysis Progress */}
+            {isAnalyzing && analysisProgress && (
+              <div className="analysis-progress">
+                <div className="progress-header">
+                  <span>🎵 Analyzing BPM...</span>
+                  <span>{Math.round(analysisProgress.progress)}%</span>
+                </div>
+                <div className="progress-bar">
+                  <div 
+                    className="progress-fill" 
+                    style={{ width: `${analysisProgress.progress}%` }}
+                  />
+                </div>
+                <div className="progress-message">{analysisProgress.message}</div>
+              </div>
+            )}
+
+            {/* BPM Detection Results */}
+            {detectedBpm && !manualBpm && (
+              <div className="bpm-detection-result">
+                <div className="detection-header">
+                  <span>✅ BPM Detected: {detectedBpm}</span>
+                  <button 
+                    type="button"
+                    className="btn-small"
+                    onClick={() => setManualBpm(true)}
+                  >
+                    Manual Override
+                  </button>
+                </div>
+                <div style={{ fontSize: "10px", color: "#666" }}>
+                  Click "Manual Override" to adjust the detected BPM
+                </div>
+              </div>
+            )}
+
+            {/* Manual BPM Input */}
+            {(manualBpm || !detectedBpm) && file && (
+              <div className="field-row">
+                <label htmlFor="bpm">
+                  {detectedBpm ? "Override BPM:" : "BPM (optional):"}
+                </label>
+                <input
+                  type="number"
+                  id="bpm"
+                  className="textbox"
+                  value={bpm}
+                  onChange={(e) => setBpm(e.target.value)}
+                  placeholder={detectedBpm ? detectedBpm.toString() : "Enter BPM (e.g., 120)"}
+                  min="1"
+                  max="300"
+                  style={{ flex: 1 }}
+                />
+                {detectedBpm && (
+                  <button 
+                    type="button"
+                    className="btn-small"
+                    onClick={() => {
+                      setBpm(detectedBpm.toString());
+                      setManualBpm(false);
+                    }}
+                  >
+                    Use Auto
+                  </button>
+                )}
+              </div>
+            )}
+            
+            {!file && (
+              <div style={{ fontSize: "10px", color: "#666", marginTop: "2px" }}>
+                Upload a file to automatically detect BPM or enter manually.
+              </div>
+            )}
 
             <div className="field-row" style={{ justifyContent: "center", marginTop: "20px" }}>
               <button 
