@@ -233,7 +233,7 @@ export default function WaveformPlayer({
     if (!currentBpm) return null;
     
     const beatsPerBar = 4; // Standard 4/4 time signature
-    const secondsPerBeat = 60 / bpm;
+    const secondsPerBeat = 60 / currentBpm;
     const secondsPerBar = secondsPerBeat * beatsPerBar;
     
     const totalBars = Math.ceil(duration / secondsPerBar);
@@ -471,11 +471,81 @@ export default function WaveformPlayer({
         </div>
       )}
 
+      {/* BPM Analysis Progress */}
+      {isAnalyzingBpm && analysisProgress && (
+        <div style={{ 
+          background: "#F0F0F0", 
+          border: "2px inset #C0C0C0", 
+          padding: "12px", 
+          marginBottom: "16px" 
+        }}>
+          <div style={{ marginBottom: "8px" }}>
+            <span>🎵 {analysisProgress.message}</span>
+          </div>
+          <div style={{ 
+            background: "#E0E0E0", 
+            border: "1px inset #C0C0C0", 
+            height: "20px",
+            position: "relative"
+          }}>
+            <div style={{
+              background: analysisProgress.stage === 'error' ? "#FF6B6B" : "#4CAF50",
+              height: "100%",
+              width: `${analysisProgress.progress}%`,
+              transition: "width 0.3s ease"
+            }} />
+          </div>
+        </div>
+      )}
+
+      {/* BPM Status and Manual Override */}
+      <div style={{ 
+        background: "#F0F0F0", 
+        border: "2px inset #C0C0C0", 
+        padding: "12px", 
+        marginBottom: "16px",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center"
+      }}>
+        <div>
+          <strong>BPM: </strong>
+          {detectedBpm || bpm ? (
+            <span>{detectedBpm || bpm} BPM {detectedBpm && !bpm ? "(detected)" : ""}</span>
+          ) : (
+            <span style={{ color: "#666" }}>
+              {isAnalyzingBpm ? "Analyzing..." : "Not detected"}
+            </span>
+          )}
+        </div>
+        <div>
+          {!showManualBpm ? (
+            <button onClick={() => setShowManualBpm(true)}>
+              Manually Enter BPM
+            </button>
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <input
+                type="number"
+                min="60"
+                max="200"
+                value={manualBpmValue}
+                onChange={(e) => setManualBpmValue(e.target.value)}
+                placeholder="Enter BPM"
+                style={{ width: "80px" }}
+              />
+              <button onClick={handleManualBpmSubmit}>Set</button>
+              <button onClick={() => setShowManualBpm(false)}>Cancel</button>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Beats and Bars Timeline */}
-      {bpm && (
+      {(detectedBpm || bpm) && (
         <div className="beats-timeline">
           <div className="timeline-header">
-            <span>Bars & Beats ({bpm} BPM, 4/4)</span>
+            <span>Bars & Beats ({detectedBpm || bpm} BPM, 4/4)</span>
             <div className="zoom-controls">
               <button 
                 className="zoom-btn" 

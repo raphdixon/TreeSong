@@ -311,6 +311,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update track BPM
+  app.patch("/api/tracks/:trackId/bpm", async (req, res) => {
+    try {
+      const { bpm } = req.body;
+      
+      if (!bpm || isNaN(bpm) || bpm < 60 || bpm > 200) {
+        return res.status(400).json({ message: "Invalid BPM value. Must be between 60 and 200." });
+      }
+
+      const track = await storage.getTrack(req.params.trackId);
+      if (!track) {
+        return res.status(404).json({ message: "Track not found" });
+      }
+
+      // Update the track BPM
+      await storage.updateTrackBpm(req.params.trackId, parseInt(bpm));
+      
+      res.json({ message: "BPM updated successfully", bpm: parseInt(bpm) });
+    } catch (error) {
+      console.error("Failed to update track BPM:", error);
+      res.status(500).json({ message: "Failed to update track BPM" });
+    }
+  });
+
   // Comment routes
   app.get("/api/tracks/:trackId/comments", async (req, res) => {
     try {

@@ -34,6 +34,7 @@ export interface IStorage {
   getTracksByTeam(teamId: string): Promise<Track[]>;
   createTrack(track: InsertTrack): Promise<Track>;
   deleteTrack(id: string): Promise<void>;
+  updateTrackBpm(id: string, bpm: number): Promise<void>;
   
   // Comment methods
   getCommentsByTrack(trackId: string): Promise<Comment[]>;
@@ -133,6 +134,12 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTrack(id: string): Promise<void> {
     await db.delete(tracks).where(eq(tracks.id, id));
+  }
+
+  async updateTrackBpm(id: string, bpm: number): Promise<void> {
+    await db.update(tracks)
+      .set({ bpm })
+      .where(eq(tracks.id, id));
   }
 
   // Comment methods
