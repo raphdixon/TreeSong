@@ -32,6 +32,8 @@ export default function WaveformPlayer({
   const [showCommentPopup, setShowCommentPopup] = useState(false);
   const [commentTime, setCommentTime] = useState(0);
   const [commentPosition, setCommentPosition] = useState({ x: 0, y: 0 });
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [viewOffset, setViewOffset] = useState(0);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -143,17 +145,28 @@ export default function WaveformPlayer({
     const totalBars = Math.ceil(duration / secondsPerBar);
     const markers = [];
     
-    for (let bar = 1; bar <= totalBars; bar++) {
+    // Calculate visible time range based on zoom and offset
+    const visibleDuration = duration / zoomLevel;
+    const startTime = viewOffset * duration;
+    const endTime = startTime + visibleDuration;
+    
+    // Only show bars that are in the visible range
+    const startBar = Math.max(1, Math.floor(startTime / secondsPerBar));
+    const endBar = Math.min(totalBars, Math.ceil(endTime / secondsPerBar) + 1);
+    
+    for (let bar = startBar; bar <= endBar; bar++) {
       const barStartTime = (bar - 1) * secondsPerBar;
-      const position = (barStartTime / duration) * 100;
       
-      if (position <= 100) {
+      // Calculate position relative to visible range
+      const relativePosition = ((barStartTime - startTime) / visibleDuration) * 100;
+      
+      if (relativePosition >= -10 && relativePosition <= 110) {
         // Bar marker
         markers.push(
           <div
             key={`bar-${bar}`}
             className="bar-marker"
-            style={{ left: `${position}%` }}
+            style={{ left: `${relativePosition}%` }}
           >
             <div className="bar-label">{bar}</div>
           </div>
@@ -162,14 +175,14 @@ export default function WaveformPlayer({
         // Beat markers within each bar
         for (let beat = 1; beat <= beatsPerBar; beat++) {
           const beatTime = barStartTime + (beat - 1) * secondsPerBeat;
-          const beatPosition = (beatTime / duration) * 100;
+          const beatRelativePosition = ((beatTime - startTime) / visibleDuration) * 100;
           
-          if (beatPosition <= 100) {
+          if (beatRelativePosition >= -5 && beatRelativePosition <= 105) {
             markers.push(
               <div
                 key={`beat-${bar}-${beat}`}
                 className={`beat-marker ${beat === 1 ? 'downbeat' : ''}`}
-                style={{ left: `${beatPosition}%` }}
+                style={{ left: `${beatRelativePosition}%` }}
               />
             );
           }
@@ -178,6 +191,34 @@ export default function WaveformPlayer({
     }
     
     return markers;
+  };
+
+  // Zoom controls
+  const handleZoomIn = () => {
+    const newZoom = Math.min(zoomLevel * 2, 16);
+    setZoomLevel(newZoom);
+    // Adjust offset to keep current time centered
+    const centerTime = currentTime / duration;
+    const newOffset = Math.max(0, Math.min(1 - 1/newZoom, centerTime - 0.5/newZoom));
+    setViewOffset(newOffset);
+  };
+
+  const handleZoomOut = () => {
+    const newZoom = Math.max(zoomLevel / 2, 1);
+    setZoomLevel(newZoom);
+    if (newZoom === 1) {
+      setViewOffset(0);
+    } else {
+      // Adjust offset to keep current time centered
+      const centerTime = currentTime / duration;
+      const newOffset = Math.max(0, Math.min(1 - 1/newZoom, centerTime - 0.5/newZoom));
+      setViewOffset(newOffset);
+    }
+  };
+
+  const handleZoomReset = () => {
+    setZoomLevel(1);
+    setViewOffset(0);
   };
 
   // Generate grid lines based on BPM or time
@@ -275,6 +316,33 @@ export default function WaveformPlayer({
         <div className="beats-timeline">
           <div className="timeline-header">
             <span>Bars & Beats ({bpm} BPM, 4/4)</span>
+            <div className="zoom-controls">
+              <button 
+                className="zoom-btn" 
+                onClick={handleZoomOut}
+                disabled={zoomLevel <= 1}
+                title="Zoom Out"
+              >
+                -
+              </button>
+              <span className="zoom-level">{zoomLevel}x</span>
+              <button 
+                className="zoom-btn" 
+                onClick={handleZoomIn}
+                disabled={zoomLevel >= 16}
+                title="Zoom In"
+              >
+                +
+              </button>
+              <button 
+                className="zoom-btn reset" 
+                onClick={handleZoomReset}
+                disabled={zoomLevel === 1}
+                title="Reset Zoom"
+              >
+                Reset
+              </button>
+            </div>
           </div>
           <div className="timeline-markers">
             {generateBeatsAndBars()}
@@ -284,13 +352,36 @@ export default function WaveformPlayer({
 
       {/* Waveform Container */}
       <div className="waveform-container" style={{ opacity: isFileDeleted ? 0.5 : 1 }}>
-        <div ref={waveformRef} style={{ width: "100%", height: "100%" }} />
+        <div 
+          className="waveform-wrapper"
+          style={{
+            transform: `scaleX(${zoomLevel}) translateX(${-viewOffset * 100}%)`,
+            transformOrigin: 'left center'
+          }}
+        >
+          <div ref={waveformRef} style={{ width: "100%", height: "100%" }} />
+        </div>
         
         {/* Grid Overlay */}
         <div className="waveform-grid">
           {generateGridLines()}
           {generateCommentMarkers()}
         </div>
+        
+        {/* Horizontal Scrollbar for zoomed view */}
+        {zoomLevel > 1 && (
+          <div className="timeline-scrollbar">
+            <input
+              type="range"
+              min="0"
+              max={1 - 1/zoomLevel}
+              step={0.01}
+              value={viewOffset}
+              onChange={(e) => setViewOffset(parseFloat(e.target.value))}
+              className="scrollbar-slider"
+            />
+          </div>
+        )}
       </div>
 
       {/* Controls */}
