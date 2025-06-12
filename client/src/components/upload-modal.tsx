@@ -149,7 +149,7 @@ export default function UploadModal({ onClose, teamId }: UploadModalProps) {
       
       <div className="window-body" style={{ padding: "20px" }}>
         <form onSubmit={handleSubmit}>
-          <div className="field-row" style={{ marginBottom: "20px" }}>
+          <div style={{ marginBottom: "20px", display: "flex", justifyContent: "center" }}>
             <div
               className={`sunken-panel ${isDragging ? 'drag-hover' : ''}`}
               style={{
@@ -157,7 +157,9 @@ export default function UploadModal({ onClose, teamId }: UploadModalProps) {
                 textAlign: "center",
                 cursor: "pointer",
                 border: isDragging ? "2px dashed #0080ff" : "2px dashed #ccc",
-                backgroundColor: isDragging ? "#f0f8ff" : "#f9f9f9"
+                backgroundColor: isDragging ? "#f0f8ff" : "#f9f9f9",
+                width: "100%",
+                maxWidth: "400px"
               }}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
