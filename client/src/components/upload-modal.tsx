@@ -17,6 +17,7 @@ export default function UploadModal({ onClose, teamId }: UploadModalProps) {
   const [analysisProgress, setAnalysisProgress] = useState<BPMAnalysisProgress | null>(null);
   const [detectedBpm, setDetectedBpm] = useState<number | null>(null);
   const [manualBpm, setManualBpm] = useState(false);
+  const [autoBpmEnabled, setAutoBpmEnabled] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -81,6 +82,12 @@ export default function UploadModal({ onClose, teamId }: UploadModalProps) {
         description: validation.error,
         variant: "destructive",
       });
+      return;
+    }
+
+    // Check if auto BPM detection is enabled
+    if (!autoBpmEnabled) {
+      setManualBpm(true);
       return;
     }
 
@@ -216,6 +223,22 @@ export default function UploadModal({ onClose, teamId }: UploadModalProps) {
                   }
                 }}
               />
+            </div>
+
+            {/* Auto BPM Detection Checkbox */}
+            <div className="field-row">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={autoBpmEnabled}
+                  onChange={(e) => setAutoBpmEnabled(e.target.checked)}
+                  style={{ marginRight: "8px" }}
+                />
+                Automatic BPM detection
+              </label>
+            </div>
+            <div style={{ fontSize: "10px", color: "#666", marginTop: "-4px", marginBottom: "8px" }}>
+              Uncheck to manually enter BPM without automatic analysis
             </div>
 
             {/* BPM Analysis Progress */}
