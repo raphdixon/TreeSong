@@ -58,16 +58,24 @@ export const tracks = pgTable("tracks", {
   fileDeletedAt: timestamp("file_deleted_at")
 });
 
-// Comments table
-export const comments = pgTable("comments", {
+// Emoji reactions table
+export const emojiReactions = pgTable("emoji_reactions", {
   id: varchar("id").primaryKey().notNull(),
   trackId: varchar("track_id").notNull(),
   time: real("time").notNull(),
-  username: varchar("username").notNull(),
-  text: text("text").notNull(),
+  emoji: varchar("emoji").notNull(),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
-  isPublic: boolean("is_public").default(false).notNull(),
-  authorUserId: varchar("author_user_id")
+  listenerSessionId: varchar("listener_session_id") // For tracking unique listeners
+});
+
+// Track listens table - to track if a user has completed listening
+export const trackListens = pgTable("track_listens", {
+  id: varchar("id").primaryKey().notNull(),
+  trackId: varchar("track_id").notNull(),
+  sessionId: varchar("session_id").notNull(),
+  completedAt: timestamp("completed_at"),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  hasCompletedFullListen: boolean("has_completed_full_listen").default(false).notNull()
 });
 
 // Shares table
@@ -94,9 +102,15 @@ export const insertTrackSchema = createInsertSchema(tracks).omit({
   uploadDate: true
 });
 
-export const insertCommentSchema = createInsertSchema(comments).omit({
+export const insertEmojiReactionSchema = createInsertSchema(emojiReactions).omit({
   id: true,
   timestamp: true
+});
+
+export const insertTrackListenSchema = createInsertSchema(trackListens).omit({
+  id: true,
+  startedAt: true,
+  completedAt: true
 });
 
 export const insertShareSchema = createInsertSchema(shares).omit({
@@ -113,8 +127,10 @@ export const insertInviteSchema = createInsertSchema(invites).omit({
 // Types
 export type InsertTrack = z.infer<typeof insertTrackSchema>;
 export type Track = typeof tracks.$inferSelect;
-export type InsertComment = z.infer<typeof insertCommentSchema>;
-export type Comment = typeof comments.$inferSelect;
+export type InsertEmojiReaction = z.infer<typeof insertEmojiReactionSchema>;
+export type EmojiReaction = typeof emojiReactions.$inferSelect;
+export type InsertTrackListen = z.infer<typeof insertTrackListenSchema>;
+export type TrackListen = typeof trackListens.$inferSelect;
 export type InsertShare = z.infer<typeof insertShareSchema>;
 export type Share = typeof shares.$inferSelect;
 export type InsertInvite = z.infer<typeof insertInviteSchema>;

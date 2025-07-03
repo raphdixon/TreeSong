@@ -1,13 +1,15 @@
 import {
-  users, teams, tracks, comments, shares, invites, teamMembers,
+  users, teams, tracks, emojiReactions, trackListens, shares, invites, teamMembers,
   type User,
   type InsertUser,
   type Team,
   type InsertTeam,
   type Track,
   type InsertTrack,
-  type Comment,
-  type InsertComment,
+  type EmojiReaction,
+  type InsertEmojiReaction,
+  type TrackListen,
+  type InsertTrackListen,
   type Share,
   type InsertShare,
   type Invite,
@@ -15,7 +17,7 @@ import {
 } from "@shared/schema";
 import { nanoid } from "nanoid";
 import bcrypt from "bcrypt";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db } from "./db";
 
 export interface IStorage {
@@ -36,10 +38,14 @@ export interface IStorage {
   deleteTrack(id: string): Promise<void>;
   updateTrackBpm(id: string, bpm: number): Promise<void>;
   
-  // Comment methods
-  getCommentsByTrack(trackId: string): Promise<Comment[]>;
-  createComment(comment: InsertComment): Promise<Comment>;
-  deleteComment(id: string): Promise<void>;
+  // Emoji reaction methods
+  getEmojiReactionsByTrack(trackId: string): Promise<EmojiReaction[]>;
+  createEmojiReaction(reaction: InsertEmojiReaction): Promise<EmojiReaction>;
+  
+  // Track listen methods
+  getTrackListen(trackId: string, sessionId: string): Promise<TrackListen | undefined>;
+  createTrackListen(trackListen: InsertTrackListen): Promise<TrackListen>;
+  markTrackListenComplete(trackId: string, sessionId: string): Promise<void>;
   
   // Share methods
   getShareByToken(token: string): Promise<Share | undefined>;
@@ -158,27 +164,62 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Comment methods
-  async getCommentsByTrack(trackId: string): Promise<Comment[]> {
-    return await db.select().from(comments).where(eq(comments.trackId, trackId));
+  // Emoji reaction methods
+  async getEmojiReactionsByTrack(trackId: string): Promise<EmojiReaction[]> {
+    return await db.select().from(emojiReactions).where(eq(emojiReactions.trackId, trackId));
   }
 
-  async createComment(insertComment: InsertComment): Promise<Comment> {
+  async createEmojiReaction(insertReaction: InsertEmojiReaction): Promise<EmojiReaction> {
     const id = nanoid();
     
-    const [comment] = await db
-      .insert(comments)
+    const [reaction] = await db
+      .insert(emojiReactions)
       .values({
         id,
-        ...insertComment
+        ...insertReaction
       })
       .returning();
       
-    return comment;
+    return reaction;
   }
 
-  async deleteComment(id: string): Promise<void> {
-    await db.delete(comments).where(eq(comments.id, id));
+  // Track listen methods
+  async getTrackListen(trackId: string, sessionId: string): Promise<TrackListen | undefined> {
+    const [listen] = await db
+      .select()
+      .from(trackListens)
+      .where(and(
+        eq(trackListens.trackId, trackId),
+        eq(trackListens.sessionId, sessionId)
+      ));
+    return listen;
+  }
+
+  async createTrackListen(insertListen: InsertTrackListen): Promise<TrackListen> {
+    const id = nanoid();
+    
+    const [listen] = await db
+      .insert(trackListens)
+      .values({
+        id,
+        ...insertListen
+      })
+      .returning();
+      
+    return listen;
+  }
+
+  async markTrackListenComplete(trackId: string, sessionId: string): Promise<void> {
+    await db
+      .update(trackListens)
+      .set({
+        hasCompletedFullListen: true,
+        completedAt: new Date()
+      })
+      .where(and(
+        eq(trackListens.trackId, trackId),
+        eq(trackListens.sessionId, sessionId)
+      ));
   }
 
   // Share methods

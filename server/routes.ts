@@ -9,7 +9,7 @@ import fs from "fs";
 import { nanoid } from "nanoid";
 import express from "express";
 import cookieParser from "cookie-parser";
-import { insertUserSchema, insertTrackSchema, insertCommentSchema, insertInviteSchema } from "@shared/schema";
+import { insertUserSchema, insertTrackSchema, insertEmojiReactionSchema, insertTrackListenSchema, insertInviteSchema } from "@shared/schema";
 import { sendEmail, createTeamInviteEmail, createCommentNotificationEmail } from "./email";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
@@ -350,67 +350,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Comment routes
-  app.get("/api/tracks/:trackId/comments", async (req, res) => {
+  // Emoji reaction routes
+  app.get("/api/tracks/:trackId/emoji-reactions", async (req, res) => {
     try {
-      const comments = await storage.getCommentsByTrack(req.params.trackId);
-      res.json(comments);
+      const reactions = await storage.getEmojiReactionsByTrack(req.params.trackId);
+      res.json(reactions);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch comments" });
+      res.status(500).json({ message: "Failed to fetch emoji reactions" });
     }
   });
 
-  app.post("/api/tracks/:trackId/comments", async (req, res) => {
+  app.post("/api/tracks/:trackId/emoji-reactions", async (req, res) => {
     try {
-      const { time, username, text } = req.body;
+      const { emoji, time, listenerSessionId } = req.body;
       
-      const commentData = insertCommentSchema.parse({
+      const reactionData = insertEmojiReactionSchema.parse({
         trackId: req.params.trackId,
+        emoji,
         time: parseFloat(time),
-        username,
-        text,
-        isPublic: !req.user, // Public if no authenticated user
-        authorUserId: req.user?.id
+        listenerSessionId
       });
 
-      const comment = await storage.createComment(commentData);
+      const reaction = await storage.createEmojiReaction(reactionData);
       
-      // Send notification email to track owner
-      try {
-        const track = await storage.getTrack(req.params.trackId);
-        if (track && track.uploaderUserId) {
-          const trackOwner = await storage.getUser(track.uploaderUserId);
-          
-          // Don't send notification if commenter is the track owner
-          if (trackOwner && trackOwner.id !== req.user?.id) {
-            const baseUrl = process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:5000';
-            const trackUrl = `https://${baseUrl}/tracks/${track.id}`;
-            
-            const emailTemplate = createCommentNotificationEmail(
-              track.originalName,
-              username || 'Anonymous',
-              text,
-              parseFloat(time),
-              trackUrl
-            );
-            emailTemplate.to = trackOwner.email;
-            
-            const emailSent = await sendEmail(emailTemplate);
-            if (emailSent) {
-              console.log(`Comment notification sent to ${trackOwner.email} for track ${track.originalName}`);
-            } else {
-              console.error(`Failed to send comment notification to ${trackOwner.email}`);
-            }
-          }
-        }
-      } catch (emailError) {
-        console.error('Error sending comment notification:', emailError);
-        // Don't fail the comment creation if email fails
-      }
-      
-      res.json(comment);
+      res.json(reaction);
     } catch (error) {
-      res.status(400).json({ message: "Failed to create comment" });
+      res.status(400).json({ message: "Failed to create emoji reaction" });
+    }
+  });
+
+  // Track listen routes
+  app.post("/api/tracks/:trackId/listens", async (req, res) => {
+    try {
+      const { sessionId } = req.body;
+      
+      const listenData = insertTrackListenSchema.parse({
+        trackId: req.params.trackId,
+        sessionId
+      });
+
+      const listen = await storage.createTrackListen(listenData);
+      res.json(listen);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to create track listen" });
+    }
+  });
+
+  app.post("/api/tracks/:trackId/listens/:sessionId/complete", async (req, res) => {
+    try {
+      await storage.markTrackListenComplete(req.params.trackId, req.params.sessionId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(400).json({ message: "Failed to mark listen complete" });
     }
   });
 

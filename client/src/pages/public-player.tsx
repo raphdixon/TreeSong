@@ -52,7 +52,7 @@ export default function PublicPlayerPage() {
     );
   }
 
-  const { track, comments } = data;
+  const { track } = data;
 
   return (
     <Windows95Layout>
@@ -95,7 +95,7 @@ export default function PublicPlayerPage() {
             audioUrl={`/uploads/${track.filename}`}
             bpm={track.bpm}
             duration={track.duration}
-            comments={comments}
+            emojiReactions={[]} // Will be fetched by the component
             isPublic={true}
             fileDeletedAt={track.fileDeletedAt}
           />

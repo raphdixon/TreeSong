@@ -2,16 +2,17 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import CommentPopup from "./comment-popup";
+import EmojiPicker from "./emoji-picker";
 import { initializeWaveSurfer } from "@/lib/wavesurfer";
 import { BPMAnalyzer, type BPMAnalysisProgress } from "@/lib/bpmAnalyzer";
+import { nanoid } from "nanoid";
 
 interface WaveformPlayerProps {
   trackId: string;
   audioUrl: string;
   bpm: number | null;
   duration: number;
-  comments: any[];
+  emojiReactions: any[];
   isPublic: boolean;
   fileDeletedAt?: string | null;
 }
@@ -21,7 +22,7 @@ export default function WaveformPlayer({
   audioUrl, 
   bpm, 
   duration, 
-  comments, 
+  emojiReactions, 
   isPublic,
   fileDeletedAt
 }: WaveformPlayerProps) {
@@ -30,9 +31,6 @@ export default function WaveformPlayer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [volume, setVolume] = useState(75);
-  const [showCommentPopup, setShowCommentPopup] = useState(false);
-  const [commentTime, setCommentTime] = useState(0);
-  const [commentPosition, setCommentPosition] = useState({ x: 0, y: 0 });
   const [zoomLevel, setZoomLevel] = useState(1);
   const [viewOffset, setViewOffset] = useState(0);
   const [detectedBpm, setDetectedBpm] = useState<number | null>(bpm);
@@ -40,8 +38,71 @@ export default function WaveformPlayer({
   const [analysisProgress, setAnalysisProgress] = useState<BPMAnalysisProgress | null>(null);
   const [showManualBpm, setShowManualBpm] = useState(false);
   const [manualBpmValue, setManualBpmValue] = useState(bpm?.toString() || "");
+  
+  // New emoji and first-listen functionality
+  const [hasCompletedFirstListen, setHasCompletedFirstListen] = useState(false);
+  const [canSkip, setCanSkip] = useState(false);
+  const [sessionId] = useState(() => nanoid());
+  const [hasStartedListening, setHasStartedListening] = useState(false);
+  
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Function to handle emoji selection
+  const handleEmojiSelect = (emoji: string) => {
+    if (!hasCompletedFirstListen) {
+      toast({
+        title: "🎧 Complete first listen",
+        description: "Listen to the full track first to unlock emoji reactions!"
+      });
+      return;
+    }
+
+    createEmojiReactionMutation.mutate({
+      emoji,
+      time: currentTime
+    });
+  };
+
+  // Mutations for emoji reactions and track listening
+  const createEmojiReactionMutation = useMutation({
+    mutationFn: async (data: { emoji: string; time: number }) => {
+      return apiRequest(`/api/tracks/${trackId}/emoji-reactions`, 'POST', {
+        emoji: data.emoji,
+        time: data.time,
+        listenerSessionId: sessionId
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}/emoji-reactions`] });
+      toast({
+        title: "Emoji added!",
+        description: "Your reaction has been added to the track"
+      });
+    }
+  });
+
+  const createTrackListenMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest(`/api/tracks/${trackId}/listens`, 'POST', {
+        sessionId
+      });
+    }
+  });
+
+  const markListenCompleteMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest(`/api/tracks/${trackId}/listens/${sessionId}/complete`, 'POST');
+    },
+    onSuccess: () => {
+      setHasCompletedFirstListen(true);
+      setCanSkip(true);
+      toast({
+        title: "🎉 Track completed!",
+        description: "You can now skip around and add emoji reactions anywhere!"
+      });
+    }
+  });
 
   // Initialize WaveSurfer
   useEffect(() => {
@@ -65,28 +126,38 @@ export default function WaveformPlayer({
             setCurrentTime(time);
           });
 
-          waveSurfer.on('play', () => setIsPlaying(true));
+          waveSurfer.on('play', () => {
+            setIsPlaying(true);
+            
+            // Track the start of listening for first-time listeners
+            if (!hasStartedListening) {
+              setHasStartedListening(true);
+              createTrackListenMutation.mutate();
+            }
+          });
+          
           waveSurfer.on('pause', () => setIsPlaying(false));
 
-          // Click to seek and comment
+          // Handle track completion for first-time listeners
+          waveSurfer.on('finish', () => {
+            if (!hasCompletedFirstListen) {
+              markListenCompleteMutation.mutate();
+            }
+          });
+
+          // Click handler - only allow seeking if user has completed first listen
           waveSurfer.on('click', (progress: number) => {
-            console.log('WaveSurfer click - progress:', progress, 'duration:', duration);
-            const clickTime = progress * duration;
-            console.log('Calculated click time:', clickTime);
+            if (!hasCompletedFirstListen && !canSkip) {
+              toast({
+                title: "⏯️ First listen required",
+                description: "Please listen to the full track first before you can skip around!"
+              });
+              return;
+            }
             
-            // Immediately seek to clicked position
+            const clickTime = progress * duration;
             waveSurfer.seekTo(progress);
             setCurrentTime(clickTime);
-            setCommentTime(clickTime);
-            
-            // Calculate position for popup relative to viewport
-            const rect = waveformRef.current!.getBoundingClientRect();
-            setCommentPosition({
-              x: rect.left + (progress * rect.width),
-              y: rect.top - 10 // Position popup above the waveform
-            });
-            
-            setShowCommentPopup(true);
           });
 
           // Alternative: Use seek event to ensure we get the actual time
@@ -255,12 +326,7 @@ export default function WaveformPlayer({
     }
   };
 
-  const seekToTime = (time: number) => {
-    if (waveSurferRef.current) {
-      const progress = time / duration;
-      waveSurferRef.current.seekTo(progress);
-    }
-  };
+
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -441,53 +507,62 @@ export default function WaveformPlayer({
     return lines;
   };
 
-  // Generate comment markers based on zoom level
-  const generateCommentMarkers = () => {
+  // Generate emoji reaction markers based on zoom level
+  const generateEmojiMarkers = () => {
     // Calculate visible time range based on zoom and offset
     const visibleDuration = duration / zoomLevel;
     const startTime = viewOffset * duration;
     const endTime = startTime + visibleDuration;
     
-    return comments
-      .filter(comment => comment.time >= startTime && comment.time <= endTime)
-      .map((comment) => {
+    return emojiReactions
+      .filter(reaction => reaction.time >= startTime && reaction.time <= endTime)
+      .map((reaction) => {
         // Calculate position relative to visible range
-        const relativePosition = ((comment.time - startTime) / visibleDuration) * 100;
+        const relativePosition = ((reaction.time - startTime) / visibleDuration) * 100;
         
         return (
           <div
-            key={comment.id}
-            className="comment-marker"
-            style={{ left: `${relativePosition}%` }}
-            title={`${comment.username}: ${comment.text}`}
+            key={reaction.id}
+            className="emoji-marker"
+            style={{ 
+              left: `${relativePosition}%`,
+              position: 'absolute',
+              top: '10px',
+              fontSize: '20px',
+              zIndex: 10,
+              cursor: 'pointer',
+              pointerEvents: 'auto'
+            }}
+            title={`${reaction.emoji} at ${formatTime(reaction.time)}`}
             onClick={(e) => {
               e.stopPropagation();
-              seekToTime(comment.time);
+              if (hasCompletedFirstListen) {
+                seekToTime(reaction.time);
+              }
             }}
-          />
+          >
+            {reaction.emoji}
+          </div>
         );
       });
   };
 
-  const addCommentMutation = useMutation({
-    mutationFn: async (commentData: { time: number; username: string; text: string }) => {
-      const response = await apiRequest("POST", `/api/tracks/${trackId}/comments`, commentData);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}/comments`] });
-      setShowCommentPopup(false);
-      toast({ title: "Comment added!", description: "Your comment has been posted successfully." });
-    },
-    onError: (error: any) => {
-      toast({ 
-        title: "Failed to add comment", 
-        description: error.message,
-        variant: "destructive"
+  // Function to seek to a specific time (only if completed first listen or can skip)
+  const seekToTime = (time: number) => {
+    if (!hasCompletedFirstListen && !canSkip) {
+      toast({
+        title: "Complete first listen",
+        description: "Please listen to the full track first before skipping around!"
       });
+      return;
     }
-  });
+    
+    if (waveSurferRef.current) {
+      const progress = time / duration;
+      waveSurferRef.current.seekTo(progress);
+      setCurrentTime(time);
+    }
+  };
 
   const isFileDeleted = fileDeletedAt !== null && fileDeletedAt !== undefined;
 
@@ -633,7 +708,7 @@ export default function WaveformPlayer({
         {/* Grid Overlay */}
         <div className="waveform-grid">
           {generateGridLines()}
-          {generateCommentMarkers()}
+          {generateEmojiMarkers()}
         </div>
         
         {/* Horizontal Scrollbar for zoomed view */}
@@ -676,40 +751,38 @@ export default function WaveformPlayer({
         />
       </div>
 
-      {/* Comments Section */}
-      <div className="comments-section">
-        <div className="comments-header">
-          <h3>{isPublic ? "Public Comments" : "Comments"}</h3>
-          <button 
-            className="btn"
-            onClick={() => {
-              setCommentTime(currentTime);
-              setCommentPosition({ x: 400, y: 300 });
-              setShowCommentPopup(true);
-            }}
-          >
-            💬 Add Comment
-          </button>
+      {/* Emoji Reactions Section */}
+      <div className="emoji-reactions-section">
+        <div className="reactions-header">
+          <h3>🎵 Track Reactions</h3>
+          <div style={{ fontSize: "11px", color: "#666" }}>
+            {hasCompletedFirstListen ? 
+              "Reactions unlocked! Use the emoji panel below." :
+              "Complete your first listen to unlock reactions."
+            }
+          </div>
         </div>
         
-        <div className="comments-list">
-          {comments.length === 0 ? (
+        <div className="reactions-list">
+          {emojiReactions.length === 0 ? (
             <div style={{ padding: "20px", textAlign: "center", color: "#666" }}>
-              No comments yet. Click on the waveform or use the button above to add one!
+              No reactions yet. Complete your first listen to start reacting!
             </div>
           ) : (
-            comments.map((comment) => (
+            emojiReactions.map((reaction) => (
               <div 
-                key={comment.id} 
-                className="comment-item"
-                onClick={() => seekToTime(comment.time)}
+                key={reaction.id} 
+                className="reaction-item"
+                onClick={() => seekToTime(reaction.time)}
+                style={{ 
+                  cursor: hasCompletedFirstListen ? 'pointer' : 'default',
+                  opacity: hasCompletedFirstListen ? 1 : 0.5
+                }}
               >
-                <span className="comment-time">[{formatTime(comment.time)}]</span>
-                <span className="comment-author">{comment.username}:</span>
-                <span> {comment.text}</span>
-                {comment.isPublic && (
-                  <span style={{ fontSize: "9px", color: "#808080" }}> (Public)</span>
-                )}
+                <span className="reaction-time">[{formatTime(reaction.time)}]</span>
+                <span className="reaction-emoji" style={{ fontSize: "16px", marginLeft: "8px" }}>
+                  {reaction.emoji}
+                </span>
               </div>
             ))
           )}
@@ -717,16 +790,11 @@ export default function WaveformPlayer({
       </div>
 
       {/* Comment Popup */}
-      {showCommentPopup && (
-        <CommentPopup
-          time={commentTime}
-          position={commentPosition}
-          isPublic={isPublic}
-          onSubmit={(data) => addCommentMutation.mutate(data)}
-          onClose={() => setShowCommentPopup(false)}
-          isLoading={addCommentMutation.isPending}
-        />
-      )}
+      {/* Emoji Picker - Always visible */}
+      <EmojiPicker 
+        onEmojiSelect={handleEmojiSelect}
+        disabled={!hasCompletedFirstListen}
+      />
     </div>
   );
 }
