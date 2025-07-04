@@ -34,6 +34,7 @@ export interface IStorage {
   // Track methods
   getTrack(id: string): Promise<Track | undefined>;
   getTracksByTeam(teamId: string): Promise<Track[]>;
+  getAllTracks(): Promise<Track[]>;
   createTrack(track: InsertTrack): Promise<Track>;
   deleteTrack(id: string): Promise<void>;
   
@@ -121,6 +122,10 @@ export class DatabaseStorage implements IStorage {
 
   async getTracksByTeam(teamId: string): Promise<Track[]> {
     return await db.select().from(tracks).where(eq(tracks.teamId, teamId));
+  }
+
+  async getAllTracks(): Promise<Track[]> {
+    return await db.select().from(tracks);
   }
 
   async createTrack(insertTrack: InsertTrack): Promise<Track> {

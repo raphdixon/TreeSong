@@ -127,11 +127,18 @@ DemoTree is a public music sharing platform where musicians can upload their dem
 
 ```
 Changelog:
-- July 04, 2025. Transformed from TreeNote collaboration platform to DemoTree music demo sharing platform
-  - Replaced comment system with emoji reactions placed on timeline
-  - Added first-listen restriction preventing skipping until track completion  
-  - Implemented session-based listen tracking
-  - Updated welcome message to explain DemoTree's purpose for demo sharing and reactions
+- July 04, 2025. Major transformation: Built TikTok-like music discovery platform  
+  - Created vertical scrolling newsfeed with Windows 95 aesthetics (/feed)
+  - Implemented recommendation algorithm (emoji reactions + recency + randomness)
+  - Added keyboard navigation (arrow keys) and auto-track advance
+  - Built public track discovery with /api/tracks/public endpoint
+  - Updated app routing to make feed the main page for logged-in users
+  - Removed all BPM detection features to focus on discovery
+  - Added TikTok-style CSS with retro Windows 95 design elements
+  - Transformed from team collaboration to public music discovery
+- July 04, 2025. Fixed database isolation - users now only see tracks from their team
+  - Updated routes to use authenticated user's teamId instead of hardcoded values
+  - Removed BPM field from database schema completely
 - July 03, 2025. Initial setup
 ```
 

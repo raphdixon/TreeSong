@@ -8,6 +8,7 @@ import LandingPage from "./pages/landing";
 import LoginPage from "./pages/login";
 import RegisterPage from "./pages/register";
 import DashboardPage from "./pages/dashboard";
+import FeedPage from "./pages/feed";
 import PlayerPage from "./pages/player";
 import PublicPlayerPage from "./pages/public-player";
 import NotFound from "./pages/not-found";
@@ -33,13 +34,16 @@ function Router() {
   return (
     <Switch>
       <Route path="/">
-        {user ? <Redirect to="/dashboard" /> : <LandingPage />}
+        {user ? <FeedPage /> : <LandingPage />}
       </Route>
       <Route path="/login">
-        {user ? <Redirect to="/dashboard" /> : <LoginPage />}
+        {user ? <Redirect to="/" /> : <LoginPage />}
       </Route>
       <Route path="/register">
-        {user ? <Redirect to="/dashboard" /> : <RegisterPage />}
+        {user ? <Redirect to="/" /> : <RegisterPage />}
+      </Route>
+      <Route path="/feed">
+        {user ? <FeedPage /> : <Redirect to="/" />}
       </Route>
       <Route path="/dashboard">
         {user ? <DashboardPage /> : <Redirect to="/" />}

@@ -218,6 +218,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public tracks for the feed (all tracks across teams)
+  app.get("/api/tracks/public", async (req, res) => {
+    try {
+      const tracks = await storage.getAllTracks();
+      
+      // Add emoji reactions to each track
+      const tracksWithReactions = await Promise.all(
+        tracks.map(async (track) => {
+          const emojiReactions = await storage.getEmojiReactionsByTrack(track.id);
+          return {
+            ...track,
+            emojiReactions
+          };
+        })
+      );
+      
+      res.json(tracksWithReactions);
+    } catch (error) {
+      console.error("Failed to fetch public tracks:", error);
+      res.status(500).json({ message: "Failed to fetch public tracks" });
+    }
+  });
+
   app.get("/api/tracks/:trackId", async (req, res) => {
     try {
       const track = await storage.getTrack(req.params.trackId);

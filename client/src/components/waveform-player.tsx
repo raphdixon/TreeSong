@@ -14,6 +14,8 @@ interface WaveformPlayerProps {
   emojiReactions: any[];
   isPublic: boolean;
   fileDeletedAt?: string | null;
+  autoPlay?: boolean;
+  onTrackEnd?: () => void;
 }
 
 export default function WaveformPlayer({ 
@@ -22,7 +24,9 @@ export default function WaveformPlayer({
   duration, 
   emojiReactions, 
   isPublic,
-  fileDeletedAt
+  fileDeletedAt,
+  autoPlay = false,
+  onTrackEnd
 }: WaveformPlayerProps) {
   const waveformRef = useRef<HTMLDivElement>(null);
   const waveSurferRef = useRef<any>(null);
@@ -110,9 +114,9 @@ export default function WaveformPlayer({
           waveSurfer.on('ready', () => {
             console.log('WaveSurfer ready');
             
-            // Start background BPM detection if no BPM is set
-            if (!bpm && !detectedBpm) {
-              detectBpmInBackground();
+            // Auto-play if requested (for feed)
+            if (autoPlay) {
+              waveSurfer.play();
             }
           });
 
@@ -132,10 +136,15 @@ export default function WaveformPlayer({
           
           waveSurfer.on('pause', () => setIsPlaying(false));
 
-          // Handle track completion for first-time listeners
+          // Handle track completion
           waveSurfer.on('finish', () => {
             if (!hasCompletedFirstListen) {
               markListenCompleteMutation.mutate();
+            }
+            
+            // Call onTrackEnd if provided (for feed auto-advance)
+            if (onTrackEnd) {
+              onTrackEnd();
             }
           });
 
@@ -212,100 +221,7 @@ export default function WaveformPlayer({
     }
   }, [volume]);
 
-  // Background BPM detection
-  const detectBpmInBackground = async () => {
-    try {
-      setIsAnalyzingBpm(true);
-      setAnalysisProgress({ stage: 'loading', progress: 0, message: 'Starting BPM analysis...' });
-      
-      // Fetch the audio file for analysis
-      const response = await fetch(audioUrl);
-      const arrayBuffer = await response.arrayBuffer();
-      const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
-      const file = new File([blob], 'track.mp3', { type: 'audio/mpeg' });
-      
-      const analyzer = new BPMAnalyzer((progress) => {
-        setAnalysisProgress(progress);
-      });
-      
-      const result = await analyzer.analyzeFile(file);
-      
-      if (result.processed && result.bpm > 0) {
-        setDetectedBpm(result.bpm);
-        setManualBpmValue(result.bpm.toString());
-        
-        // Update the track in the database
-        console.log('About to trigger BPM update mutation with:', result.bpm);
-        updateBpmMutation.mutate(result.bpm);
-        
-        toast({
-          title: "BPM Detected",
-          description: `Automatically detected ${result.bpm} BPM`,
-        });
-      } else {
-        console.log('BPM detection failed');
-        setAnalysisProgress({ stage: 'error', progress: 0, message: 'Could not detect BPM automatically' });
-      }
-    } catch (error) {
-      console.error('Background BPM detection failed:', error);
-      setAnalysisProgress({ stage: 'error', progress: 0, message: 'BPM analysis failed' });
-    } finally {
-      setIsAnalyzingBpm(false);
-      setTimeout(() => setAnalysisProgress(null), 3000); // Clear progress after 3 seconds
-    }
-  };
 
-  // Update track BPM mutation
-  const updateBpmMutation = useMutation({
-    mutationFn: async (newBpm: number) => {
-      console.log('=== BPM UPDATE MUTATION ===');
-      console.log('Track ID:', trackId);
-      console.log('New BPM:', newBpm);
-      console.log('API URL:', `/api/tracks/${trackId}/bpm`);
-      console.log('Request body:', { bpm: newBpm });
-      
-      const result = await apiRequest(`/api/tracks/${trackId}/bpm`, 'PATCH', { bpm: newBpm });
-      console.log('BPM update response:', result);
-      return result;
-    },
-    onSuccess: (data) => {
-      console.log('BPM update successful:', data);
-      queryClient.invalidateQueries({ queryKey: ['/api/tracks', trackId] });
-    },
-    onError: (error) => {
-      console.error('=== BPM UPDATE ERROR ===');
-      console.error('Error object:', error);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-      toast({
-        title: "Failed to update BPM",
-        description: "Could not save BPM to database",
-        variant: "destructive"
-      });
-    }
-  });
-
-  // Handle manual BPM submission
-  const handleManualBpmSubmit = async () => {
-    const bpmValue = parseInt(manualBpmValue);
-    if (isNaN(bpmValue) || bpmValue < 60 || bpmValue > 200) {
-      toast({
-        title: "Invalid BPM",
-        description: "Please enter a BPM between 60 and 200",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setDetectedBpm(bpmValue);
-    updateBpmMutation.mutate(bpmValue);
-    setShowManualBpm(false);
-    
-    toast({
-      title: "BPM Updated",
-      description: `Track BPM set to ${bpmValue}`,
-    });
-  };
 
   const togglePlay = () => {
     if (waveSurferRef.current) {
@@ -581,32 +497,7 @@ export default function WaveformPlayer({
         </div>
       )}
 
-      {/* BPM Analysis Progress */}
-      {isAnalyzingBpm && analysisProgress && (
-        <div style={{ 
-          background: "#F0F0F0", 
-          border: "2px inset #C0C0C0", 
-          padding: "12px", 
-          marginBottom: "16px" 
-        }}>
-          <div style={{ marginBottom: "8px" }}>
-            <span>🎵 {analysisProgress.message}</span>
-          </div>
-          <div style={{ 
-            background: "#E0E0E0", 
-            border: "1px inset #C0C0C0", 
-            height: "20px",
-            position: "relative"
-          }}>
-            <div style={{
-              background: analysisProgress.stage === 'error' ? "#FF6B6B" : "#4CAF50",
-              height: "100%",
-              width: `${analysisProgress.progress}%`,
-              transition: "width 0.3s ease"
-            }} />
-          </div>
-        </div>
-      )}
+
 
       {/* BPM Status and Manual Override */}
       <div style={{ 
@@ -619,35 +510,12 @@ export default function WaveformPlayer({
         alignItems: "center"
       }}>
         <div>
-          <strong>BPM: </strong>
-          {detectedBpm || bpm ? (
-            <span>{detectedBpm || bpm} BPM {detectedBpm && !bpm ? "(detected)" : ""}</span>
-          ) : (
-            <span style={{ color: "#666" }}>
-              {isAnalyzingBpm ? "Analyzing..." : "Not detected"}
-            </span>
-          )}
+          <strong>🎵 Track Player</strong>
         </div>
         <div>
-          {!showManualBpm ? (
-            <button onClick={() => setShowManualBpm(true)}>
-              Manually Enter BPM
-            </button>
-          ) : (
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <input
-                type="number"
-                min="60"
-                max="200"
-                value={manualBpmValue}
-                onChange={(e) => setManualBpmValue(e.target.value)}
-                placeholder="Enter BPM"
-                style={{ width: "80px" }}
-              />
-              <button onClick={handleManualBpmSubmit}>Set</button>
-              <button onClick={() => setShowManualBpm(false)}>Cancel</button>
-            </div>
-          )}
+          <span style={{ fontSize: "11px", color: "#666" }}>
+            Duration: {Math.floor(duration / 60)}:{Math.floor(duration % 60).toString().padStart(2, '0')}
+          </span>
         </div>
       </div>
 
@@ -655,10 +523,7 @@ export default function WaveformPlayer({
       <div className="beats-timeline">
         <div className="timeline-header">
           <span>
-            {(detectedBpm || bpm) ? 
-              `Bars & Beats (${detectedBpm || bpm} BPM, 4/4)` : 
-              'Waveform Timeline'
-            }
+            Waveform Timeline
           </span>
           <div className="zoom-controls">
             <button 

@@ -198,22 +198,183 @@
     border: 1px inset #C0C0C0;
   }
 
-  /* BPM Analysis Progress Styles */
-  .analysis-progress {
-    background: #E0E0E0;
-    border: 1px inset #C0C0C0;
-    padding: 8px;
-    margin: 8px 0;
+  /* TikTok-style Feed Styles */
+  .feed-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 40px; /* Account for taskbar */
+    background: #008080;
+    overflow: hidden;
   }
 
-  .progress-header {
+  .feed-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: #C0C0C0;
+    border-bottom: 2px outset #C0C0C0;
+    height: 32px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+    padding: 0 8px;
     font-size: 11px;
     font-weight: bold;
-    margin-bottom: 4px;
+  }
+
+  .feed-main {
+    position: absolute;
+    top: 32px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+  }
+
+  .feed-viewport {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .feed-item {
+    height: calc(100vh - 72px); /* Full height minus header and taskbar */
+    width: 100%;
+    flex-shrink: 0;
+    background: #C0C0C0;
+    border: 2px inset #C0C0C0;
+    margin: 4px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+
+  .track-info-overlay {
+    background: #F0F0F0;
+    border: 2px inset #C0C0C0;
+    padding: 12px;
+    margin-bottom: 16px;
+    border-radius: 0;
+  }
+
+  .track-title {
+    font-size: 14px;
+    font-weight: bold;
     color: #000080;
+    margin-bottom: 8px;
+  }
+
+  .track-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 11px;
+    color: #666;
+    align-items: center;
+  }
+
+  .uploader, .duration, .reactions-count {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .waveform-container {
+    flex: 1;
+    background: white;
+    border: 2px inset #C0C0C0;
+    padding: 8px;
+    overflow: hidden;
+  }
+
+  /* Feed Navigation Controls */
+  .feed-controls {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .nav-btn {
+    width: 48px;
+    height: 48px;
+    border: 2px outset #C0C0C0;
+    background: #C0C0C0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all 0.1s;
+  }
+
+  .nav-btn:hover:not(:disabled) {
+    background: #E0E0E0;
+  }
+
+  .nav-btn:active:not(:disabled) {
+    border: 2px inset #C0C0C0;
+    background: #A0A0A0;
+  }
+
+  .nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border: 2px inset #C0C0C0;
+  }
+
+  .track-indicator {
+    background: #F0F0F0;
+    border: 2px inset #C0C0C0;
+    padding: 8px;
+    border-radius: 0;
+  }
+
+  .dots {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border: 1px solid #808080;
+    background: #E0E0E0;
+  }
+
+  .dot.active {
+    background: #000080;
+    border: 1px solid #000080;
+  }
+
+  /* Debug Panel */
+  .debug-info {
+    position: fixed;
+    bottom: 60px;
+    left: 20px;
+    z-index: 1000;
+  }
+
+  /* Loading and Empty States */
+  .feed-loading, .feed-empty {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
   }
 
   .progress-bar {
