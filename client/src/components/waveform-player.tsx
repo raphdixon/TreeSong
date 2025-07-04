@@ -4,13 +4,12 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import EmojiPicker from "./emoji-picker";
 import { initializeWaveSurfer } from "@/lib/wavesurfer";
-import { BPMAnalyzer, type BPMAnalysisProgress } from "@/lib/bpmAnalyzer";
+
 import { nanoid } from "nanoid";
 
 interface WaveformPlayerProps {
   trackId: string;
   audioUrl: string;
-  bpm: number | null;
   duration: number;
   emojiReactions: any[];
   isPublic: boolean;
@@ -20,7 +19,6 @@ interface WaveformPlayerProps {
 export default function WaveformPlayer({ 
   trackId, 
   audioUrl, 
-  bpm, 
   duration, 
   emojiReactions, 
   isPublic,
@@ -33,11 +31,7 @@ export default function WaveformPlayer({
   const [volume, setVolume] = useState(75);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [viewOffset, setViewOffset] = useState(0);
-  const [detectedBpm, setDetectedBpm] = useState<number | null>(bpm);
-  const [isAnalyzingBpm, setIsAnalyzingBpm] = useState(false);
-  const [analysisProgress, setAnalysisProgress] = useState<BPMAnalysisProgress | null>(null);
-  const [showManualBpm, setShowManualBpm] = useState(false);
-  const [manualBpmValue, setManualBpmValue] = useState(bpm?.toString() || "");
+
   
   // New emoji and first-listen functionality
   const [hasCompletedFirstListen, setHasCompletedFirstListen] = useState(false);

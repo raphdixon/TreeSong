@@ -36,7 +36,6 @@ export interface IStorage {
   getTracksByTeam(teamId: string): Promise<Track[]>;
   createTrack(track: InsertTrack): Promise<Track>;
   deleteTrack(id: string): Promise<void>;
-  updateTrackBpm(id: string, bpm: number): Promise<void>;
   
   // Emoji reaction methods
   getEmojiReactionsByTrack(trackId: string): Promise<EmojiReaction[]>;
@@ -142,27 +141,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(tracks).where(eq(tracks.id, id));
   }
 
-  async updateTrackBpm(id: string, bpm: number): Promise<void> {
-    console.log('=== STORAGE: updateTrackBpm ===');
-    console.log('Track ID:', id);
-    console.log('BPM:', bpm);
-    console.log('BPM type:', typeof bpm);
-    
-    try {
-      const result = await db.update(tracks)
-        .set({ bpm })
-        .where(eq(tracks.id, id));
-      
-      console.log('Database update result:', result);
-      console.log('Update completed successfully');
-    } catch (error) {
-      console.error('=== STORAGE ERROR: updateTrackBpm ===');
-      console.error('Error:', error);
-      console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
-      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
-      throw error;
-    }
-  }
+
 
   // Emoji reaction methods
   async getEmojiReactionsByTrack(trackId: string): Promise<EmojiReaction[]> {

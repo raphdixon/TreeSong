@@ -52,7 +52,6 @@ export const tracks = pgTable("tracks", {
   uploaderUserId: varchar("uploader_user_id").notNull(),
   filename: varchar("filename").notNull(),
   originalName: varchar("original_name").notNull(),
-  bpm: integer("bpm"),
   uploadDate: timestamp("upload_date").defaultNow().notNull(),
   duration: real("duration").notNull(),
   fileDeletedAt: timestamp("file_deleted_at")
