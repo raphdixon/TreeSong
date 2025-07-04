@@ -1,8 +1,8 @@
-# TreeNote - Audio Collaboration Platform
+# DemoTree - Music Demo Sharing Platform
 
 ## Overview
 
-TreeNote is a web application that allows musicians and audio professionals to upload audio tracks, visualize waveforms with optional BPM grid overlays, and collaborate through time-coded comments. The application features a retro Windows 95 aesthetic using the 98.css library and provides both authenticated team collaboration and public sharing capabilities.
+DemoTree is a public music sharing platform where musicians can upload their demos and receive emoji reactions from listeners. The application enforces first-listen restrictions to ensure full song completion before allowing interaction, then enables emoji reactions to be placed at specific timeline positions. Features a retro Windows 95 aesthetic using the 98.css library.
 
 ## System Architecture
 
@@ -45,11 +45,11 @@ TreeNote is a web application that allows musicians and audio professionals to u
 3. **Waveform Generation**: Client-side visualization with WaveSurfer.js
 4. **Beat Grid Overlay**: Visual tempo grid aligned to detected or manual BPM
 
-### Comment System
-- Time-coded comments linked to specific audio positions
-- Real-time collaboration features
-- Public and private comment visibility
-- Email notifications for new comments
+### Emoji Reaction System
+- Emoji reactions placed at specific audio timeline positions  
+- First-listen restriction preventing skipping until track completion
+- Session-based listen tracking for restriction enforcement
+- Always-visible emoji picker window with popular music emojis
 
 ### Sharing Mechanism
 - Public share links with unique tokens
@@ -127,6 +127,11 @@ TreeNote is a web application that allows musicians and audio professionals to u
 
 ```
 Changelog:
+- July 04, 2025. Transformed from TreeNote collaboration platform to DemoTree music demo sharing platform
+  - Replaced comment system with emoji reactions placed on timeline
+  - Added first-listen restriction preventing skipping until track completion  
+  - Implemented session-based listen tracking
+  - Updated welcome message to explain DemoTree's purpose for demo sharing and reactions
 - July 03, 2025. Initial setup
 ```
 

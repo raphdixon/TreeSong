@@ -69,7 +69,7 @@ export default function LandingPage() {
           data-notepad
         >
           <div className="title-bar">
-            <div className="title-bar-text">📝 Notepad - Welcome.txt</div>
+            <div className="title-bar-text">📝 Notepad - DemoTree Welcome.txt</div>
             <div className="title-bar-controls">
               <div className="title-bar-button">_</div>
               <div className="title-bar-button">□</div>
@@ -95,7 +95,7 @@ export default function LandingPage() {
               backgroundColor: "#ffffff",
               lineHeight: "1.4"
             }}>
-              Welcome to TreeNote by{" "}
+              Welcome to DemoTree by{" "}
               <a 
                 href="https://themeetingtree.com" 
                 target="_blank" 
@@ -109,9 +109,11 @@ export default function LandingPage() {
               </a>
               .
               <br /><br />
-              TreeNote allows people to comment on audio wave forms at various timestamps, without creating an account. It is perfect for making notes at certain points of a song or podcast.
+              DemoTree is the perfect platform for sharing your music demos and getting reactions from listeners. Upload your tracks and watch as people respond with emoji reactions placed at specific moments throughout your song.
               <br /><br />
-              TreeNote is currently free. It was made by{" "}
+              First-time listeners must complete the full track before they can skip around or add reactions - ensuring your music gets the attention it deserves from start to finish.
+              <br /><br />
+              DemoTree is currently free. It was made by{" "}
               <a 
                 href="https://themeetingtree.com" 
                 target="_blank" 
@@ -125,7 +127,7 @@ export default function LandingPage() {
               </a>
               , a boutique global sonic house.
               <br /><br />
-              Your audio files will be automatically deleted after 21 days, but comments and waveform visualizations remain available for collaboration!
+              Your audio files will be automatically deleted after 21 days, but emoji reactions and waveform visualizations remain available to track your demo's reception!
             </div>
           </div>
         </div>
@@ -157,7 +159,7 @@ export default function LandingPage() {
         data-login
       >
         <div className="title-bar">
-          <div className="title-bar-text">TreeNote - Login</div>
+          <div className="title-bar-text">DemoTree - Login</div>
           <div className="title-bar-controls">
             <div className="title-bar-button">_</div>
             <div className="title-bar-button">□</div>
