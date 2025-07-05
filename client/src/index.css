@@ -55,20 +55,27 @@ html {
   -moz-osx-font-smoothing: grayscale !important;
 }
 
-/* Windows 95 Audio Player Window - Much Larger Size */
+/* Windows 95 Audio Player Window - Responsive Design */
 .win95-audio-player {
   background: var(--win95-gray) !important;
   border: 2px outset var(--win95-gray) !important;
-  width: 90vw !important;
-  max-width: 800px !important;
-  min-width: 600px !important;
-  min-height: 80vh !important;
-  margin: 10vh auto !important;
+  width: 96vw !important;
+  max-width: 96vw !important;
+  margin: 2vh auto !important;
   font-size: 11px !important;
   position: relative !important;
   z-index: 10 !important;
   display: flex !important;
   flex-direction: column !important;
+}
+
+/* Desktop specific sizing */
+@media (min-width: 768px) {
+  .win95-audio-player {
+    width: 450px !important;
+    max-width: 450px !important;
+    margin: 20px auto !important;
+  }
 }
 
 /* Title Bar */
@@ -112,13 +119,20 @@ html {
   border: 1px inset var(--win95-gray);
 }
 
-/* Player Content - Larger padding and flex layout */
+/* Player Content - Responsive padding */
 .win95-player-content {
-  padding: 16px !important;
+  padding: 8px !important;
   background: var(--win95-gray) !important;
   flex: 1 !important;
   display: flex !important;
   flex-direction: column !important;
+}
+
+/* Desktop specific padding */
+@media (min-width: 768px) {
+  .win95-player-content {
+    padding: 12px !important;
+  }
 }
 
 /* Track Info */
@@ -143,16 +157,21 @@ html {
   color: var(--win95-black);
 }
 
-/* Waveform Container - Much Larger Size */
+/* Waveform Container - Responsive Height */
 .win95-waveform-container {
   border: 2px inset var(--win95-gray) !important;
   background: var(--win95-white) !important;
-  height: 300px !important;
-  margin-bottom: 16px !important;
+  height: 140px !important;
+  margin-bottom: 8px !important;
   position: relative !important;
   overflow: hidden !important;
-  flex: 1 !important;
-  min-height: 300px !important;
+}
+
+/* Desktop specific waveform height */
+@media (min-width: 768px) {
+  .win95-waveform-container {
+    height: 120px !important;
+  }
 }
 
 .win95-waveform {
@@ -202,14 +221,29 @@ html {
   border: 1px inset var(--win95-gray);
 }
 
-/* Emoji Grid - Force 4x3 grid layout with larger spacing */
+/* Emoji Grid - Responsive layout */
 .win95-emoji-grid {
   display: grid !important;
   grid-template-columns: repeat(4, 1fr) !important;
-  gap: 6px !important;
-  margin-bottom: 16px !important;
+  gap: 4px !important;
+  margin-bottom: 8px !important;
   width: 100% !important;
-  padding: 8px !important;
+  padding: 0 !important;
+}
+
+/* Mobile specific - 4 columns x 8 rows */
+@media (max-width: 767px) {
+  .win95-emoji-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
+
+/* Desktop specific - 8 columns x 4 rows */
+@media (min-width: 768px) {
+  .win95-emoji-grid {
+    grid-template-columns: repeat(8, 1fr) !important;
+    gap: 2px !important;
+  }
 }
 
 /* Hide all old styling completely */
@@ -232,13 +266,21 @@ html {
 .win95-emoji-btn {
   background: var(--win95-gray) !important;
   border: 1px outset var(--win95-gray) !important;
-  width: 60px !important;
-  height: 50px !important;
+  width: 100% !important;
+  height: 45px !important;
   cursor: pointer !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-size: 24px !important;
+  font-size: 20px !important;
+}
+
+/* Desktop specific emoji button sizing */
+@media (min-width: 768px) {
+  .win95-emoji-btn {
+    height: 40px !important;
+    font-size: 18px !important;
+  }
 }
 
 .win95-emoji-btn:active {
@@ -257,8 +299,15 @@ html {
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  padding: 20px !important;
+  padding: 0 !important;
   position: relative !important;
+}
+
+/* Desktop specific padding */
+@media (min-width: 768px) {
+  .win95-desktop {
+    padding: 20px !important;
+  }
 }
 
 /* Ensure Win95 audio player is always visible */
