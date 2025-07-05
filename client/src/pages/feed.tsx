@@ -266,7 +266,6 @@ export default function FeedPage() {
           )}
         </div>
       </div>
-
       {/* Main Content - Win95 Audio Player */}
       <div style={{ 
         display: 'flex', 
@@ -278,7 +277,7 @@ export default function FeedPage() {
         {currentTrack && (
           <div className="win95-audio-player">
             {/* Title Bar */}
-            <div className="win95-title-bar">
+            <div className="win95-title-bar ml-[0px] mr-[0px] mt-[0px] mb-[0px] pt-[14px] pb-[14px]">
               <div className="win95-title-text">
                 ♪ {currentTrack.originalName}
               </div>
@@ -334,7 +333,6 @@ export default function FeedPage() {
           </div>
         )}
       </div>
-
       {/* Navigation Arrows - Bottom Right */}
       <div style={{
         position: 'fixed',
