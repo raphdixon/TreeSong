@@ -43,7 +43,15 @@ export default function WaveformPlayer({
   const [sessionId] = useState(() => nanoid());
   const [hasStartedListening, setHasStartedListening] = useState(false);
   const [currentEmojiCount, setCurrentEmojiCount] = useState(0);
-  const [localEmojis, setLocalEmojis] = useState<any[]>(emojiReactions || []);
+  const [localEmojis, setLocalEmojis] = useState<any[]>(() => {
+    console.log('[DEBUG] Initializing localEmojis:', {
+      emojiReactions,
+      emojiReactionsType: typeof emojiReactions,
+      emojiReactionsIsArray: Array.isArray(emojiReactions),
+      fallback: emojiReactions || []
+    });
+    return emojiReactions || [];
+  });
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -252,6 +260,13 @@ export default function WaveformPlayer({
 
   // Keep local emojis in sync with props
   useEffect(() => {
+    console.log('[DEBUG] useEffect syncing localEmojis:', {
+      emojiReactions,
+      emojiReactionsType: typeof emojiReactions,
+      emojiReactionsIsArray: Array.isArray(emojiReactions),
+      previousLocalEmojis: localEmojis,
+      newValue: emojiReactions || []
+    });
     setLocalEmojis(emojiReactions || []);
   }, [emojiReactions]);
 
@@ -382,6 +397,21 @@ export default function WaveformPlayer({
 
   // Generate emoji reaction markers based on zoom level
   const generateEmojiMarkers = () => {
+    console.log('[DEBUG] generateEmojiMarkers called:', {
+      localEmojis,
+      localEmojisType: typeof localEmojis,
+      localEmojisIsArray: Array.isArray(localEmojis),
+      emojiReactions,
+      emojiReactionsType: typeof emojiReactions,
+      emojiReactionsIsArray: Array.isArray(emojiReactions)
+    });
+    
+    // Defensive check
+    if (!Array.isArray(localEmojis)) {
+      console.error('[ERROR] localEmojis is not an array:', localEmojis);
+      return [];
+    }
+    
     // Calculate visible time range based on zoom and offset
     const visibleDuration = duration / zoomLevel;
     const startTime = viewOffset * duration;
