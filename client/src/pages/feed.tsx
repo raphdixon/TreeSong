@@ -287,7 +287,6 @@ export default function FeedPage() {
               </div>
               <div className="win95-window-controls">
                 <button className="win95-window-btn">_</button>
-                <button className="win95-window-btn">□</button>
                 <button className="win95-window-btn">×</button>
               </div>
             </div>
@@ -319,33 +318,31 @@ export default function FeedPage() {
         )}
       </div>
 
-      {/* Desktop Navigation Arrows */}
+      {/* Navigation Arrows - Bottom Right */}
       <div style={{
         position: 'fixed',
         right: '20px',
-        top: '50%',
-        transform: 'translateY(-50%)',
+        bottom: '40px',
         display: 'flex',
-        flexDirection: 'column',
         gap: '10px',
         zIndex: 100
       }}>
         <button 
-          className="win95-taskbar-btn"
+          className="win95-nav-btn"
           onClick={() => navigateTrack('up')}
           disabled={currentTrackIndex === 0 || isScrolling}
-          title="Previous Track (↑)"
+          title="Previous Track"
         >
-          ↑
+          ←
         </button>
         
         <button 
-          className="win95-taskbar-btn"
+          className="win95-nav-btn"
           onClick={() => navigateTrack('down')}
           disabled={currentTrackIndex === recommendedTracks.length - 1 || isScrolling}
-          title="Next Track (↓)"
+          title="Next Track"
         >
-          ↓
+          →
         </button>
       </div>
     </div>

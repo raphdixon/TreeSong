@@ -1,9 +1,9 @@
-// Win95 pixel-style emojis for music reactions - exactly 32 emojis (4x8 mobile, 8x4 desktop)
+// Win95 pixel-style emojis for music reactions - exactly 16 emojis (4x4 grid)
 const EMOJI_OPTIONS = [
-  "🔥", "❤️", "🎵", "🎤", "🎸", "🥁", "🎹", "🎻",
-  "🎺", "🎷", "🎶", "💿", "🎼", "🎧", "👏", "✨",
-  "💯", "🤩", "😍", "🤯", "🙌", "💃", "🕺", "🎉",
-  "⭐", "🌟", "💥", "🚀", "🌊", "🔊", "📢", "🎯"
+  "🔥", "❤️", "🎵", "🎤",
+  "🎸", "🥁", "🎹", "🎷",
+  "💯", "🤩", "😍", "👏",
+  "✨", "🎶", "🎧", "🎉"
 ];
 
 interface EmojiPickerProps {
