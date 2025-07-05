@@ -565,27 +565,30 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .player-container {
-    height: 350px;
+    height: 420px;
   }
   
   .waveform-section {
-    flex: 0 0 140px;
+    flex: 0 0 180px;
   }
   
   .waveform-element {
-    height: 100px;
-  }
-  
-  .emoji-picker-section {
-    flex: 0 0 160px;
-  }
-  
-  .emoji-grid {
     height: 140px;
   }
   
+  .emoji-picker-section {
+    flex: 0 0 220px;
+  }
+  
+  .emoji-grid {
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    height: 200px;
+    gap: 4px;
+  }
+  
   .desktop-window {
-    height: 380px;
+    height: 450px;
   }
   
   .desktop-navigation {
