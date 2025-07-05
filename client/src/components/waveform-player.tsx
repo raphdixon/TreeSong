@@ -492,53 +492,37 @@ export default function WaveformPlayer({
   }, [trackId, isPlaying, currentTime, hasCompletedFirstListen]);
 
   return (
-    <div className="player-container">
-      {/* Compact Waveform Section */}
-      <div className="waveform-section">
-        <div className="waveform-wrapper">
-          <div ref={waveformRef} className="waveform-element" />
-          
-          {/* Overlay Controls on Waveform */}
-          <div className="waveform-overlay-controls">
-            <button 
-              className="play-pause-btn"
-              onClick={togglePlay}
-              disabled={isFileDeleted}
-              title={isPlaying ? "Pause" : "Play"}
-            >
-              {isPlaying ? "⏸" : "▶"}
-            </button>
-            
-            <div className="time-info">
-              <span className="current-time">{formatTime(currentTime)}</span>
-              <span className="time-separator">/</span>
-              <span className="total-time">{formatTime(duration)}</span>
-            </div>
-            
-            <input
-              type="range"
-              className="volume-control"
-              min="0"
-              max="100"
-              value={volume}
-              onChange={(e) => setVolume(Number(e.target.value))}
-              title={`Volume: ${volume}%`}
-            />
-          </div>
+    <>
+      {/* Waveform Container */}
+      <div className="win95-waveform-container">
+        <div className="win95-waveform">
+          <div ref={waveformRef} style={{ width: '100%', height: '100%' }} />
           
           {/* Emoji Markers on Waveform */}
           <div className="waveform-markers" key={`markers-${displayEmojis.length}`}>
             {generateEmojiMarkers()}
           </div>
         </div>
-        
-
       </div>
-
-
-
-      {/* Emoji Picker Section - Always at Bottom */}
-      <div className="emoji-picker-section">
+      
+      {/* Win95 Controls */}
+      <div className="win95-controls">
+        <button 
+          className="win95-play-btn"
+          onClick={togglePlay}
+          disabled={isFileDeleted}
+          title={isPlaying ? "Pause" : "Play"}
+        >
+          {isPlaying ? "⏸" : "▶"}
+        </button>
+        
+        <div className="win95-time-display">
+          {formatTime(currentTime)} / {formatTime(duration)}
+        </div>
+      </div>
+      
+      {/* Win95 Emoji Grid */}
+      <div className="win95-emoji-grid">
         <EmojiPicker 
           onEmojiSelect={handleEmojiSelect}
           disabled={false}
@@ -555,6 +539,6 @@ export default function WaveformPlayer({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

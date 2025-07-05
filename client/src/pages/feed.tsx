@@ -30,33 +30,33 @@ function FeedItem({ track, isActive, onTrackEnd }: FeedItemProps) {
   if (!track) return null;
 
   return (
-    <div className="desktop-window" data-track-id={track.id}>
-      <div className="window-header">
-        <div className="window-title">
-          <span className="window-icon">🎵</span>
-          <span className="track-name">{track.originalName}</span>
+    <div className="win95-audio-player" data-track-id={track.id}>
+      {/* Title Bar */}
+      <div className="win95-title-bar">
+        <div className="win95-title-text">
+          <span>♪ {track.originalName}</span>
         </div>
-        <div className="window-controls">
-          <button className="window-btn minimize">_</button>
-          <button className="window-btn maximize">□</button>
-          <button className="window-btn close">×</button>
+        <div className="win95-window-controls">
+          <button className="win95-window-btn">_</button>
+          <button className="win95-window-btn">□</button>
+          <button className="win95-window-btn">×</button>
         </div>
       </div>
       
-      <div className="window-content">
-        <div className="track-info-bar">
-          <span className="track-creator">
-            <User size={12} /> Creator
-          </span>
-          <span className="track-duration">
-            {Math.floor(track.duration / 60)}:{Math.floor(track.duration % 60).toString().padStart(2, '0')}
-          </span>
-          <span className="track-reactions">
+      {/* Player Content */}
+      <div className="win95-player-content">
+        {/* Track Info */}
+        <div className="win95-track-info">
+          <div className="win95-creator">
+            <span>👤 Creator</span>
+          </div>
+          <div className="win95-reactions-count">
             {track.emojiReactions?.length || 0} reactions
-          </span>
+          </div>
         </div>
         
-        <div className="waveform-area">
+        {/* Waveform */}
+        <div className="win95-waveform-container">
           <WaveformPlayer 
             trackId={track.id}
             audioUrl={`/uploads/${track.filename}`}
@@ -235,97 +235,86 @@ export default function FeedPage() {
   const currentTrack = recommendedTracks[currentTrackIndex];
 
   return (
-    <div className="desktop-environment" ref={feedRef}>
-      {/* Desktop Background */}
-      <div className="desktop-background">
+    <div className="win95-desktop" ref={feedRef}>
+      {/* Windows 95 Taskbar */}
+      <div className="win95-taskbar">
+        <div className="win95-taskbar-left">
+          <button className="win95-start-btn">
+            ♪ DemoTree
+          </button>
+        </div>
+        <div className="win95-taskbar-center">
+          Track {currentTrackIndex + 1} of {recommendedTracks.length}
+        </div>
+        <div className="win95-taskbar-right">
+          {user ? (
+            <button 
+              className="win95-taskbar-btn"
+              onClick={() => setLocation('/dashboard')}
+              title="Go to Dashboard"
+            >
+              📁 Upload
+            </button>
+          ) : (
+            <button 
+              className="win95-taskbar-btn"
+              onClick={() => setLocation('/login')}
+              title="Login to Upload Music"
+            >
+              🔐 Login
+            </button>
+          )}
+          <div className="win95-taskbar-time">
+            {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content - Current Track */}
+      <div style={{ 
+        paddingBottom: '40px', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        flex: 1
+      }}>
+        {currentTrack && (
+          <FeedItem 
+            track={currentTrack}
+            isActive={true}
+            onTrackEnd={() => navigateTrack('down')}
+          />
+        )}
+      </div>
+
+      {/* Desktop Navigation Arrows */}
+      <div style={{
+        position: 'fixed',
+        right: '20px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+        zIndex: 100
+      }}>
+        <button 
+          className="win95-taskbar-btn"
+          onClick={() => navigateTrack('up')}
+          disabled={currentTrackIndex === 0 || isScrolling}
+          title="Previous Track (↑)"
+        >
+          ↑
+        </button>
         
-        {/* Minimal Taskbar */}
-        <div className="desktop-taskbar">
-          <div className="taskbar-left">
-            <div className="start-button">
-              🎵 DemoTree
-            </div>
-          </div>
-          <div className="taskbar-center">
-            <span className="track-counter">
-              Track {currentTrackIndex + 1} of {recommendedTracks.length}
-            </span>
-          </div>
-          <div className="taskbar-right">
-            {user ? (
-              <button 
-                className="taskbar-btn upload-btn"
-                onClick={() => setLocation('/dashboard')}
-                title="Go to Dashboard"
-              >
-                <Upload size={14} />
-                Upload
-              </button>
-            ) : (
-              <button 
-                className="taskbar-btn login-btn"
-                onClick={() => setLocation('/login')}
-                title="Login to Upload Music"
-              >
-                <LogIn size={14} />
-                Login
-              </button>
-            )}
-            <div className="taskbar-time">
-              {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </div>
-          </div>
-        </div>
-
-        {/* Floating Windows Container */}
-        <div className="desktop-windows">
-          <div 
-            className="windows-viewport"
-            style={{ 
-              transform: `translateY(-${currentTrackIndex * 100}vh)`,
-              transition: isScrolling ? 'transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)' : 'none'
-            }}
-          >
-            {recommendedTracks.map((track, index) => (
-              <div 
-                key={track.id}
-                className="window-viewport"
-                style={{
-                  opacity: index === currentTrackIndex ? 1 : 0.3,
-                  transform: index === currentTrackIndex ? 'scale(1)' : 'scale(0.8)',
-                  transition: isScrolling ? 'all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)' : 'all 0.3s ease'
-                }}
-              >
-                <FeedItem 
-                  track={track}
-                  isActive={index === currentTrackIndex}
-                  onTrackEnd={() => navigateTrack('down')}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Desktop Navigation Arrows */}
-        <div className="desktop-navigation">
-          <button 
-            className="desktop-nav-btn nav-up"
-            onClick={() => navigateTrack('up')}
-            disabled={currentTrackIndex === 0 || isScrolling}
-            title="Previous Track (↑)"
-          >
-            <ChevronUp size={24} />
-          </button>
-          
-          <button 
-            className="desktop-nav-btn nav-down"
-            onClick={() => navigateTrack('down')}
-            disabled={currentTrackIndex === recommendedTracks.length - 1 || isScrolling}
-            title="Next Track (↓)"
-          >
-            <ChevronDown size={24} />
-          </button>
-        </div>
+        <button 
+          className="win95-taskbar-btn"
+          onClick={() => navigateTrack('down')}
+          disabled={currentTrackIndex === recommendedTracks.length - 1 || isScrolling}
+          title="Next Track (↓)"
+        >
+          ↓
+        </button>
       </div>
     </div>
   );

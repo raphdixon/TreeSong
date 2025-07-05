@@ -1,0 +1,95 @@
+Here’s an explicit spec and Replit/Dev prompt that will move your UI from “approximate Win95” to actual pixel-perfect Win95—in line with your reference image. Your current UI is headed in the right direction (bevelled, no rounding), but falls over on iconography, font, palette, and layout discipline.
+
+⸻
+
+SPEC: Turn your app into a true Windows 95 audio player
+
+1. Fonts:
+	•	Use a bitmap font:
+	•	Chicago, MS Sans Serif, or Perfect DOS VGA 437
+	•	Google Fonts: Press Start 2P is a decent web fallback.
+	•	Apply this everywhere. No anti-aliasing.
+
+font-family: 'Press Start 2P', 'MS Sans Serif', monospace;
+image-rendering: pixelated;
+font-size: 12px;
+
+
+
+⸻
+
+2. Icons and Emojis:
+	•	Swap ALL modern emojis for 16×16 or 20×20 pixel art icons.
+	•	Use free Win95/98 icon packs (iconarchive) or make your own pixel emoji.
+	•	Reaction grid = only pixel icons, not Apple/Google style emoji.
+
+⸻
+
+3. Colours:
+	•	Strictly use the Win95 16-colour palette:
+	•	Title bar: #000080 (navy blue)
+	•	Button face: #C0C0C0 (light grey)
+	•	Button shadow: #808080 (dark grey)
+	•	Button highlight: #FFFFFF (white)
+	•	Text: #000000
+	•	Parent background: grey, not teal (#C0C0C0). If you must use a pattern, use a subtle checker.
+	•	No drop shadows, no gradients.
+
+⸻
+
+4. Structure & Layout:
+	•	Title bar: blue, bold white, all-caps font, classic close/max/min buttons (pixel art, not SVG or emoji).
+	•	Menu bar (optional): “File Edit View Help” in small bitmap font under the title bar.
+	•	Main panel: bevelled 3D frames for everything.
+	•	Status bar: at the bottom, light grey, with current time, total time, and reaction count in bitmap font.
+
+⸻
+
+5. Waveform:
+	•	Blue bars or lines (not smoothed SVGs).
+	•	Use a white background inside the waveform panel, not teal or grey.
+
+⸻
+
+6. Buttons:
+	•	Square, flat, bevelled (3D), sharp-cornered.
+	•	Use classic Win95 play/pause/stop icons—pixel art, not Material Design.
+
+⸻
+
+7. Audio-visual polish (bonus):
+	•	Optional: add a 4-LED VU meter using four tiny rectangles, animate when playing.
+	•	Change cursor to “pointer” or “resize” (Win95 style) on button/slider hover.
+
+⸻
+
+DEV/REPLIT PROMPT TO COPY–PASTE
+
+Rebuild my audio player UI to precisely match Windows 95 styling.
+	•	Use only the classic 16-colour Windows 95 palette.
+	•	Font everywhere is bitmap: MS Sans Serif, Chicago, or Press Start 2P. All text must be sharp, no smoothing.
+	•	All icons—including reactions—are 16x16 or 20x20 pixel art (not standard emoji or SVG).
+	•	All UI elements are rectangular, sharp corners, and have 1px light (top/left) and dark (bottom/right) borders for the 3D effect.
+	•	Title bar is blue, with bold white text and pixel-art window controls.
+	•	Buttons are grey, 3D, flat, with pixel art icons inside.
+	•	Waveform area has a white background and blue bars/lines—no smoothing.
+	•	Add a status bar at the bottom, with current time, duration, and reaction count, all in bitmap font.
+	•	No drop shadows, no gradients, no rounded corners, no modern UI tricks.
+	•	For reference, see this screenshot [attach your previous image].
+	•	Do not use Apple/Google/modern emojis—only pixel art.
+	•	(Bonus) Add an animated VU meter (4 rectangles) that lights up when music is playing.
+
+⸻
+
+Open Source CSS Resources
+	•	98.css (by jdan) – Drop-in CSS for classic Win98/95.
+	•	XP.css (by botoxparty) – For Windows XP/9x.
+
+You’ll get a closer match to the reference if you build on these CSS frameworks or inspect their button/icon code.
+
+⸻
+
+Bottom line
+	•	Your current UI is close. It just needs bitmap fonts, pixel emoji, the Win95 palette, and stricter layout discipline. Kill all anti-aliasing and SVG/modern emoji. Use Win95 iconography for reactions and controls. Swap teal wallpaper for a solid or checker grey desk if you want true authenticity.
+
+If you want a working code sample, I can sketch a React or HTML/CSS snippet for a Win95-style button or panel—just say the word.

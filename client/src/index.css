@@ -1,127 +1,299 @@
 @import url('https://unpkg.com/98.css');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P:wght@400&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Global Windows 95 Green Background */
+/* Windows 95 16-Color Palette */
+:root {
+  --win95-navy: #000080;
+  --win95-gray: #C0C0C0;
+  --win95-dark-gray: #808080;
+  --win95-light-gray: #DFDFDF;
+  --win95-white: #FFFFFF;
+  --win95-black: #000000;
+  --win95-red: #800000;
+  --win95-green: #008000;
+  --win95-yellow: #808000;
+  --win95-blue: #0000FF;
+  --win95-magenta: #800080;
+  --win95-cyan: #008080;
+  --win95-silver: #C0C0C0;
+  --win95-maroon: #800000;
+  --win95-olive: #808000;
+  --win95-lime: #00FF00;
+  --win95-aqua: #00FFFF;
+  --win95-teal: #008080;
+  --win95-purple: #800080;
+  --win95-fuchsia: #FF00FF;
+}
+
+/* Global Windows 95 Desktop Background */
 body {
-  background: #008080 !important;
-  background-image: 
-    repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.1) 10px, rgba(255,255,255,.1) 20px),
-    repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(0,0,0,.1) 10px, rgba(0,0,0,.1) 20px);
-  background-size: 20px 20px;
+  background: var(--win95-teal) !important;
+  font-family: 'Press Start 2P', 'MS Sans Serif', monospace !important;
+  font-size: 11px !important;
+  image-rendering: pixelated !important;
+  -webkit-font-smoothing: none !important;
+  -moz-osx-font-smoothing: grayscale !important;
 }
 
 html {
-  background: #008080 !important;
+  background: var(--win95-teal) !important;
 }
 
 #root {
-  background: #008080 !important;
+  background: var(--win95-teal) !important;
   min-height: 100vh;
 }
 
-:root {
-  --windows-blue: #000080;
-  --windows-gray: #C0C0C0;
-  --windows-green: #008080;
-  --windows-dark-gray: #808080;
-  --windows-light-gray: #DFDFDF;
-  --windows-white: #FFFFFF;
-  --windows-black: #000000;
+* {
+  font-family: 'Press Start 2P', 'MS Sans Serif', monospace !important;
+  image-rendering: pixelated !important;
+  -webkit-font-smoothing: none !important;
+  -moz-osx-font-smoothing: grayscale !important;
 }
 
-/* Player Container - Fixed Height Layout */
-.player-container {
-  display: flex;
-  flex-direction: column;
-  height: 400px;
+/* Windows 95 Audio Player Window */
+.win95-audio-player {
+  background: var(--win95-gray);
+  border: 2px outset var(--win95-gray);
   width: 100%;
-  background: var(--windows-green);
-  overflow: hidden;
+  max-width: 320px;
+  margin: 20px auto;
+  font-size: 11px;
 }
 
-/* Waveform Section - Fixed Height */
-.waveform-section {
-  flex: 0 0 200px;
-  position: relative;
-  background: var(--windows-white);
-  border: 2px inset var(--windows-green);
-  margin: 4px;
-  overflow: hidden;
-}
-
-.waveform-wrapper {
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
-
-.waveform-element {
-  width: 100%;
-  height: 120px;
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-/* Overlay Controls on Waveform */
-.waveform-overlay-controls {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(192, 192, 192, 0.95);
-  padding: 4px 8px;
+/* Title Bar */
+.win95-title-bar {
+  background: var(--win95-navy);
+  color: var(--win95-white);
+  padding: 2px 4px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  border-top: 1px solid var(--windows-dark-gray);
+  justify-content: space-between;
+  font-weight: bold;
+  font-size: 11px;
+  height: 18px;
 }
 
-.play-pause-btn {
-  background: var(--windows-gray);
-  border: 1px outset var(--windows-gray);
-  width: 32px;
-  height: 24px;
-  font-size: 14px;
+.win95-title-text {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.win95-window-controls {
+  display: flex;
+  gap: 2px;
+}
+
+.win95-window-btn {
+  background: var(--win95-gray);
+  border: 1px outset var(--win95-gray);
+  width: 16px;
+  height: 14px;
+  font-size: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--win95-black);
 }
 
-.play-pause-btn:active {
-  border: 1px inset var(--windows-gray);
+.win95-window-btn:active {
+  border: 1px inset var(--win95-gray);
 }
 
-.play-pause-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+/* Player Content */
+.win95-player-content {
+  padding: 8px;
+  background: var(--win95-gray);
 }
 
-.time-info {
+/* Track Info */
+.win95-track-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding: 2px 4px;
+  background: var(--win95-light-gray);
+  border: 1px inset var(--win95-gray);
+  font-size: 10px;
+}
+
+.win95-creator {
   display: flex;
   align-items: center;
   gap: 4px;
-  background: var(--windows-black);
-  color: #00FF00;
+}
+
+.win95-reactions-count {
+  color: var(--win95-black);
+}
+
+/* Waveform Container */
+.win95-waveform-container {
+  border: 2px inset var(--win95-gray);
+  background: var(--win95-white);
+  height: 120px;
+  margin-bottom: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.win95-waveform {
+  width: 100%;
+  height: 100%;
+}
+
+/* Controls */
+.win95-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.win95-play-btn {
+  background: var(--win95-gray);
+  border: 1px outset var(--win95-gray);
+  width: 32px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.win95-play-btn:active {
+  border: 1px inset var(--win95-gray);
+}
+
+.win95-time-display {
+  background: var(--win95-black);
+  color: var(--win95-lime);
   padding: 2px 6px;
   font-family: monospace;
-  font-size: 11px;
-  border: 1px inset var(--windows-gray);
+  font-size: 10px;
+  border: 1px inset var(--win95-gray);
 }
 
-.time-separator {
-  color: #00FF00;
+/* Emoji Grid */
+.win95-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  margin-bottom: 8px;
 }
 
-.volume-control {
+.win95-emoji-btn {
+  background: var(--win95-gray);
+  border: 1px outset var(--win95-gray);
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.win95-emoji-btn:active {
+  border: 1px inset var(--win95-gray);
+}
+
+.win95-emoji-btn:hover {
+  background: var(--win95-light-gray);
+}
+
+/* Desktop Layout */
+.win95-desktop {
+  min-height: 100vh;
+  background: var(--win95-teal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Taskbar */
+.win95-taskbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  background: var(--win95-gray);
+  border-top: 1px solid var(--win95-white);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  font-size: 10px;
+  z-index: 1000;
+}
+
+.win95-taskbar-left {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.win95-start-btn {
+  background: var(--win95-gray);
+  border: 1px outset var(--win95-gray);
+  height: 22px;
+  padding: 0 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+}
+
+.win95-start-btn:active {
+  border: 1px inset var(--win95-gray);
+}
+
+.win95-taskbar-center {
   flex: 1;
-  max-width: 100px;
-  height: 16px;
+  text-align: center;
 }
+
+.win95-taskbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.win95-taskbar-btn {
+  background: var(--win95-gray);
+  border: 1px outset var(--win95-gray);
+  height: 22px;
+  padding: 0 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+}
+
+.win95-taskbar-btn:active {
+  border: 1px inset var(--win95-gray);
+}
+
+.win95-taskbar-time {
+  background: var(--win95-light-gray);
+  border: 1px inset var(--win95-gray);
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+/* Legacy styles cleanup - will be replaced by Win95 styles */
 
 /* Waveform Markers */
 .waveform-markers {
