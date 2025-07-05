@@ -106,23 +106,25 @@ html {
 
 .win95-window-controls {
   display: flex;
-  gap: 2px;
+  gap: 1px;
 }
 
-/* Vote buttons - smaller square and more authentic Win95 style */
+/* Vote buttons - authentic Windows 95 size and style */
 .win95-vote-btn {
   background: var(--win95-gray);
   border: 1px outset var(--win95-gray);
-  width: 12px;
-  height: 12px;
-  font-size: 8px;
+  width: 16px;
+  height: 14px;
+  font-size: 9px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--win95-black);
-  font-weight: bold;
+  font-weight: normal;
   line-height: 1;
+  min-width: 16px;
+  padding: 0;
 }
 
 .win95-vote-btn:active {
