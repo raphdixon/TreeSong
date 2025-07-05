@@ -287,17 +287,6 @@ export default function FeedPage() {
               </div>
               <div className="win95-window-controls">
                 <button 
-                  className="win95-vote-btn win95-vote-like" 
-                  title="Like this track"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // TODO: Implement like functionality
-                    console.log('Like track:', currentTrack.id);
-                  }}
-                >
-                  +
-                </button>
-                <button 
                   className="win95-vote-btn win95-vote-dislike" 
                   title="Dislike this track"
                   onClick={(e) => {
@@ -307,6 +296,17 @@ export default function FeedPage() {
                   }}
                 >
                   -
+                </button>
+                <button 
+                  className="win95-vote-btn win95-vote-like" 
+                  title="Like this track"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // TODO: Implement like functionality
+                    console.log('Like track:', currentTrack.id);
+                  }}
+                >
+                  +
                 </button>
               </div>
             </div>

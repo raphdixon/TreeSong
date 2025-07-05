@@ -109,13 +109,13 @@ html {
   gap: 2px;
 }
 
-/* Vote buttons - smaller and more authentic Win95 style */
+/* Vote buttons - smaller square and more authentic Win95 style */
 .win95-vote-btn {
   background: var(--win95-gray);
   border: 1px outset var(--win95-gray);
-  width: 14px;
+  width: 12px;
   height: 12px;
-  font-size: 9px;
+  font-size: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
