@@ -465,24 +465,13 @@ export default function WaveformPlayer({
           </div>
         </div>
         
-        {/* First Listen Message */}
-        {!hasCompletedFirstListen && (
-          <div className="first-listen-notice">
-            Complete first listen to unlock seeking
-          </div>
-        )}
+
       </div>
 
 
 
       {/* Emoji Picker Section - Always at Bottom */}
       <div className="emoji-picker-section">
-        <div className="emoji-picker-header">
-          <span className="picker-title">Emoji Reactions</span>
-          {emojiReactions.length > 0 && (
-            <span className="reaction-count">{emojiReactions.length} reactions</span>
-          )}
-        </div>
         <EmojiPicker 
           onEmojiSelect={handleEmojiSelect}
           disabled={false}
