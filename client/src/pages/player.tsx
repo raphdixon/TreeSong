@@ -44,7 +44,7 @@ export default function PlayerPage() {
     );
   }
 
-  if (error || !data) {
+  if (error || !data || !(data as any)?.track) {
     return (
       <Windows95Layout>
         <div className="window" style={{ 
@@ -70,7 +70,7 @@ export default function PlayerPage() {
     );
   }
 
-  const { track, comments } = data;
+  const { track, comments = [] } = data as any;
 
   return (
     <Windows95Layout>
@@ -132,9 +132,8 @@ export default function PlayerPage() {
           <WaveformPlayer 
             trackId={track.id}
             audioUrl={`/uploads/${track.filename}`}
-            bpm={track.bpm}
             duration={track.duration}
-            comments={comments}
+            emojiReactions={comments || []}
             isPublic={false}
             fileDeletedAt={track.fileDeletedAt}
           />
@@ -154,7 +153,7 @@ export default function PlayerPage() {
           right: "0"
         }}>
           <span>BPM Grid: {track.bpm ? `Enabled (${track.bpm} BPM)` : "Disabled"} | Time Scale: 4/4</span>
-          <span>Comments: {comments.length} | Share Link: Available</span>
+          <span>Comments: {comments?.length || 0} | Share Link: Available</span>
         </div>
       </div>
 

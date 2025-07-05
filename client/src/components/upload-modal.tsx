@@ -10,7 +10,6 @@ interface UploadModalProps {
 
 export default function UploadModal({ onClose, teamId }: UploadModalProps) {
   const [file, setFile] = useState<File | null>(null);
-  const [bpm, setBpm] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
@@ -94,10 +93,6 @@ export default function UploadModal({ onClose, teamId }: UploadModalProps) {
       const formData = new FormData();
       formData.append('audio', file);
       formData.append('duration', duration.toString());
-      
-      if (bpm.trim()) {
-        formData.append('bpm', bpm.trim());
-      }
       
       uploadMutation.mutate(formData);
       
@@ -190,20 +185,6 @@ export default function UploadModal({ onClose, teamId }: UploadModalProps) {
                 }}
               />
             </div>
-          </div>
-
-          <div className="field-row">
-            <label htmlFor="bpm">BPM (optional):</label>
-            <input
-              id="bpm"
-              type="number"
-              min="60"
-              max="200"
-              placeholder="Enter BPM (e.g., 120)"
-              value={bpm}
-              onChange={(e) => setBpm(e.target.value)}
-              style={{ width: "100%" }}
-            />
           </div>
 
           <div className="field-row" style={{ justifyContent: "center", marginTop: "20px" }}>
