@@ -473,25 +473,7 @@ export default function WaveformPlayer({
         )}
       </div>
 
-      {/* Compact Reactions List */}
-      {emojiReactions.length > 0 && (
-        <div className="reactions-strip">
-          <div className="reactions-scroll">
-            {emojiReactions.map((reaction) => (
-              <button
-                key={reaction.id}
-                className="reaction-badge"
-                onClick={() => seekToTime(reaction.time)}
-                disabled={!hasCompletedFirstListen}
-                title={`Jump to ${formatTime(reaction.time)}`}
-              >
-                <span className="reaction-emoji">{reaction.emoji}</span>
-                <span className="reaction-time">{formatTime(reaction.time)}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+
 
       {/* Emoji Picker Section - Always at Bottom */}
       <div className="emoji-picker-section">
