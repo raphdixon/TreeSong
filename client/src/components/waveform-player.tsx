@@ -244,80 +244,9 @@ export default function WaveformPlayer({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Generate beats and bars timeline with adaptive density
+  // Remove BPM-related timeline generation
   const generateBeatsAndBars = () => {
-    const currentBpm = detectedBpm || bpm;
-    if (!currentBpm) return null;
-    
-    const beatsPerBar = 4; // Standard 4/4 time signature
-    const secondsPerBeat = 60 / currentBpm;
-    const secondsPerBar = secondsPerBeat * beatsPerBar;
-    
-    const totalBars = Math.ceil(duration / secondsPerBar);
-    const markers = [];
-    
-    // Calculate visible time range based on zoom and offset
-    const visibleDuration = duration / zoomLevel;
-    const startTime = viewOffset * duration;
-    const endTime = startTime + visibleDuration;
-    
-    // Adaptive display based on zoom level
-    const barsInView = visibleDuration / secondsPerBar;
-    let showBeats = zoomLevel >= 2; // Only show beats at 2x zoom or higher
-    let barInterval = 1; // Show every bar by default
-    
-    // At low zoom levels, show fewer bars to avoid clutter
-    if (barsInView > 50) {
-      barInterval = Math.ceil(barsInView / 20); // Show max 20 bars
-      showBeats = false;
-    } else if (barsInView > 20) {
-      barInterval = Math.ceil(barsInView / 15); // Show max 15 bars
-      showBeats = false;
-    }
-    
-    // Only show bars that are in the visible range
-    const startBar = Math.max(1, Math.floor(startTime / secondsPerBar));
-    const endBar = Math.min(totalBars, Math.ceil(endTime / secondsPerBar) + 1);
-    
-    for (let bar = startBar; bar <= endBar; bar += barInterval) {
-      const barStartTime = (bar - 1) * secondsPerBar;
-      
-      // Calculate position relative to visible range
-      const relativePosition = ((barStartTime - startTime) / visibleDuration) * 100;
-      
-      if (relativePosition >= -10 && relativePosition <= 110) {
-        // Bar marker
-        markers.push(
-          <div
-            key={`bar-${bar}`}
-            className="bar-marker"
-            style={{ left: `${relativePosition}%` }}
-          >
-            <div className="bar-label">{bar}</div>
-          </div>
-        );
-        
-        // Beat markers within each bar (only when zoomed in enough)
-        if (showBeats) {
-          for (let beat = 1; beat <= beatsPerBar; beat++) {
-            const beatTime = barStartTime + (beat - 1) * secondsPerBeat;
-            const beatRelativePosition = ((beatTime - startTime) / visibleDuration) * 100;
-            
-            if (beatRelativePosition >= -5 && beatRelativePosition <= 105) {
-              markers.push(
-                <div
-                  key={`beat-${bar}-${beat}`}
-                  className={`beat-marker ${beat === 1 ? 'downbeat' : ''}`}
-                  style={{ left: `${beatRelativePosition}%` }}
-                />
-              );
-            }
-          }
-        }
-      }
-    }
-    
-    return markers;
+    return null; // BPM detection removed from platform
   };
 
   // Zoom controls using WaveSurfer's native zoom
