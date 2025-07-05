@@ -43,10 +43,23 @@ export default function WaveformPlayer({
   const [sessionId] = useState(() => nanoid());
   const [hasStartedListening, setHasStartedListening] = useState(false);
   const [currentEmojiCount, setCurrentEmojiCount] = useState(0);
-  const [localEmojis, setLocalEmojis] = useState<any[]>(emojiReactions || []);
+  const [localEmojis, setLocalEmojis] = useState<any[]>([]);
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Initialize local emojis from props
+  useEffect(() => {
+    if (emojiReactions && Array.isArray(emojiReactions)) {
+      console.log('[EMOJI INIT] Setting initial emojis:', emojiReactions.length);
+      setLocalEmojis([...emojiReactions]);
+    }
+  }, [emojiReactions]);
+
+  // Force re-render when localEmojis changes
+  useEffect(() => {
+    console.log('[EMOJI RENDER] localEmojis changed, count:', localEmojis.length);
+  }, [localEmojis]);
 
   // Function to handle emoji selection
   const handleEmojiSelect = (emoji: string) => {
@@ -88,9 +101,9 @@ export default function WaveformPlayer({
         
         console.log('[EMOJI FLOW] 5. Before state update - localEmojis:', localEmojis.length);
         
-        // Update state
+        // Update state with fresh references to force re-render
         setCurrentEmojiCount(response.currentCount);
-        setLocalEmojis([...response.allReactions]);
+        setLocalEmojis(response.allReactions ? [...response.allReactions] : []);
         
         console.log('[EMOJI FLOW] 6. State update called');
         
