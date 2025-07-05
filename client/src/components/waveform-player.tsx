@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import EmojiPicker from "./emoji-picker";
@@ -42,105 +42,51 @@ export default function WaveformPlayer({
   const [canSkip, setCanSkip] = useState(false);
   const [sessionId] = useState(() => nanoid());
   const [hasStartedListening, setHasStartedListening] = useState(false);
-  const [currentEmojiCount, setCurrentEmojiCount] = useState(0);
-  const [localEmojis, setLocalEmojis] = useState<any[]>([]);
-  
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Initialize local emojis from props
-  useEffect(() => {
-    if (emojiReactions && Array.isArray(emojiReactions)) {
-      console.log('[EMOJI INIT] Setting initial emojis:', emojiReactions.length);
-      setLocalEmojis([...emojiReactions]);
-    }
-  }, [emojiReactions]);
+  // Simple state for emoji display
+  const [displayEmojis, setDisplayEmojis] = useState<any[]>(emojiReactions || []);
+  const [emojiCount, setEmojiCount] = useState(0);
 
-  // Force re-render when localEmojis changes
-  useEffect(() => {
-    console.log('[EMOJI RENDER] localEmojis changed, count:', localEmojis.length);
-  }, [localEmojis]);
-
-  // Function to handle emoji selection
-  const handleEmojiSelect = (emoji: string) => {
+  // Simple async function to handle emoji addition
+  const handleEmojiSelect = async (emoji: string) => {
+    if (!waveSurferRef.current || !hasStartedListening) return;
+    
     try {
-      console.log('[EMOJI FLOW] 1. handleEmojiSelect called');
-      const actualTime = waveSurferRef.current?.getCurrentTime() || currentTime;
-      console.log('[EMOJI FLOW] 2. Time calculated:', actualTime);
+      const currentTime = waveSurferRef.current.getCurrentTime();
       
-      createEmojiReactionMutation.mutate({
+      const response: any = await apiRequest('POST', `/api/tracks/${trackId}/emoji-reactions`, {
         emoji,
-        time: actualTime
+        time: currentTime,
+        listenerSessionId: sessionId
       });
-      console.log('[EMOJI FLOW] 3. Mutation called');
-    } catch (error) {
-      console.error('[EMOJI ERROR] handleEmojiSelect failed:', error);
+      
+      // Update local state immediately with response data
+      if (response.allReactions) {
+        setDisplayEmojis(response.allReactions);
+      }
+      if (response.currentCount !== undefined) {
+        setEmojiCount(response.currentCount);
+      }
+      
+      // Update feed data
+      queryClient.invalidateQueries({ queryKey: ['/api/tracks/public'] });
+      
       toast({
-        title: "Could not add emoji",
-        description: "Please try again",
+        title: "Emoji added!",
+        description: `${response.currentCount || 0}/10 emojis used`
+      });
+      
+    } catch (error) {
+      console.error('Error adding emoji:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add emoji. Please try again.",
         variant: "destructive"
       });
     }
   };
-
-  // Mutations for emoji reactions and track listening
-  const createEmojiReactionMutation = useMutation({
-    mutationFn: async (data: { emoji: string; time: number }) => {
-      return apiRequest('POST', `/api/tracks/${trackId}/emoji-reactions`, {
-        emoji: data.emoji,
-        time: data.time,
-        listenerSessionId: sessionId
-      });
-    },
-    onSuccess: (response: any) => {
-      try {
-        console.log('[VALIDATION] Raw response from backend:', JSON.stringify(response, null, 2));
-        console.log('[VALIDATION] Response keys:', Object.keys(response));
-        console.log('[VALIDATION] currentCount type and value:', typeof response.currentCount, response.currentCount);
-        console.log('[VALIDATION] allReactions type and length:', typeof response.allReactions, response.allReactions?.length);
-        console.log('[VALIDATION] Current sessionId:', sessionId);
-        console.log('[VALIDATION] Before update - localEmojis count:', localEmojis.length);
-        
-        // Check if response has expected structure
-        if (response.currentCount === undefined) {
-          console.error('[VALIDATION] ERROR: currentCount is undefined in response!');
-        }
-        if (!response.allReactions) {
-          console.error('[VALIDATION] ERROR: allReactions is missing in response!');
-        }
-        
-        // Update state with fresh references to force re-render
-        setCurrentEmojiCount(response.currentCount || 0);
-        setLocalEmojis(response.allReactions ? [...response.allReactions] : []);
-        
-        console.log('[EMOJI FLOW] 6. State update called');
-        
-        // Force re-render check
-        setTimeout(() => {
-          console.log('[EMOJI FLOW] 7. After timeout - localEmojis should be:', response.allReactions?.length);
-        }, 100);
-        
-        // Invalidate queries
-        queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}/emoji-reactions`] });
-        queryClient.invalidateQueries({ queryKey: ['/api/tracks/public'] });
-        
-        toast({
-          title: "Emoji added!",
-          description: `${response.currentCount}/10 emojis used`
-        });
-      } catch (error) {
-        console.error('[EMOJI ERROR] onSuccess failed:', error);
-      }
-    },
-    onError: (error) => {
-      console.error('Failed to add emoji reaction:', error);
-      toast({
-        title: "Could not add emoji",
-        description: "Please try again",
-        variant: "destructive"
-      });
-    }
-  });
 
   const createTrackListenMutation = useMutation({
     mutationFn: async () => {
@@ -289,12 +235,17 @@ export default function WaveformPlayer({
     }
   }, [volume]);
 
+  // Initialize emoji state from props
+  useEffect(() => {
+    setDisplayEmojis(emojiReactions || []);
+  }, [emojiReactions]);
+  
   // Fetch initial emoji count for this session
   useEffect(() => {
     const fetchEmojiCount = async () => {
       try {
         const response: any = await apiRequest('GET', `/api/tracks/${trackId}/emoji-reactions/session/${sessionId}`);
-        setCurrentEmojiCount(response.count);
+        setEmojiCount(response.count || 0);
       } catch (error) {
         console.error('Failed to fetch emoji count:', error);
       }
@@ -302,11 +253,6 @@ export default function WaveformPlayer({
     
     fetchEmojiCount();
   }, [trackId, sessionId]);
-
-  // Keep local emojis in sync with props
-  useEffect(() => {
-    setLocalEmojis(emojiReactions || []);
-  }, [emojiReactions]);
 
 
 
@@ -436,14 +382,14 @@ export default function WaveformPlayer({
   // Generate emoji reaction markers based on zoom level  
   const generateEmojiMarkers = () => {
     try {
-      console.log('[EMOJI FLOW] 8. generateEmojiMarkers called, count:', localEmojis?.length || 0);
+      console.log('[EMOJI FLOW] 8. generateEmojiMarkers called, count:', displayEmojis?.length || 0);
       
-      if (!localEmojis || !Array.isArray(localEmojis) || localEmojis.length === 0) {
+      if (!displayEmojis || !Array.isArray(displayEmojis) || displayEmojis.length === 0) {
         console.log('[EMOJI FLOW] 9. No emojis to render');
         return [];
       }
       
-      console.log('[EMOJI FLOW] 10. Rendering', localEmojis.length, 'emojis');
+      console.log('[EMOJI FLOW] 10. Rendering', displayEmojis.length, 'emojis');
     } catch (error) {
       console.error('[EMOJI ERROR] generateEmojiMarkers failed:', error);
       return [];
@@ -454,7 +400,7 @@ export default function WaveformPlayer({
     const startTime = viewOffset * duration;
     const endTime = startTime + visibleDuration;
     
-    return localEmojis
+    return displayEmojis
       .filter(reaction => reaction.time >= startTime && reaction.time <= endTime)
       .map((reaction) => {
         // Calculate position relative to visible range
@@ -555,7 +501,7 @@ export default function WaveformPlayer({
           </div>
           
           {/* Emoji Markers on Waveform */}
-          <div className="waveform-markers" key={`markers-${localEmojis.length}`}>
+          <div className="waveform-markers" key={`markers-${displayEmojis.length}`}>
             {generateEmojiMarkers()}
           </div>
         </div>
@@ -570,8 +516,8 @@ export default function WaveformPlayer({
         <EmojiPicker 
           onEmojiSelect={handleEmojiSelect}
           disabled={false}
-          currentCount={currentEmojiCount}
-          showWarning={currentEmojiCount >= 8}
+          currentCount={emojiCount}
+          showWarning={emojiCount >= 8}
         />
       </div>
 
