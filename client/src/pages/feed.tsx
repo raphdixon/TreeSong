@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
+import { useTrackCounter } from "@/hooks/use-track-counter";
 import Windows95Layout from "@/components/windows95-layout";
 import WaveformPlayer from "@/components/waveform-player";
+import AuthPromptCard from "@/components/auth-prompt-card";
 import { ChevronUp, ChevronDown, User, LogIn, Upload } from "lucide-react";
 
 interface Track {
@@ -74,11 +76,19 @@ function FeedItem({ track, isActive, onTrackEnd }: FeedItemProps) {
 }
 
 export default function FeedPage() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [hasViewedTrack, setHasViewedTrack] = useState<Set<string>>(new Set());
   const feedRef = useRef<HTMLDivElement>(null);
+  
+  const { 
+    tracksViewed, 
+    incrementTrackCount, 
+    shouldShowAuthPrompt,
+    TRACKS_BEFORE_AUTH 
+  } = useTrackCounter();
 
   // Fetch all public tracks for the feed
   const { data: allTracks = [], isLoading } = useQuery({
@@ -126,15 +136,50 @@ export default function FeedPage() {
 
   const recommendedTracks = getRecommendedTracks(allTracks);
 
+  // Create display items list with auth prompts injected
+  const createDisplayItems = () => {
+    if (!recommendedTracks.length) return [];
+    
+    const items: Array<{ type: 'track' | 'auth', data?: Track, index: number }> = [];
+    let trackIndex = 0;
+    
+    for (let i = 0; i < recommendedTracks.length + Math.floor(recommendedTracks.length / TRACKS_BEFORE_AUTH); i++) {
+      if (!isAuthenticated && shouldShowAuthPrompt(i)) {
+        console.log(`[FEED] Injecting auth prompt at position ${i}`);
+        items.push({ type: 'auth', index: i });
+      } else if (trackIndex < recommendedTracks.length) {
+        items.push({ type: 'track', data: recommendedTracks[trackIndex], index: i });
+        trackIndex++;
+      }
+    }
+    
+    return items;
+  };
+  
+  const displayItems = createDisplayItems();
+
   const navigateTrack = (direction: 'up' | 'down') => {
     if (isScrolling) return;
     
     setIsScrolling(true);
     
-    if (direction === 'down' && currentTrackIndex < recommendedTracks.length - 1) {
-      setCurrentTrackIndex(prev => prev + 1);
-    } else if (direction === 'up' && currentTrackIndex > 0) {
-      setCurrentTrackIndex(prev => prev - 1);
+    const newIndex = direction === 'down' 
+      ? Math.min(currentTrackIndex + 1, displayItems.length - 1)
+      : Math.max(currentTrackIndex - 1, 0);
+    
+    if (newIndex !== currentTrackIndex) {
+      setCurrentTrackIndex(newIndex);
+      
+      // Track view for actual tracks (not auth prompts)
+      const item = displayItems[newIndex];
+      if (item?.type === 'track' && item.data) {
+        const trackId = item.data.id;
+        if (!hasViewedTrack.has(trackId)) {
+          incrementTrackCount(trackId);
+          setHasViewedTrack(prev => new Set(prev).add(trackId));
+          console.log(`[FEED] Track ${trackId} marked as viewed`);
+        }
+      }
     }
     
     // Reset scrolling lock after animation
@@ -142,10 +187,16 @@ export default function FeedPage() {
   };
 
   const handleTrackEnd = () => {
-    // Auto-advance to next track when current track ends
-    if (currentTrackIndex < recommendedTracks.length - 1) {
+    // Auto-advance to next item when current track ends
+    if (currentTrackIndex < displayItems.length - 1) {
+      console.log('[FEED] Track ended, auto-advancing to next item');
       setTimeout(() => navigateTrack('down'), 1000);
     }
+  };
+
+  const handleLogin = () => {
+    console.log('[FEED] Redirecting to login...');
+    window.location.href = '/api/login';
   };
 
   // Wheel navigation with automatic track jumping
@@ -233,7 +284,8 @@ export default function FeedPage() {
     );
   }
 
-  const currentTrack = recommendedTracks[currentTrackIndex];
+  const currentItem = displayItems[currentTrackIndex];
+  const currentTrack = currentItem?.type === 'track' ? currentItem.data : null;
 
   return (
     <div className="win95-desktop" ref={feedRef}>
@@ -275,7 +327,9 @@ export default function FeedPage() {
         flex: 1,
         paddingBottom: '40px'
       }}>
-        {currentTrack && (
+        {currentItem?.type === 'auth' ? (
+          <AuthPromptCard onLogin={handleLogin} />
+        ) : currentTrack ? (
           <div className="win95-audio-player">
             {/* Title Bar */}
             <div className="win95-title-bar ml-[0px] mr-[0px] mt-[0px] mb-[0px] pt-[14px] pb-[14px]">
@@ -339,7 +393,7 @@ export default function FeedPage() {
               />
             </div>
           </div>
-        )}
+        ) : null}
       </div>
       {/* Navigation Arrows - Bottom Right */}
       <div style={{
@@ -363,7 +417,7 @@ export default function FeedPage() {
         <button 
           className="win95-nav-btn"
           onClick={() => navigateTrack('down')}
-          disabled={currentTrackIndex === recommendedTracks.length - 1 || isScrolling}
+          disabled={currentTrackIndex === displayItems.length - 1 || isScrolling}
           title="Next Track"
         >
           ↓
