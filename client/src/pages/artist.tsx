@@ -245,16 +245,35 @@ export default function ArtistPage() {
         zIndex: 50
       }}>
         {currentTrack && (
-          <div className="win95-audio-player" style={{ position: 'relative' }}>
+          <div className="win95-audio-player">
             {/* Title Bar */}
-            <div className="win95-title-bar">
+            <div className="win95-title-bar ml-[0px] mr-[0px] mt-[0px] mb-[0px] pt-[14px] pb-[14px]">
               <div className="win95-title-text">
-                <span>♪ {currentTrack.originalName}</span>
+                ♪ {currentTrack.originalName}
               </div>
               <div className="win95-window-controls">
-                <button className="win95-window-btn">_</button>
-                <button className="win95-window-btn">□</button>
-                <button className="win95-window-btn">×</button>
+                <button 
+                  className="win95-vote-btn win95-vote-dislike" 
+                  title="Dislike this track"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // TODO: Implement dislike functionality
+                    console.log('Dislike track:', currentTrack.id);
+                  }}
+                >
+                  -
+                </button>
+                <button 
+                  className="win95-vote-btn win95-vote-like" 
+                  title="Like this track"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // TODO: Implement like functionality
+                    console.log('Like track:', currentTrack.id);
+                  }}
+                >
+                  +
+                </button>
               </div>
             </div>
             
