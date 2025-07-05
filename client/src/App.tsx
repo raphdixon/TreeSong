@@ -33,23 +33,18 @@ function Router() {
 
   return (
     <Switch>
-      <Route path="/">
-        {user ? <FeedPage /> : <LandingPage />}
-      </Route>
+      <Route path="/" component={FeedPage} />
       <Route path="/login">
         {user ? <Redirect to="/" /> : <LoginPage />}
       </Route>
       <Route path="/register">
         {user ? <Redirect to="/" /> : <RegisterPage />}
       </Route>
-      <Route path="/feed">
-        {user ? <FeedPage /> : <Redirect to="/" />}
-      </Route>
       <Route path="/dashboard">
-        {user ? <DashboardPage /> : <Redirect to="/" />}
+        {user ? <DashboardPage /> : <Redirect to="/login" />}
       </Route>
       <Route path="/tracks/:trackId">
-        {user ? <PlayerPage /> : <Redirect to="/" />}
+        {user ? <PlayerPage /> : <Redirect to="/login" />}
       </Route>
       <Route path="/share/:token" component={PublicPlayerPage} />
       <Route component={NotFound} />
@@ -64,16 +59,6 @@ function App() {
         <div className="desktop">
           <Router />
           <Toaster />
-          
-          {/* Windows 95 Taskbar */}
-          <div className="taskbar">
-            <div className="start-button">
-              <span>🪟 Start</span>
-            </div>
-            <div className="taskbar-time">
-              {new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}
-            </div>
-          </div>
         </div>
       </AuthProvider>
     </QueryClientProvider>

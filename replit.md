@@ -127,6 +127,11 @@ DemoTree is a public music sharing platform where musicians can upload their dem
 
 ```
 Changelog:
+- July 05, 2025. Universal Feed Homepage - Made feed accessible to all users
+  - Changed homepage routing so all users (logged in and out) see the music discovery feed
+  - Login page now only accessible via login button in taskbar
+  - Removed redundant taskbar from main app since feed has its own
+  - Feed shows "Login" button for visitors and "Upload" button for authenticated users
 - July 05, 2025. Comprehensive Security & Performance Refactor
   - Added rate limiting to authentication endpoints (5 requests per 15 minutes)
   - Fixed JWT_SECRET environment validation with proper TypeScript typing
