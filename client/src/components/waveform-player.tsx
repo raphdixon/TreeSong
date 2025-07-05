@@ -43,15 +43,8 @@ export default function WaveformPlayer({
   const [sessionId] = useState(() => nanoid());
   const [hasStartedListening, setHasStartedListening] = useState(false);
   const [currentEmojiCount, setCurrentEmojiCount] = useState(0);
-  const [localEmojis, setLocalEmojis] = useState<any[]>(() => {
-    console.log('[DEBUG] Initializing localEmojis:', {
-      emojiReactions,
-      emojiReactionsType: typeof emojiReactions,
-      emojiReactionsIsArray: Array.isArray(emojiReactions),
-      fallback: emojiReactions || []
-    });
-    return emojiReactions || [];
-  });
+  const [localEmojis, setLocalEmojis] = useState<any[]>(emojiReactions || []);
+  const [renderTrigger, setRenderTrigger] = useState(0);
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -78,17 +71,10 @@ export default function WaveformPlayer({
       });
     },
     onSuccess: (response: any) => {
-      console.log('[DEBUG] Emoji mutation success:', {
-        currentCount: response.currentCount,
-        allReactions: response.allReactions,
-        previousLocalEmojis: localEmojis
-      });
-      
       // Update local emoji count and reactions in real-time
       setCurrentEmojiCount(response.currentCount);
       setLocalEmojis(response.allReactions);
-      
-      console.log('[DEBUG] State updated, localEmojis should now be:', response.allReactions);
+      setRenderTrigger(prev => prev + 1); // Force re-render
       
       // Still invalidate queries for other components
       queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}/emoji-reactions`] });
@@ -272,21 +258,8 @@ export default function WaveformPlayer({
 
   // Keep local emojis in sync with props
   useEffect(() => {
-    console.log('[DEBUG] useEffect syncing localEmojis:', {
-      emojiReactions,
-      emojiReactionsType: typeof emojiReactions,
-      emojiReactionsIsArray: Array.isArray(emojiReactions),
-      previousLocalEmojis: localEmojis,
-      newValue: emojiReactions || []
-    });
     setLocalEmojis(emojiReactions || []);
   }, [emojiReactions]);
-
-  // Track when localEmojis state changes
-  useEffect(() => {
-    console.log('[DEBUG] localEmojis state changed, new value:', localEmojis);
-    console.log('[DEBUG] Component should re-render and call generateEmojiMarkers now');
-  }, [localEmojis]);
 
 
 
@@ -415,18 +388,8 @@ export default function WaveformPlayer({
 
   // Generate emoji reaction markers based on zoom level
   const generateEmojiMarkers = () => {
-    console.log('[DEBUG] generateEmojiMarkers called:', {
-      localEmojis,
-      localEmojisType: typeof localEmojis,
-      localEmojisIsArray: Array.isArray(localEmojis),
-      emojiReactions,
-      emojiReactionsType: typeof emojiReactions,
-      emojiReactionsIsArray: Array.isArray(emojiReactions)
-    });
-    
     // Defensive check
     if (!Array.isArray(localEmojis)) {
-      console.error('[ERROR] localEmojis is not an array:', localEmojis);
       return [];
     }
     
@@ -536,13 +499,8 @@ export default function WaveformPlayer({
           </div>
           
           {/* Emoji Markers on Waveform */}
-          <div className="waveform-markers">
-            {(() => {
-              console.log('[DEBUG] RENDER: About to call generateEmojiMarkers, localEmojis:', localEmojis.length);
-              const markers = generateEmojiMarkers();
-              console.log('[DEBUG] RENDER: generateEmojiMarkers returned', markers.length, 'markers');
-              return markers;
-            })()}
+          <div className="waveform-markers" key={`markers-${localEmojis.length}-${renderTrigger}`}>
+            {generateEmojiMarkers()}
           </div>
         </div>
         
