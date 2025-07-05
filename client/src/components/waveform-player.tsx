@@ -40,7 +40,18 @@ export default function WaveformPlayer({
   // New emoji and first-listen functionality
   const [hasCompletedFirstListen, setHasCompletedFirstListen] = useState(false);
   const [canSkip, setCanSkip] = useState(false);
-  const [sessionId] = useState(() => nanoid());
+  const [sessionId] = useState(() => {
+    // Get persistent session ID from localStorage or create new one
+    const existingSessionId = localStorage.getItem('demoTreeSessionId');
+    if (existingSessionId) {
+      console.log('[SESSION] Using existing session ID:', existingSessionId);
+      return existingSessionId;
+    }
+    const newSessionId = nanoid();
+    localStorage.setItem('demoTreeSessionId', newSessionId);
+    console.log('[SESSION] Created new session ID:', newSessionId);
+    return newSessionId;
+  });
   const [hasStartedListening, setHasStartedListening] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
