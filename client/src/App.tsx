@@ -17,30 +17,46 @@ import NotFound from "./pages/not-found";
 function Router() {
   const { user, isLoading, isAuthenticated } = useAuth();
 
-  if (isLoading) {
-    return (
-      <div className="desktop" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
-        <div className="window" style={{ width: '300px' }}>
-          <div className="title-bar">
-            <div className="title-bar-text">TreeNote</div>
-          </div>
-          <div className="window-body" style={{ textAlign: 'center', padding: '20px' }}>
-            <p>Loading...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // Don't block the entire app on auth loading - only block protected routes
   return (
     <Switch>
       <Route path="/" component={FeedPage} />
       <Route path="/artist/:username" component={ArtistPage} />
       <Route path="/dashboard">
-        {isAuthenticated ? <DashboardPage /> : <Redirect to="/" />}
+        {isLoading ? (
+          <div className="desktop" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+            <div className="window" style={{ width: '300px' }}>
+              <div className="title-bar">
+                <div className="title-bar-text">TreeNote</div>
+              </div>
+              <div className="window-body" style={{ textAlign: 'center', padding: '20px' }}>
+                <p>Loading...</p>
+              </div>
+            </div>
+          </div>
+        ) : isAuthenticated ? (
+          <DashboardPage />
+        ) : (
+          <Redirect to="/" />
+        )}
       </Route>
       <Route path="/tracks/:trackId">
-        {isAuthenticated ? <PlayerPage /> : <Redirect to="/" />}
+        {isLoading ? (
+          <div className="desktop" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+            <div className="window" style={{ width: '300px' }}>
+              <div className="title-bar">
+                <div className="title-bar-text">TreeNote</div>
+              </div>
+              <div className="window-body" style={{ textAlign: 'center', padding: '20px' }}>
+                <p>Loading...</p>
+              </div>
+            </div>
+          </div>
+        ) : isAuthenticated ? (
+          <PlayerPage />
+        ) : (
+          <Redirect to="/" />
+        )}
       </Route>
       <Route path="/share/:token" component={PublicPlayerPage} />
       <Route component={NotFound} />
