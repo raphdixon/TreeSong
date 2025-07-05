@@ -286,8 +286,28 @@ export default function FeedPage() {
                 ♪ {currentTrack.originalName}
               </div>
               <div className="win95-window-controls">
-                <button className="win95-window-btn">_</button>
-                <button className="win95-window-btn">×</button>
+                <button 
+                  className="win95-vote-btn win95-vote-like" 
+                  title="Like this track"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // TODO: Implement like functionality
+                    console.log('Like track:', currentTrack.id);
+                  }}
+                >
+                  +
+                </button>
+                <button 
+                  className="win95-vote-btn win95-vote-dislike" 
+                  title="Dislike this track"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // TODO: Implement dislike functionality
+                    console.log('Dislike track:', currentTrack.id);
+                  }}
+                >
+                  -
+                </button>
               </div>
             </div>
             

@@ -109,21 +109,46 @@ html {
   gap: 2px;
 }
 
-.win95-window-btn {
+/* Vote buttons - smaller and more authentic Win95 style */
+.win95-vote-btn {
   background: var(--win95-gray);
   border: 1px outset var(--win95-gray);
-  width: 16px;
-  height: 14px;
-  font-size: 10px;
+  width: 14px;
+  height: 12px;
+  font-size: 9px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--win95-black);
+  font-weight: bold;
+  line-height: 1;
 }
 
-.win95-window-btn:active {
+.win95-vote-btn:active {
   border: 1px inset var(--win95-gray);
+}
+
+.win95-vote-btn:hover {
+  background: var(--win95-light-gray);
+}
+
+/* Like button styling */
+.win95-vote-like {
+  color: var(--win95-black);
+}
+
+.win95-vote-like:hover {
+  background: #90EE90; /* Light green on hover */
+}
+
+/* Dislike button styling */
+.win95-vote-dislike {
+  color: var(--win95-black);
+}
+
+.win95-vote-dislike:hover {
+  background: #FFB6C1; /* Light pink on hover */
 }
 
 /* Player Content - Responsive padding */
