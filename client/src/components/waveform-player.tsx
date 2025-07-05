@@ -411,121 +411,110 @@ export default function WaveformPlayer({
 
   const isFileDeleted = fileDeletedAt !== null && fileDeletedAt !== undefined;
 
+  // Add debug logging
+  useEffect(() => {
+    console.log('[WaveformPlayer] Component mounted/updated', {
+      trackId,
+      audioUrl,
+      duration,
+      hasEmojiReactions: emojiReactions.length,
+      isPlaying,
+      currentTime,
+      hasCompletedFirstListen
+    });
+  }, [trackId, isPlaying, currentTime, hasCompletedFirstListen]);
+
   return (
-    <div>
-      {/* File Deleted Notice */}
-      {isFileDeleted && (
-        <div style={{ 
-          background: "#FFEEEE", 
-          border: "2px inset #C0C0C0", 
-          padding: "12px", 
-          marginBottom: "16px",
-          textAlign: "center"
-        }}>
-          <h3 style={{ color: "#CC0000", marginBottom: "8px" }}>📁 Audio File Deleted</h3>
-          <p style={{ marginBottom: "4px" }}>
-            This audio file was automatically deleted after 21 days as per our storage policy.
-          </p>
-          <p style={{ fontSize: "11px", color: "#666" }}>
-            Comments and waveform visualization remain available for collaboration.
-          </p>
-        </div>
-      )}
-      {/* Waveform Container */}
-      <div className="waveform-container" style={{ opacity: isFileDeleted ? 0.5 : 1 }}>
+    <div className="player-container">
+      {/* Compact Waveform Section */}
+      <div className="waveform-section">
         <div className="waveform-wrapper">
-          <div ref={waveformRef} style={{ width: "100%", height: "100%" }} />
-        </div>
-        
-        {/* Grid Overlay */}
-        <div className="waveform-grid">
-          {generateGridLines()}
-          {generateEmojiMarkers()}
-        </div>
-        
-        {/* Horizontal Scrollbar for zoomed view */}
-        {zoomLevel > 1 && (
-          <div className="timeline-scrollbar">
+          <div ref={waveformRef} className="waveform-element" />
+          
+          {/* Overlay Controls on Waveform */}
+          <div className="waveform-overlay-controls">
+            <button 
+              className="play-pause-btn"
+              onClick={togglePlay}
+              disabled={isFileDeleted}
+              title={isPlaying ? "Pause" : "Play"}
+            >
+              {isPlaying ? "⏸" : "▶"}
+            </button>
+            
+            <div className="time-info">
+              <span className="current-time">{formatTime(currentTime)}</span>
+              <span className="time-separator">/</span>
+              <span className="total-time">{formatTime(duration)}</span>
+            </div>
+            
             <input
               type="range"
+              className="volume-control"
               min="0"
-              max={1 - 1/zoomLevel}
-              step={0.01}
-              value={viewOffset}
-              onChange={(e) => setViewOffset(parseFloat(e.target.value))}
-              className="scrollbar-slider"
+              max="100"
+              value={volume}
+              onChange={(e) => setVolume(Number(e.target.value))}
+              title={`Volume: ${volume}%`}
             />
+          </div>
+          
+          {/* Emoji Markers on Waveform */}
+          <div className="waveform-markers">
+            {generateEmojiMarkers()}
+          </div>
+        </div>
+        
+        {/* First Listen Message */}
+        {!hasCompletedFirstListen && (
+          <div className="first-listen-notice">
+            Complete first listen to unlock seeking
           </div>
         )}
       </div>
 
-      {/* Controls */}
-      <div className="controls-panel" style={{ opacity: isFileDeleted ? 0.5 : 1 }}>
-        <button className="btn" onClick={togglePlay} disabled={isFileDeleted}>
-          {isPlaying ? "⏸️" : "▶️"}
-        </button>
-        <button className="btn" onClick={stop} disabled={isFileDeleted}>⏹️</button>
-        <button className="btn" disabled={isFileDeleted}>⏮️</button>
-        <button className="btn" disabled={isFileDeleted}>⏭️</button>
-        
-        <div className="time-display">{formatTime(currentTime)}</div>
-        <span style={{ margin: "0 8px" }}>/</span>
-        <div className="time-display">{formatTime(duration)}</div>
-        
-        <label style={{ marginLeft: "16px" }}>Volume:</label>
-        <input
-          type="range"
-          className="volume-slider"
-          min="0"
-          max="100"
-          value={volume}
-          onChange={(e) => setVolume(Number(e.target.value))}
+      {/* Compact Reactions List */}
+      {emojiReactions.length > 0 && (
+        <div className="reactions-strip">
+          <div className="reactions-scroll">
+            {emojiReactions.map((reaction) => (
+              <button
+                key={reaction.id}
+                className="reaction-badge"
+                onClick={() => seekToTime(reaction.time)}
+                disabled={!hasCompletedFirstListen}
+                title={`Jump to ${formatTime(reaction.time)}`}
+              >
+                <span className="reaction-emoji">{reaction.emoji}</span>
+                <span className="reaction-time">{formatTime(reaction.time)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Emoji Picker Section - Always at Bottom */}
+      <div className="emoji-picker-section">
+        <div className="emoji-picker-header">
+          <span className="picker-title">Emoji Reactions</span>
+          {emojiReactions.length > 0 && (
+            <span className="reaction-count">{emojiReactions.length} reactions</span>
+          )}
+        </div>
+        <EmojiPicker 
+          onEmojiSelect={handleEmojiSelect}
+          disabled={false}
         />
       </div>
 
-      {/* Emoji Reactions Section */}
-      <div className="emoji-reactions-section">
-        <div className="reactions-header">
-          <div style={{ fontSize: "11px", color: "#666" }}>
-            {hasCompletedFirstListen ? 
-              "Track completed! Fast forward and rewind unlocked." :
-              "Complete your first listen to unlock fast forward and rewind."
-            }
+      {/* File Deleted Overlay */}
+      {isFileDeleted && (
+        <div className="file-deleted-overlay">
+          <div className="deleted-message">
+            Audio file deleted after 21 days
           </div>
         </div>
-        
-        <div className="reactions-list">
-          {emojiReactions.length === 0 ? (
-            <div style={{ padding: "20px", textAlign: "center", color: "#666" }}>
-              No reactions yet. Complete your first listen to start reacting!
-            </div>
-          ) : (
-            emojiReactions.map((reaction) => (
-              <div 
-                key={reaction.id} 
-                className="reaction-item"
-                onClick={() => seekToTime(reaction.time)}
-                style={{ 
-                  cursor: hasCompletedFirstListen ? 'pointer' : 'default',
-                  opacity: hasCompletedFirstListen ? 1 : 0.5
-                }}
-              >
-                <span className="reaction-time">[{formatTime(reaction.time)}]</span>
-                <span className="reaction-emoji" style={{ fontSize: "16px", marginLeft: "8px" }}>
-                  {reaction.emoji}
-                </span>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Comment Popup */}
-      {/* Emoji Picker - Always visible and enabled */}
-      <EmojiPicker 
-        onEmojiSelect={handleEmojiSelect}
-        disabled={false}
-      />
+      )}
     </div>
   );
 }
