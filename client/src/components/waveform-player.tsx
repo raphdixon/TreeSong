@@ -44,7 +44,6 @@ export default function WaveformPlayer({
   const [hasStartedListening, setHasStartedListening] = useState(false);
   const [currentEmojiCount, setCurrentEmojiCount] = useState(0);
   const [localEmojis, setLocalEmojis] = useState<any[]>(emojiReactions || []);
-  const [renderTrigger, setRenderTrigger] = useState(0);
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -75,25 +74,20 @@ export default function WaveformPlayer({
       });
     },
     onSuccess: (response: any) => {
-      try {
-        console.log('[EMOJI DEBUG] Mutation success, count:', response.currentCount);
-        
-        // Update local emoji count and reactions in real-time
-        setCurrentEmojiCount(response.currentCount);
-        setLocalEmojis(response.allReactions);
-        setRenderTrigger(prev => prev + 1); // Force re-render
-        
-        // Still invalidate queries for other components
-        queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}/emoji-reactions`] });
-        queryClient.invalidateQueries({ queryKey: ['/api/tracks/public'] });
-        
-        toast({
-          title: "Emoji added!",
-          description: `${response.currentCount}/10 emojis used`
-        });
-      } catch (error) {
-        console.error('[EMOJI DEBUG] Error in onSuccess:', error);
-      }
+      console.log('[EMOJI DEBUG] Success - updating state');
+      
+      // Simple state updates without complex operations
+      setCurrentEmojiCount(response.currentCount);
+      setLocalEmojis([...response.allReactions]); // Force new array reference
+      
+      // Invalidate queries to refresh other components
+      queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}/emoji-reactions`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tracks/public'] });
+      
+      toast({
+        title: "Emoji added!",
+        description: `${response.currentCount}/10 emojis used`
+      });
     },
     onError: (error) => {
       console.error('Failed to add emoji reaction:', error);
@@ -398,15 +392,7 @@ export default function WaveformPlayer({
 
   // Generate emoji reaction markers based on zoom level
   const generateEmojiMarkers = () => {
-    try {
-      console.log('[EMOJI DEBUG] generateEmojiMarkers called, emojis count:', localEmojis?.length || 0);
-      
-      // Defensive check
-      if (!Array.isArray(localEmojis)) {
-        return [];
-      }
-    } catch (error) {
-      console.error('[EMOJI DEBUG] Error in generateEmojiMarkers:', error);
+    if (!localEmojis || !Array.isArray(localEmojis) || localEmojis.length === 0) {
       return [];
     }
     
@@ -516,7 +502,7 @@ export default function WaveformPlayer({
           </div>
           
           {/* Emoji Markers on Waveform */}
-          <div className="waveform-markers" key={`markers-${localEmojis.length}-${renderTrigger}`}>
+          <div className="waveform-markers" key={`markers-${localEmojis.length}`}>
             {generateEmojiMarkers()}
           </div>
         </div>
