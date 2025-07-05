@@ -94,15 +94,17 @@ export default function WaveformPlayer({
     },
     onSuccess: (response: any) => {
       try {
-        console.log('[EMOJI FLOW] 4. onSuccess called with:', {
+        console.log('[EMOJI FLOW] 4. onSuccess called with response:', response);
+        console.log('[EMOJI FLOW] 5. Response structure:', {
           currentCount: response.currentCount,
-          allReactionsCount: response.allReactions?.length
+          allReactionsCount: response.allReactions?.length,
+          reactionExists: !!response.reaction
         });
         
-        console.log('[EMOJI FLOW] 5. Before state update - localEmojis:', localEmojis.length);
+        console.log('[EMOJI FLOW] 6. Before state update - localEmojis:', localEmojis.length);
         
         // Update state with fresh references to force re-render
-        setCurrentEmojiCount(response.currentCount);
+        setCurrentEmojiCount(response.currentCount || 0);
         setLocalEmojis(response.allReactions ? [...response.allReactions] : []);
         
         console.log('[EMOJI FLOW] 6. State update called');
