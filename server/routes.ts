@@ -382,12 +382,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { email } = req.body;
       const token = nanoid(32);
       
+      // Get user from database to access team info
+      const userId = (req.user as any).claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user || !user.teamId) {
+        return res.status(401).json({ message: "User not authenticated or has no team" });
+      }
+      
       // Get team info for email
-      const team = await storage.getTeam(req.user.teamId);
+      const team = await storage.getTeam(user.teamId);
       const teamName = team?.name || "Unknown Team";
       
       const invite = await storage.createInvite({
-        teamId: req.user.teamId,
+        teamId: user.teamId,
         email,
         token
       });
@@ -395,7 +402,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send invitation email
       const baseUrl = process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:5000';
       const emailTemplate = createTeamInviteEmail(
-        req.user.email,
+        user.email || (req.user as any).claims.email || 'noreply@demotree.app',
         teamName,
         token,
         `https://${baseUrl}`
