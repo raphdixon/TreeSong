@@ -55,16 +55,20 @@ html {
   -moz-osx-font-smoothing: grayscale !important;
 }
 
-/* Windows 95 Audio Player Window - Override all existing styles */
+/* Windows 95 Audio Player Window - Much Larger Size */
 .win95-audio-player {
   background: var(--win95-gray) !important;
   border: 2px outset var(--win95-gray) !important;
-  width: 320px !important;
-  max-width: 320px !important;
-  margin: 20px auto !important;
+  width: 90vw !important;
+  max-width: 800px !important;
+  min-width: 600px !important;
+  min-height: 80vh !important;
+  margin: 10vh auto !important;
   font-size: 11px !important;
   position: relative !important;
   z-index: 10 !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 /* Title Bar */
@@ -108,10 +112,13 @@ html {
   border: 1px inset var(--win95-gray);
 }
 
-/* Player Content */
+/* Player Content - Larger padding and flex layout */
 .win95-player-content {
-  padding: 8px;
-  background: var(--win95-gray);
+  padding: 16px !important;
+  background: var(--win95-gray) !important;
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 /* Track Info */
@@ -136,14 +143,16 @@ html {
   color: var(--win95-black);
 }
 
-/* Waveform Container - Force proper styling */
+/* Waveform Container - Much Larger Size */
 .win95-waveform-container {
   border: 2px inset var(--win95-gray) !important;
   background: var(--win95-white) !important;
-  height: 120px !important;
-  margin-bottom: 8px !important;
+  height: 300px !important;
+  margin-bottom: 16px !important;
   position: relative !important;
   overflow: hidden !important;
+  flex: 1 !important;
+  min-height: 300px !important;
 }
 
 .win95-waveform {
@@ -193,13 +202,14 @@ html {
   border: 1px inset var(--win95-gray);
 }
 
-/* Emoji Grid - Force 4x3 grid layout */
+/* Emoji Grid - Force 4x3 grid layout with larger spacing */
 .win95-emoji-grid {
   display: grid !important;
   grid-template-columns: repeat(4, 1fr) !important;
-  gap: 2px !important;
-  margin-bottom: 8px !important;
+  gap: 6px !important;
+  margin-bottom: 16px !important;
   width: 100% !important;
+  padding: 8px !important;
 }
 
 /* Hide all old styling completely */
@@ -220,15 +230,15 @@ html {
 }
 
 .win95-emoji-btn {
-  background: var(--win95-gray);
-  border: 1px outset var(--win95-gray);
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
+  background: var(--win95-gray) !important;
+  border: 1px outset var(--win95-gray) !important;
+  width: 60px !important;
+  height: 50px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 24px !important;
 }
 
 .win95-emoji-btn:active {

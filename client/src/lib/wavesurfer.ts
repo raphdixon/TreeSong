@@ -52,7 +52,7 @@ function createWaveSurfer(container: HTMLElement, audioUrl: string) {
     barWidth: 2,
     barRadius: 0,             // Sharp corners for Win95 look
     responsive: true,
-    height: 120,              // Match Win95 height
+    height: 300,              // Match Win95 height
     normalize: true,
     backend: 'WebAudio',
     mediaControls: false,
