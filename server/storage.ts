@@ -24,6 +24,7 @@ export interface IStorage {
   // User methods
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   
   // Team methods
@@ -34,7 +35,7 @@ export interface IStorage {
   // Track methods
   getTrack(id: string): Promise<Track | undefined>;
   getTracksByTeam(teamId: string): Promise<Track[]>;
-  getAllTracks(): Promise<Track[]>;
+  getAllTracks(): Promise<(Track & { creatorUsername: string })[]>;
   createTrack(track: InsertTrack): Promise<Track>;
   deleteTrack(id: string): Promise<void>;
   
@@ -72,6 +73,11 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = nanoid();
     const passwordHash = await bcrypt.hash(insertUser.password, 10);
@@ -81,6 +87,7 @@ export class DatabaseStorage implements IStorage {
       .values({
         id,
         email: insertUser.email,
+        username: insertUser.username,
         passwordHash,
         teamId: insertUser.teamId || 'default-team'
       })
@@ -127,8 +134,26 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(tracks).where(eq(tracks.teamId, teamId));
   }
 
-  async getAllTracks(): Promise<Track[]> {
-    return await db.select().from(tracks);
+  async getAllTracks(): Promise<(Track & { creatorUsername: string })[]> {
+    const result = await db
+      .select({
+        id: tracks.id,
+        teamId: tracks.teamId,
+        uploaderUserId: tracks.uploaderUserId,
+        filename: tracks.filename,
+        originalName: tracks.originalName,
+        duration: tracks.duration,
+        fileDeletedAt: tracks.fileDeletedAt,
+        uploadDate: tracks.uploadDate,
+        creatorUsername: users.username
+      })
+      .from(tracks)
+      .leftJoin(users, eq(tracks.uploaderUserId, users.id));
+      
+    return result.map(row => ({
+      ...row,
+      creatorUsername: row.creatorUsername || 'Unknown Artist'
+    }));
   }
 
   async createTrack(insertTrack: InsertTrack): Promise<Track> {

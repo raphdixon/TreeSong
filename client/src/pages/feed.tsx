@@ -13,6 +13,7 @@ interface Track {
   duration: number;
   uploadDate: string;
   uploaderUserId: string;
+  creatorUsername: string;
   emojiReactions: any[];
   reactionScore: number;
   recencyScore: number;
@@ -311,9 +312,16 @@ export default function FeedPage() {
             <div className="win95-player-content">
               {/* Track Info */}
               <div className="win95-track-info">
-                <div className="win95-creator">
-                  👤 Creator
-                </div>
+                <button 
+                  className="win95-creator win95-creator-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLocation(`/artist/${encodeURIComponent(currentTrack.creatorUsername)}`);
+                  }}
+                  title={`View ${currentTrack.creatorUsername}'s tracks`}
+                >
+                  👤 {currentTrack.creatorUsername || 'Unknown Artist'}
+                </button>
                 <div className="win95-reactions-count">
                   {currentTrack.emojiReactions?.length || 0} reactions
                 </div>

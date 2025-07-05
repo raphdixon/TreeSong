@@ -191,6 +191,29 @@ html {
   gap: 4px;
 }
 
+.win95-creator-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 0;
+  transition: background-color 0.1s;
+  color: var(--win95-black);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.win95-creator-btn:hover {
+  background: var(--win95-blue);
+  color: var(--win95-white);
+}
+
+.win95-creator-btn:active {
+  background: var(--win95-navy);
+}
+
 .win95-reactions-count {
   color: var(--win95-black);
 }

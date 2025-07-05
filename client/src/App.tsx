@@ -9,6 +9,7 @@ import LoginPage from "./pages/login";
 import RegisterPage from "./pages/register";
 import DashboardPage from "./pages/dashboard";
 import FeedPage from "./pages/feed";
+import ArtistPage from "./pages/artist";
 import PlayerPage from "./pages/player";
 import PublicPlayerPage from "./pages/public-player";
 import NotFound from "./pages/not-found";
@@ -34,6 +35,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={FeedPage} />
+      <Route path="/artist/:username" component={ArtistPage} />
       <Route path="/login">
         {user ? <Redirect to="/" /> : <LoginPage />}
       </Route>

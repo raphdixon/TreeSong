@@ -110,15 +110,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Registration request body:", req.body);
       
-      const { email, password, teamId } = req.body;
+      const { email, username, password, teamId } = req.body;
       
       // Basic validation
-      if (!email || !password) {
-        return res.status(400).json({ message: "Email and password are required" });
+      if (!email || !username || !password) {
+        return res.status(400).json({ message: "Email, username, and password are required" });
       }
       
       if (password.length < 6) {
         return res.status(400).json({ message: "Password must be at least 6 characters" });
+      }
+      
+      if (username.length < 2) {
+        return res.status(400).json({ message: "Username must be at least 2 characters" });
+      }
+      
+      if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+        return res.status(400).json({ message: "Username can only contain letters, numbers, hyphens, and underscores" });
       }
       
       // Check if user already exists
@@ -126,15 +134,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (existingUser) {
         return res.status(400).json({ message: "User already exists" });
       }
+      
+      // Check if username already exists
+      const existingUsername = await storage.getUserByUsername(username);
+      if (existingUsername) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
 
       // Create team for new user if no teamId provided
       let userTeamId = teamId;
       if (!userTeamId) {
-        const team = await storage.createTeam({ name: `${email}'s Team` });
+        const team = await storage.createTeam({ name: `${username}'s Team` });
         userTeamId = team.id;
       }
 
-      const userData = { email, password, teamId: userTeamId };
+      const userData = { email, username, password, teamId: userTeamId };
       const user = await storage.createUser(userData);
       
       // Add user to the team
@@ -151,7 +165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       console.log("Register: Setting cookie with token:", token.substring(0, 20) + "...");
       res.json({ 
-        user: { id: user.id, email: user.email, teamId: user.teamId },
+        user: { id: user.id, email: user.email, username: user.username, teamId: user.teamId },
         token: token
       });
     } catch (error) {
@@ -184,7 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       console.log("Login: Setting cookie with token:", token.substring(0, 20) + "...");
       res.json({ 
-        user: { id: user.id, email: user.email, teamId: user.teamId },
+        user: { id: user.id, email: user.email, username: user.username, teamId: user.teamId },
         token: token
       });
     } catch (error) {

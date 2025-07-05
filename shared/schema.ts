@@ -7,6 +7,7 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().notNull(),
   email: varchar("email").unique().notNull(),
+  username: varchar("username").unique().notNull(),
   passwordHash: varchar("password_hash").notNull(),
   teamId: varchar("team_id").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull()
@@ -32,7 +33,8 @@ export const insertUserSchema = createInsertSchema(users).omit({
   passwordHash: true,
   createdAt: true
 }).extend({
-  password: z.string().min(6)
+  password: z.string().min(6),
+  username: z.string().min(2).max(50).regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain letters, numbers, hyphens, and underscores")
 });
 
 export const insertTeamSchema = createInsertSchema(teams).omit({
