@@ -344,12 +344,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/tracks/:trackId/emoji-reactions/session/:sessionId", async (req, res) => {
+    try {
+      const { trackId, sessionId } = req.params;
+      const reactions = await storage.getEmojiReactionsBySession(trackId, sessionId);
+      res.json({ count: reactions.length, reactions });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch session emoji reactions" });
+    }
+  });
+
   app.post("/api/tracks/:trackId/emoji-reactions", async (req, res) => {
     try {
       const { emoji, time, listenerSessionId } = req.body;
+      const trackId = req.params.trackId;
+      
+      // Check current emoji count for this session
+      const existingReactions = await storage.getEmojiReactionsBySession(trackId, listenerSessionId);
+      
+      // If we have 10 or more emojis, remove the oldest one (FIFO)
+      if (existingReactions.length >= 10) {
+        const oldestReaction = existingReactions[0]; // First one (oldest by timestamp)
+        await storage.deleteEmojiReaction(oldestReaction.id);
+      }
       
       const reactionData = insertEmojiReactionSchema.parse({
-        trackId: req.params.trackId,
+        trackId,
         emoji,
         time: parseFloat(time),
         listenerSessionId
@@ -357,8 +377,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const reaction = await storage.createEmojiReaction(reactionData);
       
-      res.json(reaction);
+      // Return the new reaction with current count
+      const updatedReactions = await storage.getEmojiReactionsBySession(trackId, listenerSessionId);
+      
+      res.json({ 
+        reaction, 
+        currentCount: updatedReactions.length,
+        allReactions: await storage.getEmojiReactionsByTrack(trackId) // For real-time update
+      });
     } catch (error) {
+      console.error("Failed to create emoji reaction:", error);
       res.status(400).json({ message: "Failed to create emoji reaction" });
     }
   });

@@ -42,6 +42,8 @@ export default function WaveformPlayer({
   const [canSkip, setCanSkip] = useState(false);
   const [sessionId] = useState(() => nanoid());
   const [hasStartedListening, setHasStartedListening] = useState(false);
+  const [currentEmojiCount, setCurrentEmojiCount] = useState(0);
+  const [localEmojis, setLocalEmojis] = useState<any[]>(emojiReactions);
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -63,11 +65,18 @@ export default function WaveformPlayer({
         listenerSessionId: sessionId
       });
     },
-    onSuccess: () => {
+    onSuccess: (response: any) => {
+      // Update local emoji count and reactions in real-time
+      setCurrentEmojiCount(response.currentCount);
+      setLocalEmojis(response.allReactions);
+      
+      // Still invalidate queries for other components
       queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}/emoji-reactions`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tracks/public'] });
+      
       toast({
         title: "Emoji added!",
-        description: "Your reaction has been added to the track"
+        description: `${response.currentCount}/10 emojis used`
       });
     },
     onError: (error) => {
@@ -227,6 +236,25 @@ export default function WaveformPlayer({
     }
   }, [volume]);
 
+  // Fetch initial emoji count for this session
+  useEffect(() => {
+    const fetchEmojiCount = async () => {
+      try {
+        const response: any = await apiRequest('GET', `/api/tracks/${trackId}/emoji-reactions/session/${sessionId}`);
+        setCurrentEmojiCount(response.count);
+      } catch (error) {
+        console.error('Failed to fetch emoji count:', error);
+      }
+    };
+    
+    fetchEmojiCount();
+  }, [trackId, sessionId]);
+
+  // Keep local emojis in sync with props
+  useEffect(() => {
+    setLocalEmojis(emojiReactions);
+  }, [emojiReactions]);
+
 
 
   const togglePlay = () => {
@@ -359,7 +387,7 @@ export default function WaveformPlayer({
     const startTime = viewOffset * duration;
     const endTime = startTime + visibleDuration;
     
-    return emojiReactions
+    return localEmojis
       .filter(reaction => reaction.time >= startTime && reaction.time <= endTime)
       .map((reaction) => {
         // Calculate position relative to visible range
@@ -475,6 +503,8 @@ export default function WaveformPlayer({
         <EmojiPicker 
           onEmojiSelect={handleEmojiSelect}
           disabled={false}
+          currentCount={currentEmojiCount}
+          showWarning={currentEmojiCount >= 8}
         />
       </div>
 

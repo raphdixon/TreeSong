@@ -7,6 +7,7 @@
 :root {
   --windows-blue: #000080;
   --windows-gray: #C0C0C0;
+  --windows-green: #008080;
   --windows-dark-gray: #808080;
   --windows-light-gray: #DFDFDF;
   --windows-white: #FFFFFF;
@@ -19,7 +20,7 @@
   flex-direction: column;
   height: 400px;
   width: 100%;
-  background: var(--windows-gray);
+  background: var(--windows-green);
   overflow: hidden;
 }
 
@@ -28,7 +29,7 @@
   flex: 0 0 200px;
   position: relative;
   background: var(--windows-white);
-  border: 2px inset var(--windows-gray);
+  border: 2px inset var(--windows-green);
   margin: 4px;
   overflow: hidden;
 }
@@ -323,8 +324,8 @@
   width: 100vw;
   height: 450px;
   max-width: 100vw;
-  background: var(--windows-gray);
-  border: 2px outset var(--windows-gray);
+  background: var(--windows-green);
+  border: 2px outset var(--windows-green);
   box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
@@ -336,7 +337,7 @@
 @media (min-width: 768px) {
   .desktop-window {
     width: 600px;
-    height: 450px;
+    height: 520px;
     max-width: 90vw;
   }
 }

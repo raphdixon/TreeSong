@@ -17,7 +17,7 @@ import {
 } from "@shared/schema";
 import { nanoid } from "nanoid";
 import bcrypt from "bcrypt";
-import { eq, and } from "drizzle-orm";
+import { eq, and, asc } from "drizzle-orm";
 import { db } from "./db";
 
 export interface IStorage {
@@ -40,7 +40,9 @@ export interface IStorage {
   
   // Emoji reaction methods
   getEmojiReactionsByTrack(trackId: string): Promise<EmojiReaction[]>;
+  getEmojiReactionsBySession(trackId: string, sessionId: string): Promise<EmojiReaction[]>;
   createEmojiReaction(reaction: InsertEmojiReaction): Promise<EmojiReaction>;
+  deleteEmojiReaction(id: string): Promise<void>;
   
   // Track listen methods
   getTrackListen(trackId: string, sessionId: string): Promise<TrackListen | undefined>;
@@ -153,6 +155,12 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(emojiReactions).where(eq(emojiReactions.trackId, trackId));
   }
 
+  async getEmojiReactionsBySession(trackId: string, sessionId: string): Promise<EmojiReaction[]> {
+    return await db.select().from(emojiReactions)
+      .where(and(eq(emojiReactions.trackId, trackId), eq(emojiReactions.listenerSessionId, sessionId)))
+      .orderBy(asc(emojiReactions.timestamp));
+  }
+
   async createEmojiReaction(insertReaction: InsertEmojiReaction): Promise<EmojiReaction> {
     const id = nanoid();
     
@@ -165,6 +173,10 @@ export class DatabaseStorage implements IStorage {
       .returning();
       
     return reaction;
+  }
+
+  async deleteEmojiReaction(id: string): Promise<void> {
+    await db.delete(emojiReactions).where(eq(emojiReactions.id, id));
   }
 
   // Track listen methods
