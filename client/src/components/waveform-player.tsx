@@ -78,9 +78,17 @@ export default function WaveformPlayer({
       });
     },
     onSuccess: (response: any) => {
+      console.log('[DEBUG] Emoji mutation success:', {
+        currentCount: response.currentCount,
+        allReactions: response.allReactions,
+        previousLocalEmojis: localEmojis
+      });
+      
       // Update local emoji count and reactions in real-time
       setCurrentEmojiCount(response.currentCount);
       setLocalEmojis(response.allReactions);
+      
+      console.log('[DEBUG] State updated, localEmojis should now be:', response.allReactions);
       
       // Still invalidate queries for other components
       queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}/emoji-reactions`] });
@@ -273,6 +281,12 @@ export default function WaveformPlayer({
     });
     setLocalEmojis(emojiReactions || []);
   }, [emojiReactions]);
+
+  // Track when localEmojis state changes
+  useEffect(() => {
+    console.log('[DEBUG] localEmojis state changed, new value:', localEmojis);
+    console.log('[DEBUG] Component should re-render and call generateEmojiMarkers now');
+  }, [localEmojis]);
 
 
 
@@ -523,7 +537,12 @@ export default function WaveformPlayer({
           
           {/* Emoji Markers on Waveform */}
           <div className="waveform-markers">
-            {generateEmojiMarkers()}
+            {(() => {
+              console.log('[DEBUG] RENDER: About to call generateEmojiMarkers, localEmojis:', localEmojis.length);
+              const markers = generateEmojiMarkers();
+              console.log('[DEBUG] RENDER: generateEmojiMarkers returned', markers.length, 'markers');
+              return markers;
+            })()}
           </div>
         </div>
         
