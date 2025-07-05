@@ -309,6 +309,7 @@ export default function ArtistPage() {
         right: '20px',
         bottom: '40px',
         display: 'flex',
+        flexDirection: 'column',
         gap: '10px',
         zIndex: 100
       }}>

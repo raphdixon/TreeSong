@@ -347,6 +347,7 @@ export default function FeedPage() {
         right: '20px',
         bottom: '40px',
         display: 'flex',
+        flexDirection: 'column',
         gap: '10px',
         zIndex: 100
       }}>
@@ -356,7 +357,7 @@ export default function FeedPage() {
           disabled={currentTrackIndex === 0 || isScrolling}
           title="Previous Track"
         >
-          ←
+          ↑
         </button>
         
         <button 
@@ -365,7 +366,7 @@ export default function FeedPage() {
           disabled={currentTrackIndex === recommendedTracks.length - 1 || isScrolling}
           title="Next Track"
         >
-          →
+          ↓
         </button>
       </div>
     </div>
