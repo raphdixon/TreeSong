@@ -30,32 +30,43 @@ function FeedItem({ track, isActive, onTrackEnd }: FeedItemProps) {
   if (!track) return null;
 
   return (
-    <div className="feed-item" data-track-id={track.id}>
-      <div className="track-info-overlay">
-        <div className="track-title">🎵 {track.originalName}</div>
-        <div className="track-meta">
-          <span className="uploader">
-            <User size={12} /> Creator
-          </span>
-          <span className="duration">
-            {Math.floor(track.duration / 60)}:{Math.floor(track.duration % 60).toString().padStart(2, '0')}
-          </span>
-          <span className="reactions-count">
-            {track.emojiReactions?.length || 0} reactions
-          </span>
+    <div className="desktop-window" data-track-id={track.id}>
+      <div className="window-header">
+        <div className="window-title">
+          <span className="window-icon">🎵</span>
+          <span className="track-name">{track.originalName}</span>
+        </div>
+        <div className="window-controls">
+          <button className="window-btn minimize">_</button>
+          <button className="window-btn maximize">□</button>
+          <button className="window-btn close">×</button>
         </div>
       </div>
       
-      <div className="waveform-container">
-        <WaveformPlayer 
-          trackId={track.id}
-          audioUrl={`/uploads/${track.filename}`}
-          duration={track.duration}
-          emojiReactions={track.emojiReactions || []}
-          isPublic={true}
-          autoPlay={isActive}
-          onTrackEnd={onTrackEnd}
-        />
+      <div className="window-content">
+        <div className="track-info-bar">
+          <span className="track-creator">
+            <User size={12} /> Creator
+          </span>
+          <span className="track-duration">
+            {Math.floor(track.duration / 60)}:{Math.floor(track.duration % 60).toString().padStart(2, '0')}
+          </span>
+          <span className="track-reactions">
+            {track.emojiReactions?.length || 0} reactions
+          </span>
+        </div>
+        
+        <div className="waveform-area">
+          <WaveformPlayer 
+            trackId={track.id}
+            audioUrl={`/uploads/${track.filename}`}
+            duration={track.duration}
+            emojiReactions={track.emojiReactions || []}
+            isPublic={true}
+            autoPlay={isActive}
+            onTrackEnd={onTrackEnd}
+          />
+        </div>
       </div>
     </div>
   );
@@ -136,8 +147,26 @@ export default function FeedPage() {
     }
   };
 
-  // Keyboard navigation
+  // Wheel navigation with automatic track jumping
   useEffect(() => {
+    let wheelTimeout: NodeJS.Timeout;
+    
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      
+      // Debounce wheel events
+      clearTimeout(wheelTimeout);
+      wheelTimeout = setTimeout(() => {
+        if (e.deltaY > 0) {
+          // Scroll down - next track
+          navigateTrack('down');
+        } else if (e.deltaY < 0) {
+          // Scroll up - previous track
+          navigateTrack('up');
+        }
+      }, 100);
+    };
+
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.key === 'ArrowUp') {
         e.preventDefault();
@@ -145,11 +174,22 @@ export default function FeedPage() {
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
         navigateTrack('down');
+      } else if (e.key === ' ') {
+        e.preventDefault();
+        // Space bar for next track
+        navigateTrack('down');
       }
     };
 
+    // Add passive: false to allow preventDefault on wheel
+    window.addEventListener('wheel', handleWheel, { passive: false });
     window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
+    
+    return () => {
+      clearTimeout(wheelTimeout);
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('keydown', handleKeyPress);
+    };
   }, [currentTrackIndex, isScrolling]);
 
   if (isLoading) {
@@ -195,112 +235,99 @@ export default function FeedPage() {
   const currentTrack = recommendedTracks[currentTrackIndex];
 
   return (
-    <Windows95Layout>
-      <div className="feed-container" ref={feedRef}>
-        {/* Windows 95 Style Header */}
-        <div className="feed-header">
-          <div className="window-title-bar">
-            <div className="title-bar-text">🎵 DemoTree - Music Discovery Feed</div>
-            <div className="header-actions">
-              <div className="feed-counter">
-                {currentTrackIndex + 1} / {recommendedTracks.length}
-              </div>
-              {user ? (
-                <button 
-                  className="login-btn logged-in"
-                  onClick={() => setLocation('/dashboard')}
-                  title="Go to Dashboard"
-                >
-                  <Upload size={16} />
-                  <span>Upload</span>
-                </button>
-              ) : (
-                <button 
-                  className="login-btn"
-                  onClick={() => setLocation('/login')}
-                  title="Login to Upload Music"
-                >
-                  <LogIn size={16} />
-                  <span>Login</span>
-                </button>
-              )}
+    <div className="desktop-environment" ref={feedRef}>
+      {/* Desktop Background */}
+      <div className="desktop-background">
+        
+        {/* Minimal Taskbar */}
+        <div className="desktop-taskbar">
+          <div className="taskbar-left">
+            <div className="start-button">
+              🎵 DemoTree
+            </div>
+          </div>
+          <div className="taskbar-center">
+            <span className="track-counter">
+              Track {currentTrackIndex + 1} of {recommendedTracks.length}
+            </span>
+          </div>
+          <div className="taskbar-right">
+            {user ? (
+              <button 
+                className="taskbar-btn upload-btn"
+                onClick={() => setLocation('/dashboard')}
+                title="Go to Dashboard"
+              >
+                <Upload size={14} />
+                Upload
+              </button>
+            ) : (
+              <button 
+                className="taskbar-btn login-btn"
+                onClick={() => setLocation('/login')}
+                title="Login to Upload Music"
+              >
+                <LogIn size={14} />
+                Login
+              </button>
+            )}
+            <div className="taskbar-time">
+              {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </div>
           </div>
         </div>
 
-        {/* Main Feed Area */}
-        <div className="feed-main">
+        {/* Floating Windows Container */}
+        <div className="desktop-windows">
           <div 
-            className="feed-viewport"
+            className="windows-viewport"
             style={{ 
               transform: `translateY(-${currentTrackIndex * 100}vh)`,
-              transition: isScrolling ? 'transform 0.5s ease-out' : 'none'
+              transition: isScrolling ? 'transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)' : 'none'
             }}
           >
             {recommendedTracks.map((track, index) => (
-              <FeedItem
+              <div 
                 key={track.id}
-                track={track}
-                isActive={index === currentTrackIndex}
-                onTrackEnd={handleTrackEnd}
-              />
+                className="window-viewport"
+                style={{
+                  opacity: index === currentTrackIndex ? 1 : 0.3,
+                  transform: index === currentTrackIndex ? 'scale(1)' : 'scale(0.8)',
+                  transition: isScrolling ? 'all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)' : 'all 0.3s ease'
+                }}
+              >
+                <FeedItem 
+                  track={track}
+                  isActive={index === currentTrackIndex}
+                  onTrackEnd={() => navigateTrack('down')}
+                />
+              </div>
             ))}
           </div>
         </div>
 
-        {/* Navigation Controls - Desktop Arrow Buttons */}
-        <div className="feed-controls desktop-arrows">
+        {/* Desktop Navigation Arrows */}
+        <div className="desktop-navigation">
           <button 
-            className="nav-arrow nav-arrow-up"
+            className="desktop-nav-btn nav-up"
             onClick={() => navigateTrack('up')}
             disabled={currentTrackIndex === 0 || isScrolling}
             title="Previous Track (↑)"
           >
-            <ChevronUp size={32} />
+            <ChevronUp size={24} />
           </button>
           
           <button 
-            className="nav-arrow nav-arrow-down"
+            className="desktop-nav-btn nav-down"
             onClick={() => navigateTrack('down')}
             disabled={currentTrackIndex === recommendedTracks.length - 1 || isScrolling}
             title="Next Track (↓)"
           >
-            <ChevronDown size={32} />
+            <ChevronDown size={24} />
           </button>
         </div>
-        
-        {/* Mobile Navigation Indicator */}
-        <div className="mobile-indicator">
-          <div className="track-dots">
-            {recommendedTracks.slice(Math.max(0, currentTrackIndex - 2), currentTrackIndex + 3).map((_, dotIndex) => {
-              const actualIndex = Math.max(0, currentTrackIndex - 2) + dotIndex;
-              return (
-                <div 
-                  key={actualIndex}
-                  className={`dot ${actualIndex === currentTrackIndex ? 'active' : ''}`}
-                />
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Algorithm Debug Info (remove in production) */}
-        {process.env.NODE_ENV === 'development' && currentTrack && (
-          <div className="debug-info">
-            <div className="window" style={{ width: "250px", fontSize: "10px" }}>
-              <div className="title-bar">
-                <div className="title-bar-text">🧠 Recommendation Debug</div>
-              </div>
-              <div className="window-body" style={{ padding: "4px" }}>
-                <div>Reactions: {currentTrack.reactionScore.toFixed(2)}</div>
-                <div>Recency: {currentTrack.recencyScore.toFixed(2)}</div>
-                <div>Random: {currentTrack.randomScore.toFixed(2)}</div>
-                <div><strong>Total: {currentTrack.totalScore.toFixed(2)}</strong></div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
-    </Windows95Layout>
+    </div>
   );
 }
+

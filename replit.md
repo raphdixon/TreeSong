@@ -127,16 +127,16 @@ DemoTree is a public music sharing platform where musicians can upload their dem
 
 ```
 Changelog:
-- July 05, 2025. Final BPM removal and UI cleanup
-  - Removed BPM input field from track upload modal completely
-  - Fixed PlayerPage crash caused by undefined comments array
-  - Cleaned up waveform player interface:
-    * Removed "Track Player Duration" section header
-    * Removed waveform timeline zoom controls
-    * Removed "Track Reactions" title
-    * Removed remaining BPM references from player page
-  - Emoji picker now always visible on load
-  - Completed full BPM feature removal across entire platform
+- July 05, 2025. Desktop Environment with Floating Windows 95-Style Track Windows
+  - Completely redesigned feed to display floating Windows 95-style windows on desktop background
+  - Implemented automatic track jumping on scroll with smooth transitions between tracks  
+  - Added Windows 95 taskbar with track counter, upload/login buttons, and retro digital clock
+  - Enhanced responsive design with desktop arrow navigation and mobile touch controls
+  - Added smooth scroll wheel navigation that automatically jumps between tracks
+  - Each track displays in its own retro-styled floating window with authentic Windows 95 aesthetics
+  - Removed all remaining BPM functionality and cleaned up player interface completely
+  - Emoji picker always visible for immediate reactions on first listen
+  - Desktop environment supports keyboard navigation (arrows, spacebar) for track jumping
 - July 04, 2025. Major transformation: Built TikTok-like music discovery platform  
   - Created vertical scrolling newsfeed with Windows 95 aesthetics (/feed)
   - Implemented recommendation algorithm (emoji reactions + recency + randomness)
