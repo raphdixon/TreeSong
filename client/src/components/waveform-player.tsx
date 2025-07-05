@@ -82,7 +82,7 @@ export default function WaveformPlayer({
 
   const createTrackListenMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest(`/api/tracks/${trackId}/listens`, 'POST', {
+      return apiRequest('POST', `/api/tracks/${trackId}/listens`, {
         sessionId
       });
     },
@@ -93,7 +93,7 @@ export default function WaveformPlayer({
 
   const markListenCompleteMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest(`/api/tracks/${trackId}/listens/${sessionId}/complete`, 'POST');
+      return apiRequest('POST', `/api/tracks/${trackId}/listens/${sessionId}/complete`);
     },
     onSuccess: () => {
       setHasCompletedFirstListen(true);
