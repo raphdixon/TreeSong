@@ -57,7 +57,7 @@ export default function WaveformPlayer({
   // Mutations for emoji reactions and track listening
   const createEmojiReactionMutation = useMutation({
     mutationFn: async (data: { emoji: string; time: number }) => {
-      return apiRequest(`/api/tracks/${trackId}/emoji-reactions`, 'POST', {
+      return apiRequest('POST', `/api/tracks/${trackId}/emoji-reactions`, {
         emoji: data.emoji,
         time: data.time,
         listenerSessionId: sessionId
@@ -68,6 +68,14 @@ export default function WaveformPlayer({
       toast({
         title: "Emoji added!",
         description: "Your reaction has been added to the track"
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to add emoji reaction:', error);
+      toast({
+        title: "Could not add emoji",
+        description: "Please try again",
+        variant: "destructive"
       });
     }
   });
@@ -543,8 +551,8 @@ export default function WaveformPlayer({
           <h3>🎵 Track Reactions</h3>
           <div style={{ fontSize: "11px", color: "#666" }}>
             {hasCompletedFirstListen ? 
-              "Reactions unlocked! Use the emoji panel below." :
-              "Complete your first listen to unlock reactions."
+              "Track completed! Fast forward and rewind unlocked." :
+              "Complete your first listen to unlock fast forward and rewind."
             }
           </div>
         </div>

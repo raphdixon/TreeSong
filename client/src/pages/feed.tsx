@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
+import { useLocation } from "wouter";
 import Windows95Layout from "@/components/windows95-layout";
 import WaveformPlayer from "@/components/waveform-player";
-import { ChevronUp, ChevronDown, User } from "lucide-react";
+import { ChevronUp, ChevronDown, User, LogIn, Upload } from "lucide-react";
 
 interface Track {
   id: string;
@@ -62,6 +63,7 @@ function FeedItem({ track, isActive, onTrackEnd }: FeedItemProps) {
 
 export default function FeedPage() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
@@ -199,8 +201,29 @@ export default function FeedPage() {
         <div className="feed-header">
           <div className="window-title-bar">
             <div className="title-bar-text">🎵 DemoTree - Music Discovery Feed</div>
-            <div className="feed-counter">
-              {currentTrackIndex + 1} / {recommendedTracks.length}
+            <div className="header-actions">
+              <div className="feed-counter">
+                {currentTrackIndex + 1} / {recommendedTracks.length}
+              </div>
+              {user ? (
+                <button 
+                  className="login-btn logged-in"
+                  onClick={() => setLocation('/dashboard')}
+                  title="Go to Dashboard"
+                >
+                  <Upload size={16} />
+                  <span>Upload</span>
+                </button>
+              ) : (
+                <button 
+                  className="login-btn"
+                  onClick={() => setLocation('/login')}
+                  title="Login to Upload Music"
+                >
+                  <LogIn size={16} />
+                  <span>Login</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -225,39 +248,40 @@ export default function FeedPage() {
           </div>
         </div>
 
-        {/* Navigation Controls */}
-        <div className="feed-controls">
+        {/* Navigation Controls - Desktop Arrow Buttons */}
+        <div className="feed-controls desktop-arrows">
           <button 
-            className="nav-btn nav-up"
+            className="nav-arrow nav-arrow-up"
             onClick={() => navigateTrack('up')}
             disabled={currentTrackIndex === 0 || isScrolling}
             title="Previous Track (↑)"
           >
-            <ChevronUp size={24} />
+            <ChevronUp size={32} />
           </button>
           
-          <div className="track-indicator">
-            <div className="dots">
-              {recommendedTracks.slice(Math.max(0, currentTrackIndex - 2), currentTrackIndex + 3).map((_, dotIndex) => {
-                const actualIndex = Math.max(0, currentTrackIndex - 2) + dotIndex;
-                return (
-                  <div 
-                    key={actualIndex}
-                    className={`dot ${actualIndex === currentTrackIndex ? 'active' : ''}`}
-                  />
-                );
-              })}
-            </div>
-          </div>
-          
           <button 
-            className="nav-btn nav-down"
+            className="nav-arrow nav-arrow-down"
             onClick={() => navigateTrack('down')}
             disabled={currentTrackIndex === recommendedTracks.length - 1 || isScrolling}
             title="Next Track (↓)"
           >
-            <ChevronDown size={24} />
+            <ChevronDown size={32} />
           </button>
+        </div>
+        
+        {/* Mobile Navigation Indicator */}
+        <div className="mobile-indicator">
+          <div className="track-dots">
+            {recommendedTracks.slice(Math.max(0, currentTrackIndex - 2), currentTrackIndex + 3).map((_, dotIndex) => {
+              const actualIndex = Math.max(0, currentTrackIndex - 2) + dotIndex;
+              return (
+                <div 
+                  key={actualIndex}
+                  className={`dot ${actualIndex === currentTrackIndex ? 'active' : ''}`}
+                />
+              );
+            })}
+          </div>
         </div>
 
         {/* Algorithm Debug Info (remove in production) */}
