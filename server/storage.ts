@@ -2,6 +2,7 @@ import {
   users, teams, tracks, emojiReactions, trackListens, shares, invites, teamMembers,
   type User,
   type InsertUser,
+  type UpsertUser,
   type Team,
   type InsertTeam,
   type Track,
@@ -26,6 +27,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  upsertUser(user: UpsertUser): Promise<User>;
   
   // Team methods
   getTeam(id: string): Promise<Team | undefined>;
@@ -79,20 +81,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = nanoid();
-    const passwordHash = await bcrypt.hash(insertUser.password, 10);
-    
     const [user] = await db
       .insert(users)
-      .values({
-        id,
-        email: insertUser.email,
-        username: insertUser.username,
-        passwordHash,
-        teamId: insertUser.teamId || 'default-team'
-      })
+      .values(insertUser)
       .returning();
       
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
     return user;
   }
 

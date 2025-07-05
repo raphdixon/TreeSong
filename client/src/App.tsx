@@ -2,7 +2,7 @@ import { Switch, Route, Redirect } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider, useAuth } from "./lib/auth";
+import { useAuth } from "./hooks/useAuth";
 
 import LandingPage from "./pages/landing";
 import LoginPage from "./pages/login";
@@ -15,7 +15,7 @@ import PublicPlayerPage from "./pages/public-player";
 import NotFound from "./pages/not-found";
 
 function Router() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
 
   if (isLoading) {
     return (
@@ -36,17 +36,11 @@ function Router() {
     <Switch>
       <Route path="/" component={FeedPage} />
       <Route path="/artist/:username" component={ArtistPage} />
-      <Route path="/login">
-        {user ? <Redirect to="/" /> : <LoginPage />}
-      </Route>
-      <Route path="/register">
-        {user ? <Redirect to="/" /> : <RegisterPage />}
-      </Route>
       <Route path="/dashboard">
-        {user ? <DashboardPage /> : <Redirect to="/login" />}
+        {isAuthenticated ? <DashboardPage /> : <Redirect to="/" />}
       </Route>
       <Route path="/tracks/:trackId">
-        {user ? <PlayerPage /> : <Redirect to="/login" />}
+        {isAuthenticated ? <PlayerPage /> : <Redirect to="/" />}
       </Route>
       <Route path="/share/:token" component={PublicPlayerPage} />
       <Route component={NotFound} />
@@ -57,12 +51,10 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <div className="desktop">
-          <Router />
-          <Toaster />
-        </div>
-      </AuthProvider>
+      <div className="desktop">
+        <Router />
+        <Toaster />
+      </div>
     </QueryClientProvider>
   );
 }

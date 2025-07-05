@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import Windows95Layout from "@/components/windows95-layout";
 import WaveformPlayer from "@/components/waveform-player";
@@ -259,7 +259,7 @@ export default function FeedPage() {
           ) : (
             <button 
               className="win95-taskbar-btn"
-              onClick={() => setLocation('/login')}
+              onClick={() => window.location.href = '/api/login'}
               title="Login to Upload Music"
             >
               🔐 Login

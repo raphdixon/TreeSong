@@ -1,22 +1,15 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { nanoid } from "nanoid";
 import express from "express";
-import cookieParser from "cookie-parser";
-import { insertUserSchema, insertTrackSchema, insertEmojiReactionSchema, insertTrackListenSchema, insertInviteSchema } from "@shared/schema";
+import { insertTrackSchema, insertEmojiReactionSchema, insertTrackListenSchema, insertInviteSchema } from "@shared/schema";
 import { sendEmail, createTeamInviteEmail } from "./email";
 import rateLimit from "express-rate-limit";
-
-const JWT_SECRET = process.env.JWT_SECRET!;
-if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET environment variable must be set");
-}
+import { setupAuth, isAuthenticated } from "./replitAuth";
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(process.cwd(), "uploads");
@@ -41,209 +34,39 @@ const upload = multer({
   }
 });
 
-// Auth middleware
-const authenticateToken = async (req: any, res: any, next: any) => {
-  console.log("=== AUTH MIDDLEWARE ===");
-  console.log("Request path:", req.path);
-  console.log("Cookies:", req.cookies);
-  console.log("Authorization header:", req.headers.authorization);
-  
-  // Try to get token from cookie first, then from Authorization header
-  let token = req.cookies?.token;
-  
-  if (!token) {
-    // Try Authorization header as fallback
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7);
-      console.log("Found token in Authorization header");
-    }
-  } else {
-    console.log("Found token in cookies");
-  }
-  
-  if (!token) {
-    console.log("No token found in cookies or Authorization header");
-    return res.status(401).json({ message: "Access token required" });
-  }
-
-  try {
-    console.log("Verifying token:", token.substring(0, 20) + "...");
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-    console.log("Token decoded, userId:", decoded.userId);
-    
-    const user = await storage.getUser(decoded.userId);
-    
-    if (!user) {
-      console.log("User not found for userId:", decoded.userId);
-      return res.status(401).json({ message: "User not found" });
-    }
-    
-    console.log("User authenticated:", user.email);
-    req.user = user;
-    next();
-  } catch (error) {
-    console.log("Token verification failed:", (error as Error).message);
-    return res.status(403).json({ message: "Invalid token" });
-  }
-};
+// Auth middleware will be provided by setupAuth
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
-  app.use(cookieParser());
+
+  // Setup Replit Auth middleware
+  await setupAuth(app);
 
   // Serve uploaded files
   app.use('/uploads', express.static(uploadsDir));
 
-  // Rate limiters
-  const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // Limit each IP to 5 requests per windowMs
-    message: "Too many authentication attempts, please try again later.",
-    standardHeaders: true,
-    legacyHeaders: false,
-  });
-
-  // Auth routes
-  app.post("/api/auth/register", authLimiter, async (req, res) => {
+  // Auth routes - handled by setupAuth
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      console.log("Registration request body:", req.body);
-      
-      const { email, username, password, teamId } = req.body;
-      
-      // Basic validation
-      if (!email || !username || !password) {
-        return res.status(400).json({ message: "Email, username, and password are required" });
-      }
-      
-      if (password.length < 6) {
-        return res.status(400).json({ message: "Password must be at least 6 characters" });
-      }
-      
-      if (username.length < 2) {
-        return res.status(400).json({ message: "Username must be at least 2 characters" });
-      }
-      
-      if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-        return res.status(400).json({ message: "Username can only contain letters, numbers, hyphens, and underscores" });
-      }
-      
-      // Check if user already exists
-      const existingUser = await storage.getUserByEmail(email);
-      if (existingUser) {
-        return res.status(400).json({ message: "User already exists" });
-      }
-      
-      // Check if username already exists
-      const existingUsername = await storage.getUserByUsername(username);
-      if (existingUsername) {
-        return res.status(400).json({ message: "Username already taken" });
-      }
-
-      // Create team for new user if no teamId provided
-      let userTeamId = teamId;
-      if (!userTeamId) {
-        const team = await storage.createTeam({ name: `${username}'s Team` });
-        userTeamId = team.id;
-      }
-
-      const userData = { email, username, password, teamId: userTeamId };
-      const user = await storage.createUser(userData);
-      
-      // Add user to the team
-      await storage.addUserToTeam(userTeamId, user.id);
-      
-      const token = jwt.sign({ userId: user.id }, JWT_SECRET);
-      
-      res.cookie("token", token, { 
-        httpOnly: true, 
-        secure: false, 
-        sameSite: "lax",
-        path: "/",
-        maxAge: 7 * 24 * 60 * 60 * 1000 
-      });
-      console.log("Register: Setting cookie with token:", token.substring(0, 20) + "...");
-      res.json({ 
-        user: { id: user.id, email: user.email, username: user.username, teamId: user.teamId },
-        token: token
-      });
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
     } catch (error) {
-      console.error("Registration error:", error);
-      res.status(400).json({ message: "Registration failed: " + (error as Error).message });
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
     }
-  });
-
-  app.post("/api/auth/login", authLimiter, async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      
-      const user = await storage.getUserByEmail(email);
-      if (!user) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-
-      const validPassword = await bcrypt.compare(password, user.passwordHash);
-      if (!validPassword) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-
-      const token = jwt.sign({ userId: user.id }, JWT_SECRET);
-      res.cookie("token", token, { 
-        httpOnly: true, 
-        secure: false, 
-        sameSite: "lax",
-        path: "/",
-        maxAge: 7 * 24 * 60 * 60 * 1000 
-      });
-      console.log("Login: Setting cookie with token:", token.substring(0, 20) + "...");
-      res.json({ 
-        user: { id: user.id, email: user.email, username: user.username, teamId: user.teamId },
-        token: token
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Login failed" });
-    }
-  });
-
-  app.post("/api/auth/logout", (req, res) => {
-    res.clearCookie("token");
-    res.json({ message: "Logged out successfully" });
-  });
-
-  // User info route
-  app.get("/api/me", authenticateToken, async (req, res) => {
-    const user = req.user;
-    if (!user) {
-      return res.status(401).json({ message: "User not authenticated" });
-    }
-    const team = await storage.getTeam(user.teamId);
-    res.json({ 
-      user: { id: user.id, email: user.email, teamId: user.teamId },
-      team: team ? { id: team.id, name: team.name } : null
-    });
-  });
-
-  // Debug route to check authentication
-  app.get("/api/debug/auth", (req, res) => {
-    console.log("=== DEBUG AUTH CHECK ===");
-    console.log("Cookies:", req.cookies);
-    console.log("Headers:", req.headers);
-    res.json({
-      hasCookies: !!req.cookies,
-      cookieNames: Object.keys(req.cookies || {}),
-      hasToken: !!req.cookies?.token,
-      userAgent: req.headers['user-agent']
-    });
   });
 
   // Track routes  
-  app.get("/api/tracks", authenticateToken, async (req, res) => {
+  app.get("/api/tracks", isAuthenticated, async (req: any, res) => {
     try {
-      if (!req.user) {
-        return res.status(401).json({ message: "User not authenticated" });
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user || !user.teamId) {
+        return res.status(401).json({ message: "User not authenticated or has no team" });
       }
-      const tracks = await storage.getTracksByTeam(req.user.teamId);
+      const tracks = await storage.getTracksByTeam(user.teamId);
       res.json(tracks);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch tracks" });
@@ -295,7 +118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/tracks", authenticateToken, upload.single('audio'), async (req: any, res) => {
+  app.post("/api/tracks", isAuthenticated, upload.single('audio'), async (req: any, res) => {
     console.log("=== UPLOAD TRACK REQUEST ===");
     console.log("Request body:", req.body);
     console.log("File:", req.file ? {
@@ -328,9 +151,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("File moved successfully");
 
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.teamId) {
+        return res.status(401).json({ message: "User not authenticated or has no team" });
+      }
+
       const trackData = insertTrackSchema.parse({
-        teamId: req.user.teamId,
-        uploaderUserId: req.user.id,
+        teamId: user.teamId,
+        uploaderUserId: user.id,
         filename,
         originalName: req.file.originalname,
         duration
@@ -347,9 +177,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/tracks/:trackId", authenticateToken, async (req, res) => {
+  app.delete("/api/tracks/:trackId", isAuthenticated, async (req: any, res) => {
     try {
-      if (!req.user) {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
         return res.status(401).json({ message: "User not authenticated" });
       }
       
@@ -359,7 +192,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user has permission to delete
-      if (track.teamId !== req.user.teamId || track.uploaderUserId !== req.user.id) {
+      if (track.teamId !== user.teamId || track.uploaderUserId !== user.id) {
         return res.status(403).json({ message: "Access denied" });
       }
 
@@ -540,7 +373,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Invite routes
-  app.post("/api/invite", authenticateToken, async (req, res) => {
+  app.post("/api/invite", isAuthenticated, async (req, res) => {
     try {
       if (!req.user) {
         return res.status(401).json({ message: "User not authenticated" });

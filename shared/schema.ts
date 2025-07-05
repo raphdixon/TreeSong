@@ -1,16 +1,30 @@
-import { pgTable, text, varchar, timestamp, integer, boolean, real } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, integer, boolean, real, jsonb, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { relations } from "drizzle-orm";
 import { z } from "zod";
 
-// Users table
+// Session storage table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// Users table - updated for Replit Auth
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().notNull(),
-  email: varchar("email").unique().notNull(),
-  username: varchar("username").unique().notNull(),
-  passwordHash: varchar("password_hash").notNull(),
-  teamId: varchar("team_id").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull()
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  username: varchar("username").unique(),
+  teamId: varchar("team_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Teams table
@@ -29,12 +43,13 @@ export const teamMembers = pgTable("team_members", {
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  passwordHash: true,
-  createdAt: true
-}).extend({
-  password: z.string().min(6),
-  username: z.string().min(2).max(50).regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain letters, numbers, hyphens, and underscores")
+  createdAt: true,
+  updatedAt: true
+});
+
+export const upsertUserSchema = createInsertSchema(users).omit({
+  createdAt: true,
+  updatedAt: true
 });
 
 export const insertTeamSchema = createInsertSchema(teams).omit({
@@ -43,6 +58,7 @@ export const insertTeamSchema = createInsertSchema(teams).omit({
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertTeam = z.infer<typeof insertTeamSchema>;
 export type Team = typeof teams.$inferSelect;
