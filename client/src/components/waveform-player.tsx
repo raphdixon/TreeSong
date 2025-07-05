@@ -51,16 +51,22 @@ export default function WaveformPlayer({
   // Function to handle emoji selection
   const handleEmojiSelect = (emoji: string) => {
     try {
-      // Use actual waveSurfer time instead of currentTime state (which gets polluted by mouse hover)
+      console.log('[EMOJI FLOW] 1. handleEmojiSelect called');
       const actualTime = waveSurferRef.current?.getCurrentTime() || currentTime;
-      console.log('[EMOJI DEBUG] Adding emoji at time:', actualTime);
+      console.log('[EMOJI FLOW] 2. Time calculated:', actualTime);
       
       createEmojiReactionMutation.mutate({
         emoji,
         time: actualTime
       });
+      console.log('[EMOJI FLOW] 3. Mutation called');
     } catch (error) {
-      console.error('[EMOJI DEBUG] Error in handleEmojiSelect:', error);
+      console.error('[EMOJI ERROR] handleEmojiSelect failed:', error);
+      toast({
+        title: "Could not add emoji",
+        description: "Please try again",
+        variant: "destructive"
+      });
     }
   };
 
@@ -74,20 +80,36 @@ export default function WaveformPlayer({
       });
     },
     onSuccess: (response: any) => {
-      console.log('[EMOJI DEBUG] Success - updating state');
-      
-      // Simple state updates without complex operations
-      setCurrentEmojiCount(response.currentCount);
-      setLocalEmojis([...response.allReactions]); // Force new array reference
-      
-      // Invalidate queries to refresh other components
-      queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}/emoji-reactions`] });
-      queryClient.invalidateQueries({ queryKey: ['/api/tracks/public'] });
-      
-      toast({
-        title: "Emoji added!",
-        description: `${response.currentCount}/10 emojis used`
-      });
+      try {
+        console.log('[EMOJI FLOW] 4. onSuccess called with:', {
+          currentCount: response.currentCount,
+          allReactionsCount: response.allReactions?.length
+        });
+        
+        console.log('[EMOJI FLOW] 5. Before state update - localEmojis:', localEmojis.length);
+        
+        // Update state
+        setCurrentEmojiCount(response.currentCount);
+        setLocalEmojis([...response.allReactions]);
+        
+        console.log('[EMOJI FLOW] 6. State update called');
+        
+        // Force re-render check
+        setTimeout(() => {
+          console.log('[EMOJI FLOW] 7. After timeout - localEmojis should be:', response.allReactions?.length);
+        }, 100);
+        
+        // Invalidate queries
+        queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}/emoji-reactions`] });
+        queryClient.invalidateQueries({ queryKey: ['/api/tracks/public'] });
+        
+        toast({
+          title: "Emoji added!",
+          description: `${response.currentCount}/10 emojis used`
+        });
+      } catch (error) {
+        console.error('[EMOJI ERROR] onSuccess failed:', error);
+      }
     },
     onError: (error) => {
       console.error('Failed to add emoji reaction:', error);
@@ -390,9 +412,19 @@ export default function WaveformPlayer({
     return lines;
   };
 
-  // Generate emoji reaction markers based on zoom level
+  // Generate emoji reaction markers based on zoom level  
   const generateEmojiMarkers = () => {
-    if (!localEmojis || !Array.isArray(localEmojis) || localEmojis.length === 0) {
+    try {
+      console.log('[EMOJI FLOW] 8. generateEmojiMarkers called, count:', localEmojis?.length || 0);
+      
+      if (!localEmojis || !Array.isArray(localEmojis) || localEmojis.length === 0) {
+        console.log('[EMOJI FLOW] 9. No emojis to render');
+        return [];
+      }
+      
+      console.log('[EMOJI FLOW] 10. Rendering', localEmojis.length, 'emojis');
+    } catch (error) {
+      console.error('[EMOJI ERROR] generateEmojiMarkers failed:', error);
       return [];
     }
     
