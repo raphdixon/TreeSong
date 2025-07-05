@@ -53,7 +53,26 @@ export default function WaveformPlayer({
   const handleEmojiSelect = (emoji: string) => {
     // Use actual waveSurfer time instead of currentTime state (which gets polluted by mouse hover)
     const actualTime = waveSurferRef.current?.getCurrentTime() || currentTime;
-    console.log('[DEBUG] Adding emoji at time:', actualTime, 'currentTime state:', currentTime);
+    console.log('[EMOJI DEBUG] 1. Adding emoji:', {
+      emoji,
+      actualTime,
+      waveSurferReady: !!waveSurferRef.current,
+      waveformContainerExists: !!waveformRef.current,
+      currentLocalEmojisCount: localEmojis.length
+    });
+    
+    // Check DOM structure
+    if (waveformRef.current) {
+      const waveformMarkers = waveformRef.current.querySelector('.waveform-markers');
+      const waveSurferCanvas = waveformRef.current.querySelector('canvas');
+      console.log('[EMOJI DEBUG] 2. DOM structure:', {
+        waveformMarkersExists: !!waveformMarkers,
+        waveformMarkersZIndex: waveformMarkers ? window.getComputedStyle(waveformMarkers).zIndex : 'N/A',
+        waveSurferCanvasExists: !!waveSurferCanvas,
+        waveSurferCanvasZIndex: waveSurferCanvas ? window.getComputedStyle(waveSurferCanvas).zIndex : 'N/A',
+        markersChildCount: waveformMarkers?.childElementCount || 0
+      });
+    }
     
     createEmojiReactionMutation.mutate({
       emoji,
@@ -71,10 +90,27 @@ export default function WaveformPlayer({
       });
     },
     onSuccess: (response: any) => {
+      console.log('[EMOJI DEBUG] 3. Mutation success:', {
+        newCount: response.currentCount,
+        previousEmojis: localEmojis.length,
+        newEmojis: response.allReactions.length,
+        renderTriggerBefore: renderTrigger
+      });
+      
       // Update local emoji count and reactions in real-time
       setCurrentEmojiCount(response.currentCount);
       setLocalEmojis(response.allReactions);
       setRenderTrigger(prev => prev + 1); // Force re-render
+      
+      // Check DOM after state update
+      setTimeout(() => {
+        const waveformMarkers = waveformRef.current?.querySelector('.waveform-markers');
+        console.log('[EMOJI DEBUG] 4. After state update:', {
+          markersChildCount: waveformMarkers?.childElementCount || 0,
+          localEmojisState: localEmojis.length,
+          renderTriggerAfter: renderTrigger
+        });
+      }, 100);
       
       // Still invalidate queries for other components
       queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}/emoji-reactions`] });
@@ -388,6 +424,12 @@ export default function WaveformPlayer({
 
   // Generate emoji reaction markers based on zoom level
   const generateEmojiMarkers = () => {
+    console.log('[EMOJI DEBUG] 5. generateEmojiMarkers called with:', {
+      localEmojisCount: localEmojis.length,
+      localEmojisIsArray: Array.isArray(localEmojis),
+      firstFewEmojis: localEmojis.slice(0, 3).map(e => ({ emoji: e.emoji, time: e.time }))
+    });
+    
     // Defensive check
     if (!Array.isArray(localEmojis)) {
       return [];
