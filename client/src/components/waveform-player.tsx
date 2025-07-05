@@ -43,7 +43,7 @@ export default function WaveformPlayer({
   const [sessionId] = useState(() => nanoid());
   const [hasStartedListening, setHasStartedListening] = useState(false);
   const [currentEmojiCount, setCurrentEmojiCount] = useState(0);
-  const [localEmojis, setLocalEmojis] = useState<any[]>(emojiReactions);
+  const [localEmojis, setLocalEmojis] = useState<any[]>(emojiReactions || []);
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -252,7 +252,7 @@ export default function WaveformPlayer({
 
   // Keep local emojis in sync with props
   useEffect(() => {
-    setLocalEmojis(emojiReactions);
+    setLocalEmojis(emojiReactions || []);
   }, [emojiReactions]);
 
 
