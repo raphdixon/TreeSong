@@ -244,7 +244,7 @@ export default function FeedPage() {
           </button>
         </div>
         <div className="win95-taskbar-center">
-          Track {currentTrackIndex + 1} of {recommendedTracks.length}
+          {/* Track counter removed */}
         </div>
         <div className="win95-taskbar-right">
           {user ? (
