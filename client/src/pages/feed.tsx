@@ -264,9 +264,6 @@ export default function FeedPage() {
               🔐 Login
             </button>
           )}
-          <div className="win95-taskbar-time">
-            {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </div>
         </div>
       </div>
 
