@@ -1,0 +1,367 @@
+[
+  {
+    "id": "ISSUE_001",
+    "file": "server/routes.ts:15",
+    "category": "Security Vulnerability - Hardcoded JWT Secret",
+    "recommendations": [
+      {
+        "approach": "Throw error if JWT_SECRET is missing",
+        "pros": "Forces proper configuration, prevents security breach in production",
+        "cons": "Requires environment setup before development",
+        "effort": "Low (5 minutes)",
+        "risk": "Low",
+        "tests": ["Verify server crashes on missing JWT_SECRET", "Ensure proper error message"],
+        "dependencies": [],
+        "chosen": true
+      },
+      {
+        "approach": "Use cryptographically secure random generation for development",
+        "pros": "Development convenience while maintaining security",
+        "cons": "Different behavior between dev/prod",
+        "effort": "Medium (30 minutes)",
+        "risk": "Medium",
+        "tests": ["Verify random generation in dev", "Ensure env var takes precedence"],
+        "dependencies": [],
+        "chosen": false
+      }
+    ]
+  },
+  {
+    "id": "ISSUE_002",
+    "file": "package.json:68-70",
+    "category": "Unused Dependencies - Auth Libraries",
+    "recommendations": [
+      {
+        "approach": "Remove openid-client, passport, passport-local completely",
+        "pros": "Reduces bundle size by ~200KB, removes potential vulnerabilities",
+        "cons": "None - code uses custom JWT auth",
+        "effort": "Low (10 minutes)",
+        "risk": "Low",
+        "tests": ["Run full test suite", "Verify auth flows still work"],
+        "dependencies": ["ISSUE_003"],
+        "chosen": true
+      },
+      {
+        "approach": "Keep libraries for future OAuth implementation",
+        "pros": "Ready for future features",
+        "cons": "Unnecessary bloat, security surface",
+        "effort": "None",
+        "risk": "Medium",
+        "tests": [],
+        "dependencies": [],
+        "chosen": false
+      }
+    ]
+  },
+  {
+    "id": "ISSUE_003",
+    "file": "package.json:17-43",
+    "category": "Unused Dependencies - Radix UI Components",
+    "recommendations": [
+      {
+        "approach": "Audit and remove unused Radix components",
+        "pros": "Reduces bundle by ~500KB, cleaner dependency tree",
+        "cons": "May need to add back if UI expands",
+        "effort": "Medium (1 hour)",
+        "risk": "Low",
+        "tests": ["Component render tests", "Visual regression tests", "Build verification"],
+        "dependencies": [],
+        "chosen": true
+      },
+      {
+        "approach": "Keep all Radix components for consistency",
+        "pros": "UI library ready for expansion",
+        "cons": "Significant bundle bloat",
+        "effort": "None",
+        "risk": "Low",
+        "tests": [],
+        "dependencies": [],
+        "chosen": false
+      }
+    ]
+  },
+  {
+    "id": "ISSUE_004",
+    "file": "server/routes.ts:41-87",
+    "category": "Security Vulnerability - No Rate Limiting",
+    "recommendations": [
+      {
+        "approach": "Implement express-rate-limit on auth endpoints",
+        "pros": "Simple integration, battle-tested library, configurable",
+        "cons": "Another dependency",
+        "effort": "Medium (2 hours)",
+        "risk": "Low",
+        "tests": ["Rate limit unit tests", "Integration tests for lockout behavior"],
+        "dependencies": [],
+        "chosen": true
+      },
+      {
+        "approach": "Custom rate limiting with Redis",
+        "pros": "More control, distributed rate limiting",
+        "cons": "Complex implementation, requires Redis",
+        "effort": "High (1 day)",
+        "risk": "Medium",
+        "tests": ["Redis connection tests", "Distributed rate limit tests"],
+        "dependencies": [],
+        "chosen": false
+      }
+    ]
+  },
+  {
+    "id": "ISSUE_005",
+    "file": "server/routes.ts:433-473",
+    "category": "Dead Code - Comment Routes",
+    "recommendations": [
+      {
+        "approach": "Remove all comment-related routes and imports",
+        "pros": "Cleaner codebase, no confusion about features",
+        "cons": "Need to remove comment UI components too",
+        "effort": "Low (30 minutes)",
+        "risk": "Low",
+        "tests": ["Verify no broken imports", "Check UI doesn't reference comments"],
+        "dependencies": ["ISSUE_006"],
+        "chosen": true
+      },
+      {
+        "approach": "Implement missing comment storage methods",
+        "pros": "Feature completion",
+        "cons": "Unclear if comments are needed",
+        "effort": "High (1 day)",
+        "risk": "Medium",
+        "tests": ["Comment CRUD tests", "UI integration tests"],
+        "dependencies": [],
+        "chosen": false
+      }
+    ]
+  },
+  {
+    "id": "ISSUE_006",
+    "file": "client/src/components/comment-popup.tsx",
+    "category": "Dead Code - Comment UI",
+    "recommendations": [
+      {
+        "approach": "Remove comment-popup.tsx and related imports",
+        "pros": "Consistent with backend cleanup",
+        "cons": "None",
+        "effort": "Low (15 minutes)",
+        "risk": "Low",
+        "tests": ["Build verification", "No broken imports"],
+        "dependencies": ["ISSUE_005"],
+        "chosen": true
+      }
+    ]
+  },
+  {
+    "id": "ISSUE_007",
+    "file": "client/src/lib/bpmAnalyzer.ts:85",
+    "category": "Performance - Excessive Timeout",
+    "recommendations": [
+      {
+        "approach": "Reduce timeout to 15 seconds with progress feedback",
+        "pros": "Better UX, faster failure detection",
+        "cons": "May timeout on very long files",
+        "effort": "Low (15 minutes)",
+        "risk": "Low",
+        "tests": ["Test with various file sizes", "Verify timeout behavior"],
+        "dependencies": [],
+        "chosen": true
+      },
+      {
+        "approach": "Make timeout configurable based on file size",
+        "pros": "Adaptive to content",
+        "cons": "More complex logic",
+        "effort": "Medium (1 hour)",
+        "risk": "Low",
+        "tests": ["Test timeout calculation", "Edge case testing"],
+        "dependencies": [],
+        "chosen": false
+      }
+    ]
+  },
+  {
+    "id": "ISSUE_008",
+    "file": "Multiple files",
+    "category": "Type Safety - Missing TypeScript Declarations",
+    "recommendations": [
+      {
+        "approach": "Install @types/bcrypt, @types/multer, @types/jsonwebtoken, @types/cookie-parser",
+        "pros": "Full type safety, better IDE support, catch errors at compile time",
+        "cons": "More dev dependencies",
+        "effort": "Low (15 minutes)",
+        "risk": "Low",
+        "tests": ["TypeScript compilation", "No type errors"],
+        "dependencies": [],
+        "chosen": true
+      },
+      {
+        "approach": "Create custom type declarations",
+        "pros": "No external dependencies",
+        "cons": "Maintenance burden, may be incorrect",
+        "effort": "High (4 hours)",
+        "risk": "Medium",
+        "tests": ["Type accuracy tests"],
+        "dependencies": [],
+        "chosen": false
+      }
+    ]
+  },
+  {
+    "id": "ISSUE_009",
+    "file": "server/routes.ts:41",
+    "category": "Code Quality - Excessive any Types",
+    "recommendations": [
+      {
+        "approach": "Create proper Express type extensions for Request",
+        "pros": "Type safety throughout, better refactoring support",
+        "cons": "Initial setup time",
+        "effort": "Medium (2 hours)",
+        "risk": "Low",
+        "tests": ["TypeScript compilation", "Type inference tests"],
+        "dependencies": ["ISSUE_008"],
+        "chosen": true
+      },
+      {
+        "approach": "Use type assertions at usage points",
+        "pros": "Quick fix",
+        "cons": "Not addressing root cause, error-prone",
+        "effort": "Low (30 minutes)",
+        "risk": "Medium",
+        "tests": [],
+        "dependencies": [],
+        "chosen": false
+      }
+    ]
+  },
+  {
+    "id": "ISSUE_010",
+    "file": "client/src/pages/feed.tsx",
+    "category": "Performance - N+1 Query Pattern",
+    "recommendations": [
+      {
+        "approach": "Batch fetch reactions for all visible tracks",
+        "pros": "Reduces API calls from N to 1, better performance",
+        "cons": "Requires API endpoint refactoring",
+        "effort": "Medium (3 hours)",
+        "risk": "Medium",
+        "tests": ["Performance benchmarks", "API response time tests"],
+        "dependencies": [],
+        "chosen": true
+      },
+      {
+        "approach": "Implement reaction data caching",
+        "pros": "Quick wins for repeat views",
+        "cons": "Cache invalidation complexity",
+        "effort": "Medium (2 hours)",
+        "risk": "Medium",
+        "tests": ["Cache hit/miss tests", "Invalidation tests"],
+        "dependencies": [],
+        "chosen": false
+      }
+    ]
+  },
+  {
+    "id": "ISSUE_011",
+    "file": "server/routes.ts:Throughout",
+    "category": "Code Quality - Console.log in Production",
+    "recommendations": [
+      {
+        "approach": "Implement winston or pino logger with log levels",
+        "pros": "Production-ready logging, structured logs, log levels",
+        "cons": "New dependency, refactoring effort",
+        "effort": "Medium (3 hours)",
+        "risk": "Low",
+        "tests": ["Log output tests", "Log level tests"],
+        "dependencies": [],
+        "chosen": true
+      },
+      {
+        "approach": "Simple debug module with namespaces",
+        "pros": "Lightweight, easy to implement",
+        "cons": "Less features than full logger",
+        "effort": "Low (1 hour)",
+        "risk": "Low",
+        "tests": ["Debug output tests"],
+        "dependencies": [],
+        "chosen": false
+      }
+    ]
+  },
+  {
+    "id": "ISSUE_012",
+    "file": "server/fileCleanup.ts:36",
+    "category": "Configuration - Hardcoded Values",
+    "recommendations": [
+      {
+        "approach": "Make retention period configurable via FILE_RETENTION_DAYS env var",
+        "pros": "Flexible deployment, easy to adjust",
+        "cons": "Another env var to manage",
+        "effort": "Low (30 minutes)",
+        "risk": "Low",
+        "tests": ["Config parsing tests", "Default value tests"],
+        "dependencies": [],
+        "chosen": true
+      }
+    ]
+  },
+  {
+    "id": "ISSUE_013",
+    "file": "client/src/components/waveform-player.tsx:236-244",
+    "category": "Performance - Unnecessary Re-renders",
+    "recommendations": [
+      {
+        "approach": "Use React.memo and useMemo for emoji rendering",
+        "pros": "Prevents unnecessary DOM updates, better performance",
+        "cons": "Slightly more complex code",
+        "effort": "Low (1 hour)",
+        "risk": "Low",
+        "tests": ["Performance profiling", "Render count tests"],
+        "dependencies": [],
+        "chosen": true
+      },
+      {
+        "approach": "Implement virtual scrolling for emojis",
+        "pros": "Handles thousands of emojis",
+        "cons": "Overkill for current use case",
+        "effort": "High (1 day)",
+        "risk": "Medium",
+        "tests": ["Virtual scroll tests", "Performance benchmarks"],
+        "dependencies": [],
+        "chosen": false
+      }
+    ]
+  },
+  {
+    "id": "ISSUE_014",
+    "file": "server/routes.ts:170-180",
+    "category": "Security - Missing Cookie Security Attributes",
+    "recommendations": [
+      {
+        "approach": "Add sameSite: 'strict', httpOnly: true, secure: true to all cookies",
+        "pros": "Prevents CSRF attacks, XSS protection",
+        "cons": "May break in development without HTTPS",
+        "effort": "Low (30 minutes)",
+        "risk": "Low",
+        "tests": ["Cookie attribute tests", "HTTPS redirect tests"],
+        "dependencies": [],
+        "chosen": true
+      }
+    ]
+  },
+  {
+    "id": "ISSUE_015",
+    "file": "client/src/lib/auth.tsx:13,23,50",
+    "category": "Dead Code - Unused Token State",
+    "recommendations": [
+      {
+        "approach": "Remove token state and related methods",
+        "pros": "Cleaner code, less state to manage",
+        "cons": "None - tokens are in httpOnly cookies",
+        "effort": "Low (30 minutes)",
+        "risk": "Low",
+        "tests": ["Auth flow tests", "State management tests"],
+        "dependencies": [],
+        "chosen": true
+      }
+    ]
+  }
+]
