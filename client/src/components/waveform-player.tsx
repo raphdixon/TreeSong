@@ -431,68 +431,6 @@ export default function WaveformPlayer({
           </p>
         </div>
       )}
-
-
-
-      {/* BPM Status and Manual Override */}
-      <div style={{ 
-        background: "#F0F0F0", 
-        border: "2px inset #C0C0C0", 
-        padding: "12px", 
-        marginBottom: "16px",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center"
-      }}>
-        <div>
-          <strong>🎵 Track Player</strong>
-        </div>
-        <div>
-          <span style={{ fontSize: "11px", color: "#666" }}>
-            Duration: {Math.floor(duration / 60)}:{Math.floor(duration % 60).toString().padStart(2, '0')}
-          </span>
-        </div>
-      </div>
-
-      {/* Waveform Timeline with Zoom Controls */}
-      <div className="beats-timeline">
-        <div className="timeline-header">
-          <span>
-            Waveform Timeline
-          </span>
-          <div className="zoom-controls">
-            <button 
-              className="zoom-btn" 
-              onClick={handleZoomOut}
-              disabled={zoomLevel <= 1}
-              title="Zoom Out"
-            >
-              -
-            </button>
-            <span className="zoom-level">{zoomLevel}x</span>
-            <button 
-              className="zoom-btn" 
-              onClick={handleZoomIn}
-              disabled={zoomLevel >= 16}
-              title="Zoom In"
-            >
-              +
-            </button>
-            <button 
-              className="zoom-btn reset" 
-              onClick={handleZoomReset}
-              disabled={zoomLevel === 1}
-              title="Reset Zoom"
-            >
-              Reset
-            </button>
-          </div>
-        </div>
-        <div className="timeline-markers">
-          {generateBeatsAndBars()}
-        </div>
-      </div>
-
       {/* Waveform Container */}
       <div className="waveform-container" style={{ opacity: isFileDeleted ? 0.5 : 1 }}>
         <div className="waveform-wrapper">
@@ -548,7 +486,6 @@ export default function WaveformPlayer({
       {/* Emoji Reactions Section */}
       <div className="emoji-reactions-section">
         <div className="reactions-header">
-          <h3>🎵 Track Reactions</h3>
           <div style={{ fontSize: "11px", color: "#666" }}>
             {hasCompletedFirstListen ? 
               "Track completed! Fast forward and rewind unlocked." :

@@ -127,9 +127,15 @@ DemoTree is a public music sharing platform where musicians can upload their dem
 
 ```
 Changelog:
-- July 05, 2025. Final BPM removal and bug fixes
+- July 05, 2025. Final BPM removal and UI cleanup
   - Removed BPM input field from track upload modal completely
   - Fixed PlayerPage crash caused by undefined comments array
+  - Cleaned up waveform player interface:
+    * Removed "Track Player Duration" section header
+    * Removed waveform timeline zoom controls
+    * Removed "Track Reactions" title
+    * Removed remaining BPM references from player page
+  - Emoji picker now always visible on load
   - Completed full BPM feature removal across entire platform
 - July 04, 2025. Major transformation: Built TikTok-like music discovery platform  
   - Created vertical scrolling newsfeed with Windows 95 aesthetics (/feed)

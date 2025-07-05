@@ -122,8 +122,6 @@ export default function PlayerPage() {
           <div className="field-row">
             <label>Track:</label>
             <span>{track.originalName}</span>
-            <span style={{ marginLeft: "20px" }}>BPM:</span>
-            <span>{track.bpm || "Not set"}</span>
             <span style={{ marginLeft: "20px" }}>Duration:</span>
             <span>{Math.floor(track.duration / 60)}:{Math.floor(track.duration % 60).toString().padStart(2, '0')}</span>
           </div>
@@ -152,7 +150,7 @@ export default function PlayerPage() {
           left: "0",
           right: "0"
         }}>
-          <span>BPM Grid: {track.bpm ? `Enabled (${track.bpm} BPM)` : "Disabled"} | Time Scale: 4/4</span>
+          <span>Time Scale: 4/4</span>
           <span>Comments: {comments?.length || 0} | Share Link: Available</span>
         </div>
       </div>
