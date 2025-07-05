@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth";
 import Windows95Layout from "@/components/windows95-layout";
 import UploadModal from "@/components/upload-modal";
 import InviteModal from "@/components/invite-modal";
@@ -9,31 +9,48 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function DashboardPage() {
   const [, setLocation] = useLocation();
-  const { user, logout } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const [showUpload, setShowUpload] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
   const [activeTab, setActiveTab] = useState("tracks");
 
   // Redirect if not logged in
-  if (!user) {
-    setLocation("/login");
+  if (!isLoading && !isAuthenticated) {
+    setLocation("/");
     return null;
   }
 
-  // Fetch user data and team info
+  // Show loading while checking auth
+  if (isLoading) {
+    return (
+      <div className="desktop" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+        <div className="window" style={{ width: '300px' }}>
+          <div className="title-bar">
+            <div className="title-bar-text">TreeNote</div>
+          </div>
+          <div className="window-body" style={{ textAlign: 'center', padding: '20px' }}>
+            <p>Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Get user data with team info
   const { data: userData } = useQuery({
-    queryKey: ["/api/me"],
+    queryKey: ["/api/auth/user"],
+    enabled: isAuthenticated, // Only fetch when authenticated
   });
 
-  // Fetch tracks
+  // Fetch tracks for user's team
   const { data: tracks = [], isLoading: tracksLoading } = useQuery({
     queryKey: ["/api/tracks"],
+    enabled: isAuthenticated && !!userData?.teamId, // Only fetch when user has team
   });
 
   const handleLogout = () => {
-    logout();
-    setLocation("/login");
+    window.location.href = "/api/logout";
   };
 
   const formatDuration = (seconds: number) => {
@@ -194,10 +211,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Modals */}
-      {showUpload && (
+      {showUpload && userData?.teamId && (
         <UploadModal 
           onClose={() => setShowUpload(false)}
-          teamId={user.teamId}
+          teamId={userData.teamId}
         />
       )}
       
