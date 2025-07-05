@@ -439,8 +439,9 @@ export default function WaveformPlayer({
             style={{ 
               left: `${relativePosition}%`,
               position: 'absolute',
-              top: '10px',
-              fontSize: '20px',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              fontSize: '16px',
               zIndex: 10,
               cursor: 'pointer',
               pointerEvents: 'auto'
