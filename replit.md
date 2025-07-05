@@ -127,6 +127,18 @@ DemoTree is a public music sharing platform where musicians can upload their dem
 
 ```
 Changelog:
+- July 05, 2025. Comprehensive Security & Performance Refactor
+  - Added rate limiting to authentication endpoints (5 requests per 15 minutes)
+  - Fixed JWT_SECRET environment validation with proper TypeScript typing
+  - Removed all comment-related dead code (routes, UI components, email templates)
+  - Eliminated N+1 query pattern in public tracks API (reduced from N+1 to 2 queries)
+  - Removed 33 unused dependencies (~700KB+ bundle reduction):
+    * 14 unused Radix UI components (@radix-ui/react-*)
+    * realtime-bpm-analyzer (since BPM functionality was removed)
+    * memoizee, memorystore and their 16 transitive dependencies
+  - Fixed all TypeScript compilation errors with proper null checks
+  - Implemented batch emoji reaction fetching for optimal performance
+  - Enhanced Express type definitions for better req.user safety
 - July 05, 2025. Mobile-First Compact UI Redesign with Fixed Height Layout
   - Redesigned from desktop-first to mobile-first single-screen player interface
   - Fixed waveform height (120px desktop, 140px mobile) to prevent distortion

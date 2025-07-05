@@ -40,6 +40,7 @@ export interface IStorage {
   
   // Emoji reaction methods
   getEmojiReactionsByTrack(trackId: string): Promise<EmojiReaction[]>;
+  getAllEmojiReactions(): Promise<EmojiReaction[]>;
   getEmojiReactionsBySession(trackId: string, sessionId: string): Promise<EmojiReaction[]>;
   createEmojiReaction(reaction: InsertEmojiReaction): Promise<EmojiReaction>;
   deleteEmojiReaction(id: string): Promise<void>;
@@ -153,6 +154,10 @@ export class DatabaseStorage implements IStorage {
   // Emoji reaction methods
   async getEmojiReactionsByTrack(trackId: string): Promise<EmojiReaction[]> {
     return await db.select().from(emojiReactions).where(eq(emojiReactions.trackId, trackId));
+  }
+
+  async getAllEmojiReactions(): Promise<EmojiReaction[]> {
+    return await db.select().from(emojiReactions);
   }
 
   async getEmojiReactionsBySession(trackId: string, sessionId: string): Promise<EmojiReaction[]> {
