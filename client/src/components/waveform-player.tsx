@@ -62,11 +62,17 @@ export default function WaveformPlayer({
         listenerSessionId: sessionId
       });
       
+      console.log('[DEBUG] Full response received:', response);
+      console.log('[DEBUG] Response.currentCount:', response.currentCount);
+      console.log('[DEBUG] Response.allReactions:', response.allReactions?.length);
+      
       // Update local state immediately with response data
       if (response.allReactions) {
+        console.log('[DEBUG] Setting displayEmojis to:', response.allReactions.length, 'emojis');
         setDisplayEmojis(response.allReactions);
       }
       if (response.currentCount !== undefined) {
+        console.log('[DEBUG] Setting emojiCount to:', response.currentCount);
         setEmojiCount(response.currentCount);
       }
       

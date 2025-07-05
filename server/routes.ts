@@ -388,7 +388,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         allReactions: allTrackReactions
       };
       
-
+      console.log('[BACKEND DEBUG] Sending response data:', {
+        hasReaction: !!responseData.reaction,
+        currentCount: responseData.currentCount,
+        allReactionsLength: responseData.allReactions?.length,
+        fullResponse: responseData
+      });
       
       res.json(responseData);
     } catch (error) {
