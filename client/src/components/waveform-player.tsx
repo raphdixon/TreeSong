@@ -58,9 +58,13 @@ export default function WaveformPlayer({
 
   // Function to handle emoji selection
   const handleEmojiSelect = (emoji: string) => {
+    // Use actual waveSurfer time instead of currentTime state (which gets polluted by mouse hover)
+    const actualTime = waveSurferRef.current?.getCurrentTime() || currentTime;
+    console.log('[DEBUG] Adding emoji at time:', actualTime, 'currentTime state:', currentTime);
+    
     createEmojiReactionMutation.mutate({
       emoji,
-      time: currentTime
+      time: actualTime
     });
   };
 
