@@ -85,6 +85,9 @@ export default function WaveformPlayer({
       return apiRequest(`/api/tracks/${trackId}/listens`, 'POST', {
         sessionId
       });
+    },
+    onError: (error) => {
+      console.error('Failed to create track listen:', error);
     }
   });
 
@@ -99,6 +102,9 @@ export default function WaveformPlayer({
         title: "🎉 Track completed!",
         description: "You can now skip around and add emoji reactions anywhere!"
       });
+    },
+    onError: (error) => {
+      console.error('Failed to mark track listen complete:', error);
     }
   });
 
