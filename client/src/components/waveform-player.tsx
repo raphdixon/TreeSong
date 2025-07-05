@@ -94,14 +94,20 @@ export default function WaveformPlayer({
     },
     onSuccess: (response: any) => {
       try {
-        console.log('[EMOJI FLOW] 4. onSuccess called with response:', response);
-        console.log('[EMOJI FLOW] 5. Response structure:', {
-          currentCount: response.currentCount,
-          allReactionsCount: response.allReactions?.length,
-          reactionExists: !!response.reaction
-        });
+        console.log('[VALIDATION] Raw response from backend:', JSON.stringify(response, null, 2));
+        console.log('[VALIDATION] Response keys:', Object.keys(response));
+        console.log('[VALIDATION] currentCount type and value:', typeof response.currentCount, response.currentCount);
+        console.log('[VALIDATION] allReactions type and length:', typeof response.allReactions, response.allReactions?.length);
+        console.log('[VALIDATION] Current sessionId:', sessionId);
+        console.log('[VALIDATION] Before update - localEmojis count:', localEmojis.length);
         
-        console.log('[EMOJI FLOW] 6. Before state update - localEmojis:', localEmojis.length);
+        // Check if response has expected structure
+        if (response.currentCount === undefined) {
+          console.error('[VALIDATION] ERROR: currentCount is undefined in response!');
+        }
+        if (!response.allReactions) {
+          console.error('[VALIDATION] ERROR: allReactions is missing in response!');
+        }
         
         // Update state with fresh references to force re-render
         setCurrentEmojiCount(response.currentCount || 0);

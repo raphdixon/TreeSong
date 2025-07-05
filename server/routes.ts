@@ -380,11 +380,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Return the new reaction with current count
       const updatedReactions = await storage.getEmojiReactionsBySession(trackId, listenerSessionId);
       
-      res.json({ 
+      const allTrackReactions = await storage.getEmojiReactionsByTrack(trackId);
+      
+      const responseData = { 
         reaction, 
         currentCount: updatedReactions.length,
-        allReactions: await storage.getEmojiReactionsByTrack(trackId) // For real-time update
+        allReactions: allTrackReactions
+      };
+      
+      console.log('[BACKEND VALIDATION] Sending response:', {
+        reactionExists: !!responseData.reaction,
+        currentCount: responseData.currentCount,
+        allReactionsCount: responseData.allReactions?.length,
+        sessionId: listenerSessionId
       });
+      
+      res.json(responseData);
     } catch (error) {
       console.error("Failed to create emoji reaction:", error);
       res.status(400).json({ message: "Failed to create emoji reaction" });
