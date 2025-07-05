@@ -56,6 +56,15 @@ export default function WaveformPlayer({
     try {
       const currentTime = waveSurferRef.current.getCurrentTime();
       
+      console.log('[FRONTEND DEBUG] Sending emoji request:', {
+        trackId,
+        emoji,
+        time: currentTime,
+        sessionId,
+        hasWaveSurfer: !!waveSurferRef.current,
+        hasStartedListening
+      });
+      
       const response: any = await apiRequest('POST', `/api/tracks/${trackId}/emoji-reactions`, {
         emoji,
         time: currentTime,

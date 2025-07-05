@@ -359,8 +359,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { emoji, time, listenerSessionId } = req.body;
       const trackId = req.params.trackId;
       
+      console.log('[SESSION DEBUG] Received emoji reaction request:', {
+        trackId,
+        emoji,
+        time,
+        listenerSessionId,
+        bodyKeys: Object.keys(req.body)
+      });
+      
       // Check current emoji count for this session
       const existingReactions = await storage.getEmojiReactionsBySession(trackId, listenerSessionId);
+      console.log('[SESSION DEBUG] Existing reactions for session:', {
+        sessionId: listenerSessionId,
+        count: existingReactions.length,
+        reactions: existingReactions.map(r => ({ id: r.id, emoji: r.emoji, time: r.time }))
+      });
       
       // If we have 10 or more emojis, remove the oldest one (FIFO)
       if (existingReactions.length >= 10) {
@@ -379,8 +392,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Return the new reaction with current count
       const updatedReactions = await storage.getEmojiReactionsBySession(trackId, listenerSessionId);
+      console.log('[SESSION DEBUG] Updated reactions after insert:', {
+        sessionId: listenerSessionId,
+        count: updatedReactions.length,
+        reactions: updatedReactions.map(r => ({ id: r.id, emoji: r.emoji, time: r.time }))
+      });
       
       const allTrackReactions = await storage.getEmojiReactionsByTrack(trackId);
+      console.log('[SESSION DEBUG] All track reactions:', {
+        trackId,
+        count: allTrackReactions.length,
+        reactions: allTrackReactions.slice(0, 5).map(r => ({ 
+          id: r.id, 
+          emoji: r.emoji, 
+          sessionId: r.listenerSessionId 
+        }))
+      });
       
       const responseData = { 
         reaction, 
@@ -392,7 +419,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hasReaction: !!responseData.reaction,
         currentCount: responseData.currentCount,
         allReactionsLength: responseData.allReactions?.length,
-        fullResponse: responseData
+        fullResponse: JSON.stringify(responseData)
       });
       
       res.json(responseData);

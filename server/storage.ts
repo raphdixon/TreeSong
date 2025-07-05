@@ -156,9 +156,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getEmojiReactionsBySession(trackId: string, sessionId: string): Promise<EmojiReaction[]> {
-    return await db.select().from(emojiReactions)
+    const results = await db.select().from(emojiReactions)
       .where(and(eq(emojiReactions.trackId, trackId), eq(emojiReactions.listenerSessionId, sessionId)))
       .orderBy(asc(emojiReactions.timestamp));
+      
+    console.log('[STORAGE DEBUG] getEmojiReactionsBySession query:', {
+      trackId,
+      sessionId,
+      resultsCount: results.length,
+      firstResult: results[0]
+    });
+    
+    return results;
   }
 
   async createEmojiReaction(insertReaction: InsertEmojiReaction): Promise<EmojiReaction> {
