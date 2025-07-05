@@ -203,15 +203,15 @@ export default function ArtistPage() {
       <div className="win95-taskbar">
         <div className="win95-taskbar-left">
           <button 
-            className="win95-taskbar-btn"
+            className="win95-start-btn"
             onClick={() => setLocation('/')}
             title="Back to Main Feed"
           >
-            <ArrowLeft size={16} /> Back
+            ♪ DemoTree
           </button>
-          <span className="win95-taskbar-title">
-            🎵 {artistUsername}'s Music ({tracksWithScores.length} tracks)
-          </span>
+        </div>
+        <div className="win95-taskbar-center">
+          {/* Track counter removed */}
         </div>
         <div className="win95-taskbar-right">
           {user ? (
