@@ -46,21 +46,21 @@ function createWaveSurfer(container: HTMLElement, audioUrl: string) {
   
   const waveSurfer = WaveSurfer.create({
     container,
-    waveColor: '#4a90e2',
-    progressColor: '#1e3a8a',
-    cursorColor: '#ff0000',
+    waveColor: '#0000FF',     // Win95 blue bars
+    progressColor: '#000080', // Win95 navy blue for progress
+    cursorColor: '#FF0000',   // Win95 red cursor
     barWidth: 2,
-    barRadius: 1,
+    barRadius: 0,             // Sharp corners for Win95 look
     responsive: true,
-    height: 100,
+    height: 120,              // Match Win95 height
     normalize: true,
     backend: 'WebAudio',
     mediaControls: false,
     interact: true,
-    scrollParent: false, // Disable scrolling to show full waveform
+    scrollParent: false,
     minPxPerSec: 50,
-    pixelRatio: window.devicePixelRatio || 1,
-    fillParent: true // Fill the entire container
+    pixelRatio: 1,            // Pixelated for Win95 aesthetic
+    fillParent: true
   });
 
   waveSurfer.load(audioUrl);

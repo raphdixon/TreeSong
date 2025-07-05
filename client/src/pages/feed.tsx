@@ -270,20 +270,52 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {/* Main Content - Current Track */}
+      {/* Main Content - Win95 Audio Player */}
       <div style={{ 
-        paddingBottom: '40px', 
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',
-        flex: 1
+        flex: 1,
+        paddingBottom: '40px'
       }}>
         {currentTrack && (
-          <FeedItem 
-            track={currentTrack}
-            isActive={true}
-            onTrackEnd={() => navigateTrack('down')}
-          />
+          <div className="win95-audio-player">
+            {/* Title Bar */}
+            <div className="win95-title-bar">
+              <div className="win95-title-text">
+                ♪ {currentTrack.originalName}
+              </div>
+              <div className="win95-window-controls">
+                <button className="win95-window-btn">_</button>
+                <button className="win95-window-btn">□</button>
+                <button className="win95-window-btn">×</button>
+              </div>
+            </div>
+            
+            {/* Player Content */}
+            <div className="win95-player-content">
+              {/* Track Info */}
+              <div className="win95-track-info">
+                <div className="win95-creator">
+                  👤 Creator
+                </div>
+                <div className="win95-reactions-count">
+                  {currentTrack.emojiReactions?.length || 0} reactions
+                </div>
+              </div>
+              
+              {/* Waveform and Controls */}
+              <WaveformPlayer 
+                trackId={currentTrack.id}
+                audioUrl={`/uploads/${currentTrack.filename}`}
+                duration={currentTrack.duration}
+                emojiReactions={currentTrack.emojiReactions || []}
+                isPublic={true}
+                autoPlay={true}
+                onTrackEnd={() => navigateTrack('down')}
+              />
+            </div>
+          </div>
         )}
       </div>
 

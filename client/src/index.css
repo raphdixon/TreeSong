@@ -55,14 +55,16 @@ html {
   -moz-osx-font-smoothing: grayscale !important;
 }
 
-/* Windows 95 Audio Player Window */
+/* Windows 95 Audio Player Window - Override all existing styles */
 .win95-audio-player {
-  background: var(--win95-gray);
-  border: 2px outset var(--win95-gray);
-  width: 100%;
-  max-width: 320px;
-  margin: 20px auto;
-  font-size: 11px;
+  background: var(--win95-gray) !important;
+  border: 2px outset var(--win95-gray) !important;
+  width: 320px !important;
+  max-width: 320px !important;
+  margin: 20px auto !important;
+  font-size: 11px !important;
+  position: relative !important;
+  z-index: 10 !important;
 }
 
 /* Title Bar */
@@ -134,19 +136,28 @@ html {
   color: var(--win95-black);
 }
 
-/* Waveform Container */
+/* Waveform Container - Force proper styling */
 .win95-waveform-container {
-  border: 2px inset var(--win95-gray);
-  background: var(--win95-white);
-  height: 120px;
-  margin-bottom: 8px;
-  position: relative;
-  overflow: hidden;
+  border: 2px inset var(--win95-gray) !important;
+  background: var(--win95-white) !important;
+  height: 120px !important;
+  margin-bottom: 8px !important;
+  position: relative !important;
+  overflow: hidden !important;
 }
 
 .win95-waveform {
-  width: 100%;
-  height: 100%;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Override any old waveform styles */
+.waveform-section,
+.waveform-wrapper,
+.waveform-element,
+.player-container,
+.emoji-picker-section {
+  display: none !important;
 }
 
 /* Controls */
@@ -182,12 +193,30 @@ html {
   border: 1px inset var(--win95-gray);
 }
 
-/* Emoji Grid */
+/* Emoji Grid - Force 4x3 grid layout */
 .win95-emoji-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 2px;
-  margin-bottom: 8px;
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 2px !important;
+  margin-bottom: 8px !important;
+  width: 100% !important;
+}
+
+/* Hide all old styling completely */
+.desktop-window,
+.window-header,
+.window-content,
+.track-info-bar,
+.waveform-area,
+.desktop-environment,
+.desktop-background,
+.desktop-taskbar,
+.desktop-windows,
+.windows-viewport,
+.window-viewport,
+.desktop-navigation,
+.desktop-nav-btn {
+  display: none !important;
 }
 
 .win95-emoji-btn {
@@ -210,14 +239,22 @@ html {
   background: var(--win95-light-gray);
 }
 
-/* Desktop Layout */
+/* Desktop Layout - Force proper Win95 desktop */
 .win95-desktop {
-  min-height: 100vh;
-  background: var(--win95-teal);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  min-height: 100vh !important;
+  background: var(--win95-teal) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  position: relative !important;
+}
+
+/* Ensure Win95 audio player is always visible */
+.win95-audio-player {
+  display: block !important;
+  visibility: visible !important;
 }
 
 /* Taskbar */
