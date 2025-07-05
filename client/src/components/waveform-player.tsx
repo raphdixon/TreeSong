@@ -48,14 +48,6 @@ export default function WaveformPlayer({
 
   // Function to handle emoji selection
   const handleEmojiSelect = (emoji: string) => {
-    if (!hasCompletedFirstListen) {
-      toast({
-        title: "🎧 Complete first listen",
-        description: "Listen to the full track first to unlock emoji reactions!"
-      });
-      return;
-    }
-
     createEmojiReactionMutation.mutate({
       emoji,
       time: currentTime
@@ -584,10 +576,10 @@ export default function WaveformPlayer({
       </div>
 
       {/* Comment Popup */}
-      {/* Emoji Picker - Always visible */}
+      {/* Emoji Picker - Always visible and enabled */}
       <EmojiPicker 
         onEmojiSelect={handleEmojiSelect}
-        disabled={!hasCompletedFirstListen}
+        disabled={false}
       />
     </div>
   );
