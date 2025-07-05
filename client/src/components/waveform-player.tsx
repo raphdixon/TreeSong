@@ -76,29 +76,40 @@ export default function WaveformPlayer({
         hasStartedListening
       });
       
-      const response: any = await apiRequest('POST', `/api/tracks/${trackId}/emoji-reactions`, {
+      const responseRaw = await apiRequest('POST', `/api/tracks/${trackId}/emoji-reactions`, {
         emoji,
         time: currentTime,
         listenerSessionId: sessionId
       });
       
+      const response = await responseRaw.json();
+      
       console.log('[DEBUG] Full response received:', response);
+      console.log('[DEBUG] Response type:', typeof response);
+      console.log('[DEBUG] Response keys:', Object.keys(response || {}));
       console.log('[DEBUG] Response.currentCount:', response.currentCount);
-      console.log('[DEBUG] Response.allReactions:', response.allReactions?.length);
+      console.log('[DEBUG] Response.allReactions:', response.allReactions);
+      console.log('[DEBUG] Response.allReactions length:', response.allReactions?.length);
       
       // Update local state immediately with response data
       if (response.allReactions) {
         console.log('[DEBUG] Setting displayEmojis to:', response.allReactions.length, 'emojis');
         setDisplayEmojis(response.allReactions);
+      } else {
+        console.log('[DEBUG] No allReactions in response!');
       }
+      
       if (response.currentCount !== undefined) {
         console.log('[DEBUG] Setting emojiCount to:', response.currentCount);
         setEmojiCount(response.currentCount);
+      } else {
+        console.log('[DEBUG] No currentCount in response!');
       }
       
       // Update feed data
       queryClient.invalidateQueries({ queryKey: ['/api/tracks/public'] });
       
+      console.log('[DEBUG] About to show toast with currentCount:', response.currentCount);
       toast({
         title: "Emoji added!",
         description: `${response.currentCount || 0}/10 emojis used`
@@ -263,6 +274,7 @@ export default function WaveformPlayer({
 
   // Initialize emoji state from props
   useEffect(() => {
+    console.log('[DEBUG] Initializing emojis from props:', emojiReactions?.length || 0);
     setDisplayEmojis(emojiReactions || []);
   }, [emojiReactions]);
   
@@ -270,7 +282,9 @@ export default function WaveformPlayer({
   useEffect(() => {
     const fetchEmojiCount = async () => {
       try {
-        const response: any = await apiRequest('GET', `/api/tracks/${trackId}/emoji-reactions/session/${sessionId}`);
+        const responseRaw = await apiRequest('GET', `/api/tracks/${trackId}/emoji-reactions/session/${sessionId}`);
+        const response = await responseRaw.json();
+        console.log('[DEBUG] Initial emoji count response:', response);
         setEmojiCount(response.count || 0);
       } catch (error) {
         console.error('Failed to fetch emoji count:', error);
