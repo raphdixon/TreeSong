@@ -87,25 +87,9 @@ function VolumeControl() {
             fontSize: '10px',
             fontWeight: 'bold',
             marginBottom: '4px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
+            textAlign: 'center'
           }}>
             <span>Volume</span>
-            <button
-              onClick={() => setShowVolumePopup(false)}
-              style={{
-                background: 'var(--win95-gray)',
-                border: '1px outset var(--win95-gray)',
-                width: '12px',
-                height: '10px',
-                fontSize: '6px',
-                cursor: 'pointer',
-                padding: '0'
-              }}
-            >
-              ×
-            </button>
           </div>
           
           {/* Volume slider */}
