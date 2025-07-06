@@ -6,8 +6,7 @@ import path from "path";
 import fs from "fs";
 import { nanoid } from "nanoid";
 import express from "express";
-import { insertTrackSchema, insertEmojiReactionSchema, insertTrackListenSchema, insertInviteSchema } from "@shared/schema";
-import { sendEmail, createTeamInviteEmail } from "./email";
+import { insertTrackSchema, insertEmojiReactionSchema, insertTrackListenSchema } from "@shared/schema";
 import rateLimit from "express-rate-limit";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 
@@ -62,11 +61,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tracks", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user || !user.teamId) {
-        return res.status(401).json({ message: "User not authenticated or has no team" });
-      }
-      const tracks = await storage.getTracksByTeam(user.teamId);
+      const tracks = await storage.getUserTracks(userId);
       res.json(tracks);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch tracks" });
@@ -152,15 +147,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("File moved successfully");
 
       const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      if (!user || !user.teamId) {
-        return res.status(401).json({ message: "User not authenticated or has no team" });
-      }
 
       const trackData = insertTrackSchema.parse({
-        teamId: user.teamId,
-        uploaderUserId: user.id,
+        uploaderUserId: userId,
         filename,
         originalName: req.file.originalname,
         duration
@@ -180,19 +169,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/tracks/:trackId", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
       
       const track = await storage.getTrack(req.params.trackId);
       if (!track) {
         return res.status(404).json({ message: "Track not found" });
       }
 
-      // Check if user has permission to delete
-      if (track.teamId !== user.teamId || track.uploaderUserId !== user.id) {
+      // Check if user has permission to delete (only uploader can delete)
+      if (track.uploaderUserId !== userId) {
         return res.status(403).json({ message: "Access denied" });
       }
 
@@ -372,73 +356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Invite routes
-  app.post("/api/invite", isAuthenticated, async (req, res) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-      
-      const { email } = req.body;
-      const token = nanoid(32);
-      
-      // Get user from database to access team info
-      const userId = (req.user as any).claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user || !user.teamId) {
-        return res.status(401).json({ message: "User not authenticated or has no team" });
-      }
-      
-      // Get team info for email
-      const team = await storage.getTeam(user.teamId);
-      const teamName = team?.name || "Unknown Team";
-      
-      const invite = await storage.createInvite({
-        teamId: user.teamId,
-        email,
-        token
-      });
 
-      // Send invitation email
-      const baseUrl = process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:5000';
-      const emailTemplate = createTeamInviteEmail(
-        user.email || (req.user as any).claims.email || 'noreply@demotree.app',
-        teamName,
-        token,
-        `https://${baseUrl}`
-      );
-      emailTemplate.to = email;
-      
-      const emailSent = await sendEmail(emailTemplate);
-      if (!emailSent) {
-        console.error("Failed to send invitation email to", email);
-        return res.status(500).json({ message: "Failed to send invitation email" });
-      }
-      
-      console.log(`Invitation email sent to ${email} with token: ${token}`);
-      res.json({ message: "Invitation sent successfully" });
-    } catch (error) {
-      console.error("Invitation error:", error);
-      res.status(500).json({ message: "Failed to send invitation" });
-    }
-  });
-
-  app.get("/api/invite/accept/:token", async (req, res) => {
-    try {
-      const invite = await storage.getInviteByToken(req.params.token);
-      if (!invite) {
-        return res.status(404).json({ message: "Invalid invitation token" });
-      }
-
-      if (invite.accepted) {
-        return res.status(400).json({ message: "Invitation already accepted" });
-      }
-
-      res.json({ invite: { email: invite.email, teamId: invite.teamId } });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to validate invitation" });
-    }
-  });
 
   const httpServer = createServer(app);
   return httpServer;

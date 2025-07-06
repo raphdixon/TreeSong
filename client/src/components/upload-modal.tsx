@@ -5,10 +5,9 @@ import { useLocation } from "wouter";
 
 interface UploadModalProps {
   onClose: () => void;
-  teamId: string;
 }
 
-export default function UploadModal({ onClose, teamId }: UploadModalProps) {
+export default function UploadModal({ onClose }: UploadModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);

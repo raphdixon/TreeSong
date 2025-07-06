@@ -22,24 +22,8 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   username: varchar("username").unique(),
-  teamId: varchar("team_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Teams table
-export const teams = pgTable("teams", {
-  id: varchar("id").primaryKey().notNull(),
-  name: varchar("name").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull()
-});
-
-// Team members junction table
-export const teamMembers = pgTable("team_members", {
-  id: varchar("id").primaryKey().notNull(),
-  teamId: varchar("team_id").notNull(),
-  userId: varchar("user_id").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
@@ -52,21 +36,13 @@ export const upsertUserSchema = createInsertSchema(users).omit({
   updatedAt: true
 });
 
-export const insertTeamSchema = createInsertSchema(teams).omit({
-  id: true,
-  createdAt: true
-});
-
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
-export type InsertTeam = z.infer<typeof insertTeamSchema>;
-export type Team = typeof teams.$inferSelect;
 
 // Tracks table
 export const tracks = pgTable("tracks", {
   id: varchar("id").primaryKey().notNull(),
-  teamId: varchar("team_id").notNull(),
   uploaderUserId: varchar("uploader_user_id").notNull(),
   filename: varchar("filename").notNull(),
   originalName: varchar("original_name").notNull(),
@@ -103,16 +79,6 @@ export const shares = pgTable("shares", {
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
-// Invites table
-export const invites = pgTable("invites", {
-  id: varchar("id").primaryKey().notNull(),
-  teamId: varchar("team_id").notNull(),
-  email: varchar("email").notNull(),
-  token: varchar("token").unique().notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  accepted: boolean("accepted").default(false).notNull()
-});
-
 // Insert schemas
 export const insertTrackSchema = createInsertSchema(tracks).omit({
   id: true,
@@ -135,12 +101,6 @@ export const insertShareSchema = createInsertSchema(shares).omit({
   createdAt: true
 });
 
-export const insertInviteSchema = createInsertSchema(invites).omit({
-  id: true,
-  createdAt: true,
-  accepted: true
-});
-
 // Types
 export type InsertTrack = z.infer<typeof insertTrackSchema>;
 export type Track = typeof tracks.$inferSelect;
@@ -150,5 +110,3 @@ export type InsertTrackListen = z.infer<typeof insertTrackListenSchema>;
 export type TrackListen = typeof trackListens.$inferSelect;
 export type InsertShare = z.infer<typeof insertShareSchema>;
 export type Share = typeof shares.$inferSelect;
-export type InsertInvite = z.infer<typeof insertInviteSchema>;
-export type Invite = typeof invites.$inferSelect;

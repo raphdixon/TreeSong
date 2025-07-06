@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import Windows95Layout from "@/components/windows95-layout";
 import UploadModal from "@/components/upload-modal";
-import InviteModal from "@/components/invite-modal";
+
 import { useToast } from "@/hooks/use-toast";
 
 export default function DashboardPage() {
@@ -12,7 +12,7 @@ export default function DashboardPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const [showUpload, setShowUpload] = useState(false);
-  const [showInvite, setShowInvite] = useState(false);
+
   const [activeTab, setActiveTab] = useState("tracks");
 
   // Redirect if not logged in
@@ -102,13 +102,7 @@ export default function DashboardPage() {
           >
             📁 Upload Track
           </button>
-          <button 
-            className="btn"
-            onClick={() => setShowInvite(true)}
-            style={{ fontSize: "11px", padding: "2px 8px" }}
-          >
-            ✉️ Invite Teammate
-          </button>
+
           <button 
             className="btn"
             onClick={handleLogout}
@@ -141,7 +135,7 @@ export default function DashboardPage() {
             </span>
           </div>
 
-          <h3>Your Team's Tracks</h3>
+          <h3>Your Tracks</h3>
           
           {tracksLoading ? (
             <div>Loading tracks...</div>
@@ -206,20 +200,15 @@ export default function DashboardPage() {
           right: "0"
         }}>
           <span>Ready</span>
-          <span>Team: {(userData as any)?.team?.name}</span>
+          <span>User: {userData?.email || 'Loading...'}</span>
         </div>
       </div>
 
       {/* Modals */}
-      {showUpload && userData?.teamId && (
+      {showUpload && (
         <UploadModal 
           onClose={() => setShowUpload(false)}
-          teamId={userData.teamId}
         />
-      )}
-      
-      {showInvite && (
-        <InviteModal onClose={() => setShowInvite(false)} />
       )}
     </Windows95Layout>
   );

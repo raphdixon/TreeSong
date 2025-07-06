@@ -1,10 +1,8 @@
 import {
-  users, teams, tracks, emojiReactions, trackListens, shares, invites, teamMembers,
+  users, tracks, emojiReactions, trackListens, shares,
   type User,
   type InsertUser,
   type UpsertUser,
-  type Team,
-  type InsertTeam,
   type Track,
   type InsertTrack,
   type EmojiReaction,
@@ -12,9 +10,7 @@ import {
   type TrackListen,
   type InsertTrackListen,
   type Share,
-  type InsertShare,
-  type Invite,
-  type InsertInvite
+  type InsertShare
 } from "@shared/schema";
 import { nanoid } from "nanoid";
 import bcrypt from "bcrypt";
@@ -29,15 +25,10 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
   
-  // Team methods
-  getTeam(id: string): Promise<Team | undefined>;
-  createTeam(team: InsertTeam): Promise<Team>;
-  addUserToTeam(teamId: string, userId: string): Promise<void>;
-  
   // Track methods
   getTrack(id: string): Promise<Track | undefined>;
-  getTracksByTeam(teamId: string): Promise<Track[]>;
   getAllTracks(): Promise<(Track & { creatorUsername: string })[]>;
+  getUserTracks(userId: string): Promise<Track[]>;
   createTrack(track: InsertTrack): Promise<Track>;
   deleteTrack(id: string): Promise<void>;
   
@@ -57,10 +48,7 @@ export interface IStorage {
   getShareByToken(token: string): Promise<Share | undefined>;
   createShare(share: InsertShare): Promise<Share>;
   
-  // Invite methods
-  getInviteByToken(token: string): Promise<Invite | undefined>;
-  createInvite(invite: InsertInvite): Promise<Invite>;
-  acceptInvite(token: string): Promise<void>;
+
 }
 
 export class DatabaseStorage implements IStorage {
@@ -104,49 +92,20 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  // Team methods
-  async getTeam(id: string): Promise<Team | undefined> {
-    const [team] = await db.select().from(teams).where(eq(teams.id, id));
-    return team;
-  }
-
-  async createTeam(insertTeam: InsertTeam): Promise<Team> {
-    const id = nanoid();
-    
-    const [team] = await db
-      .insert(teams)
-      .values({
-        id,
-        name: insertTeam.name
-      })
-      .returning();
-      
-    return team;
-  }
-
-  async addUserToTeam(teamId: string, userId: string): Promise<void> {
-    await db.insert(teamMembers).values({
-      id: nanoid(),
-      teamId,
-      userId
-    });
-  }
-
   // Track methods
   async getTrack(id: string): Promise<Track | undefined> {
     const [track] = await db.select().from(tracks).where(eq(tracks.id, id));
     return track;
   }
 
-  async getTracksByTeam(teamId: string): Promise<Track[]> {
-    return await db.select().from(tracks).where(eq(tracks.teamId, teamId));
+  async getUserTracks(userId: string): Promise<Track[]> {
+    return await db.select().from(tracks).where(eq(tracks.uploaderUserId, userId));
   }
 
   async getAllTracks(): Promise<(Track & { creatorUsername: string })[]> {
     const result = await db
       .select({
         id: tracks.id,
-        teamId: tracks.teamId,
         uploaderUserId: tracks.uploaderUserId,
         filename: tracks.filename,
         originalName: tracks.originalName,
@@ -181,8 +140,6 @@ export class DatabaseStorage implements IStorage {
   async deleteTrack(id: string): Promise<void> {
     await db.delete(tracks).where(eq(tracks.id, id));
   }
-
-
 
   // Emoji reaction methods
   async getEmojiReactionsByTrack(trackId: string): Promise<EmojiReaction[]> {
@@ -283,30 +240,6 @@ export class DatabaseStorage implements IStorage {
       .returning();
       
     return share;
-  }
-
-  // Invite methods
-  async getInviteByToken(token: string): Promise<Invite | undefined> {
-    const [invite] = await db.select().from(invites).where(eq(invites.token, token));
-    return invite;
-  }
-
-  async createInvite(insertInvite: InsertInvite): Promise<Invite> {
-    const id = nanoid();
-    
-    const [invite] = await db
-      .insert(invites)
-      .values({
-        id,
-        ...insertInvite
-      })
-      .returning();
-      
-    return invite;
-  }
-
-  async acceptInvite(token: string): Promise<void> {
-    await db.update(invites).set({ accepted: true }).where(eq(invites.token, token));
   }
 }
 
