@@ -90,9 +90,9 @@ function VolumeControl() {
               style={{
                 background: 'var(--win95-gray)',
                 border: '1px outset var(--win95-gray)',
-                width: '16px',
-                height: '14px',
-                fontSize: '8px',
+                width: '12px',
+                height: '10px',
+                fontSize: '6px',
                 cursor: 'pointer',
                 padding: '0'
               }}
@@ -136,30 +136,6 @@ function VolumeControl() {
               }}
             >
               Mute
-            </button>
-            <button
-              onClick={() => handleVolumeChange(50)}
-              style={{
-                background: 'var(--win95-gray)',
-                border: '1px outset var(--win95-gray)',
-                padding: '2px 4px',
-                fontSize: '8px',
-                cursor: 'pointer'
-              }}
-            >
-              50%
-            </button>
-            <button
-              onClick={() => handleVolumeChange(100)}
-              style={{
-                background: 'var(--win95-gray)',
-                border: '1px outset var(--win95-gray)',
-                padding: '2px 4px',
-                fontSize: '8px',
-                cursor: 'pointer'
-              }}
-            >
-              Max
             </button>
           </div>
         </div>
