@@ -1,18 +1,17 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import Windows95Layout from "@/components/windows95-layout";
 import UploadModal from "@/components/upload-modal";
-
 import { useToast } from "@/hooks/use-toast";
 
 export default function DashboardPage() {
   const [, setLocation] = useLocation();
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [showUpload, setShowUpload] = useState(false);
-
   const [activeTab, setActiveTab] = useState("tracks");
 
   // Redirect if not logged in
@@ -43,14 +42,35 @@ export default function DashboardPage() {
     enabled: isAuthenticated, // Only fetch when authenticated
   });
 
-  // Fetch tracks for user's team
+  // Fetch tracks for user
   const { data: tracks = [], isLoading: tracksLoading } = useQuery({
     queryKey: ["/api/tracks"],
-    enabled: isAuthenticated && !!userData?.teamId, // Only fetch when user has team
+    enabled: isAuthenticated, // Only fetch when authenticated
   });
 
   const handleLogout = () => {
     window.location.href = "/api/logout";
+  };
+
+  const updateArtistName = async (artistName: string) => {
+    if (!artistName.trim()) return;
+    
+    try {
+      const response = await fetch('/api/auth/update-artist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ artistName: artistName.trim() })
+      });
+      
+      if (response.ok) {
+        toast({ title: "Artist name updated!", description: `Set to: ${artistName.trim()}` });
+        // Refresh user data
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      }
+    } catch (error) {
+      toast({ title: "Failed to update artist name", variant: "destructive" });
+    }
   };
 
   const formatDuration = (seconds: number) => {
@@ -117,19 +137,26 @@ export default function DashboardPage() {
           overflowY: "auto",
           padding: "12px"
         }}>
-          {/* Team Info */}
+          {/* Artist Settings */}
           <div style={{ 
             background: "#C0C0C0", 
             border: "1px inset #C0C0C0", 
             padding: "8px", 
-            marginBottom: "16px",
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "8px"
+            marginBottom: "16px"
           }}>
-            <strong>Team: {(userData as any)?.team?.name || "Loading..."}</strong>
+            <strong>Artist Settings</strong>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", marginBottom: "8px" }}>
+              <label htmlFor="artistName" style={{ fontSize: "11px" }}>Artist Name:</label>
+              <input
+                id="artistName"
+                type="text"
+                className="textbox"
+                placeholder={userData?.email || 'Your artist name'}
+                defaultValue={userData?.artistName || ''}
+                onBlur={(e) => updateArtistName(e.target.value)}
+                style={{ flex: 1, fontSize: "11px" }}
+              />
+            </div>
             <span style={{ fontSize: "11px" }}>
               Logged in as: {user.email}
             </span>
@@ -200,7 +227,7 @@ export default function DashboardPage() {
           right: "0"
         }}>
           <span>Ready</span>
-          <span>User: {userData?.email || 'Loading...'}</span>
+          <span>Artist: {userData?.artistName || userData?.email || 'Loading...'}</span>
         </div>
       </div>
 

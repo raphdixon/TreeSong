@@ -24,6 +24,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
+  updateUserArtistName(userId: string, artistName: string): Promise<void>;
   
   // Track methods
   getTrack(id: string): Promise<Track | undefined>;
@@ -90,6 +91,16 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
+  }
+
+  async updateUserArtistName(userId: string, artistName: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ 
+        artistName: artistName,
+        updatedAt: new Date() 
+      })
+      .where(eq(users.id, userId));
   }
 
   // Track methods

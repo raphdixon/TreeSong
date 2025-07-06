@@ -57,6 +57,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/auth/update-artist', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { artistName } = req.body;
+      
+      if (!artistName || typeof artistName !== 'string') {
+        return res.status(400).json({ message: "Artist name is required" });
+      }
+
+      // Update user's artist name
+      await storage.updateUserArtistName(userId, artistName.trim());
+      
+      res.json({ message: "Artist name updated successfully" });
+    } catch (error) {
+      console.error("Error updating artist name:", error);
+      res.status(500).json({ message: "Failed to update artist name" });
+    }
+  });
+
   // Track routes  
   app.get("/api/tracks", isAuthenticated, async (req: any, res) => {
     try {
