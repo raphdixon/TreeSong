@@ -9,6 +9,7 @@ import express from "express";
 import { insertTrackSchema, insertEmojiReactionSchema, insertTrackListenSchema } from "@shared/schema";
 import rateLimit from "express-rate-limit";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { generateWaveformData } from "./waveform";
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(process.cwd(), "uploads");
@@ -132,6 +133,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get waveform data for a track
+  app.get("/api/tracks/:trackId/waveform", async (req, res) => {
+    try {
+      const track = await storage.getTrack(req.params.trackId);
+      if (!track) {
+        return res.status(404).json({ message: "Track not found" });
+      }
+
+      // Return cached waveform data if available
+      if (track.waveformData) {
+        res.json(track.waveformData);
+      } else {
+        // Generate waveform data on-demand if not cached
+        const filePath = path.join(uploadsDir, track.filename);
+        if (fs.existsSync(filePath)) {
+          const waveformData = await generateWaveformData(filePath);
+          res.json(waveformData);
+        } else {
+          res.status(404).json({ message: "Audio file not found" });
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching waveform:", error);
+      res.status(500).json({ message: "Failed to fetch waveform data" });
+    }
+  });
+
   app.post("/api/tracks", isAuthenticated, upload.single('audio'), async (req: any, res) => {
     console.log("=== UPLOAD TRACK REQUEST ===");
     console.log("Request body:", req.body);
@@ -167,11 +195,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const userId = req.user.claims.sub;
 
+      // Generate waveform data for faster loading
+      console.log("Generating waveform data...");
+      const waveformData = await generateWaveformData(newPath);
+      console.log("Waveform generated with", waveformData.peaks.length, "peaks");
+
       const trackData = insertTrackSchema.parse({
         uploaderUserId: userId,
         filename,
         originalName: req.file.originalname,
-        duration
+        duration,
+        waveformData
       });
 
       console.log("Creating track with data:", trackData);

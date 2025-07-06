@@ -56,6 +56,12 @@ export default function WaveformPlayer({
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Fetch cached waveform data for faster loading
+  const { data: waveformData, isLoading: waveformLoading } = useQuery({
+    queryKey: [`/api/tracks/${trackId}/waveform`],
+    staleTime: Infinity, // Waveform data never changes
+  });
+
   // Simple state for emoji display
   const [displayEmojis, setDisplayEmojis] = useState<any[]>(emojiReactions || []);
   const [emojiCount, setEmojiCount] = useState(0);
@@ -155,8 +161,8 @@ export default function WaveformPlayer({
 
   // Initialize WaveSurfer
   useEffect(() => {
-    if (waveformRef.current) {
-      initializeWaveSurfer(waveformRef.current, audioUrl)
+    if (waveformRef.current && !waveformLoading) {
+      initializeWaveSurfer(waveformRef.current, audioUrl, waveformData)
         .then((waveSurfer) => {
           console.log('WaveSurfer initialized successfully');
           waveSurferRef.current = waveSurfer;

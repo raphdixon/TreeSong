@@ -49,6 +49,7 @@ export const tracks = pgTable("tracks", {
   originalName: varchar("original_name").notNull(),
   uploadDate: timestamp("upload_date").defaultNow().notNull(),
   duration: real("duration").notNull(),
+  waveformData: jsonb("waveform_data"), // Store pre-generated waveform peaks
   fileDeletedAt: timestamp("file_deleted_at")
 });
 

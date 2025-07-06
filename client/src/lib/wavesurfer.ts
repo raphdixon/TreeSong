@@ -6,12 +6,12 @@ declare global {
 
 let waveSurferLoaded = false;
 
-export function initializeWaveSurfer(container: HTMLElement, audioUrl: string) {
+export function initializeWaveSurfer(container: HTMLElement, audioUrl: string, waveformData?: any) {
   if (!waveSurferLoaded) {
-    return loadWaveSurfer().then(() => createWaveSurfer(container, audioUrl));
+    return loadWaveSurfer().then(() => createWaveSurfer(container, audioUrl, waveformData));
   }
   
-  return Promise.resolve(createWaveSurfer(container, audioUrl));
+  return Promise.resolve(createWaveSurfer(container, audioUrl, waveformData));
 }
 
 function loadWaveSurfer(): Promise<void> {
@@ -37,7 +37,7 @@ function loadWaveSurfer(): Promise<void> {
   });
 }
 
-function createWaveSurfer(container: HTMLElement, audioUrl: string) {
+function createWaveSurfer(container: HTMLElement, audioUrl: string, waveformData?: any) {
   if (!window.WaveSurfer) {
     throw new Error('WaveSurfer not loaded');
   }
@@ -63,7 +63,14 @@ function createWaveSurfer(container: HTMLElement, audioUrl: string) {
     fillParent: true
   });
 
-  waveSurfer.load(audioUrl);
+  // Use cached waveform data if available, otherwise load the audio
+  if (waveformData && waveformData.peaks && waveformData.peaks.length > 0) {
+    console.log('Using cached waveform data with', waveformData.peaks.length, 'peaks');
+    waveSurfer.load(audioUrl, waveformData.peaks);
+  } else {
+    console.log('Loading waveform from audio file');
+    waveSurfer.load(audioUrl);
+  }
   
   return waveSurfer;
 }
