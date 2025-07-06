@@ -282,13 +282,21 @@ export default function WaveformPlayer({
     
     return displayEmojis.map((reaction: any, index: number) => {
       const position = (reaction.time / duration) * 100;
+      
+      // Generate random height based on reaction ID or index
+      const seed = reaction.id ? 
+        reaction.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) : 
+        index;
+      const heightVariations = [5, 15, 25, 35, 45, 55, 65, 75, 85, 95];
+      const randomHeight = heightVariations[seed % heightVariations.length];
+      
       return (
         <div
           key={reaction.id || `emoji-${index}`}
           style={{
             position: 'absolute',
             left: `${position}%`,
-            bottom: '10px',
+            bottom: `${randomHeight}px`,
             fontSize: '20px',
             transform: 'translateX(-50%)',
             pointerEvents: 'none',
