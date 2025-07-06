@@ -319,12 +319,7 @@ html {
   grid-template-columns: repeat(4, 1fr) !important;
 }
 
-/* Hide all old styling completely */
-.desktop-window,
-.window-header,
-.window-content,
-.track-info-bar,
-.waveform-area,
+/* Hide unused old desktop components */
 .desktop-environment,
 .desktop-background,
 .desktop-taskbar,
@@ -387,6 +382,27 @@ html {
 .win95-audio-player {
   display: block !important;
   visibility: visible !important;
+}
+
+/* Ensure player container is visible */
+.player-container {
+  display: flex !important;
+  visibility: visible !important;
+  background: var(--win95-gray) !important;
+}
+
+/* Ensure waveform container is visible */
+.waveform-container {
+  display: flex !important;
+  visibility: visible !important;
+}
+
+/* Ensure Win95 player content is visible */
+.win95-player-content {
+  display: block !important;
+  visibility: visible !important;
+  background: var(--win95-gray) !important;
+  padding: 0 !important;
 }
 
 /* Taskbar */
