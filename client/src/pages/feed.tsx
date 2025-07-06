@@ -16,10 +16,16 @@ function VolumeControl() {
   const [showVolumePopup, setShowVolumePopup] = useState(false);
   const [volume, setVolume] = useState(globalVolume);
   const popupRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
+      if (
+        popupRef.current && 
+        !popupRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
         setShowVolumePopup(false);
       }
     };
@@ -50,6 +56,7 @@ function VolumeControl() {
   return (
     <div style={{ position: 'relative' }}>
       <button 
+        ref={buttonRef}
         className="win95-taskbar-btn"
         onClick={() => setShowVolumePopup(!showVolumePopup)}
         title="Volume Control"
