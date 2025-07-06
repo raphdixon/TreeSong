@@ -79,6 +79,11 @@ export default function WaveformPlayer({
     },
     onSuccess: () => {
       setHasStartedListening(true);
+    },
+    onError: (error) => {
+      console.error('Failed to create listen record:', error);
+      // Still allow playing even if listen record fails
+      setHasStartedListening(true);
     }
   });
 
@@ -283,11 +288,13 @@ export default function WaveformPlayer({
           style={{
             position: 'absolute',
             left: `${position}%`,
-            bottom: '24px',
+            bottom: '10px',
             fontSize: '20px',
             transform: 'translateX(-50%)',
             pointerEvents: 'none',
-            zIndex: 10
+            zIndex: 20,
+            display: 'block',
+            visibility: 'visible'
           }}
         >
           {reaction.emoji}
@@ -338,7 +345,11 @@ export default function WaveformPlayer({
       )}
 
       {/* Waveform visualization */}
-      <div style={{ position: 'relative', width: '100%' }}>
+      <div style={{ 
+        position: 'relative', 
+        width: '100%',
+        minHeight: '140px'
+      }}>
         <SimpleWaveform
           trackId={trackId}
           duration={duration}

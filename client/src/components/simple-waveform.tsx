@@ -8,14 +8,32 @@ interface SimpleWaveformProps {
   isPlaying?: boolean;
 }
 
-// Generate fake waveform bars for visualization
-function generateBars(count: number): number[] {
+// Generate unique waveform bars based on trackId
+function generateBars(count: number, trackId: string): number[] {
   const bars: number[] = [];
+  
+  // Create a simple hash from trackId to use as seed
+  let hash = 0;
+  for (let i = 0; i < trackId.length; i++) {
+    const char = trackId.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  
+  // Use hash to create deterministic but unique pattern
+  const seed = Math.abs(hash);
+  const offset = (seed % 100) / 100;
+  const frequency = 0.3 + (seed % 30) / 100;
+  
   for (let i = 0; i < count; i++) {
-    // Create a more interesting pattern
-    const base = 0.3;
-    const variation = Math.sin(i * 0.3) * 0.3 + Math.random() * 0.2;
-    bars.push(Math.max(0.1, Math.min(1, base + variation)));
+    // Create unique pattern based on track
+    const base = 0.4 + (seed % 20) / 100;
+    const wave1 = Math.sin((i + offset * 10) * frequency) * 0.3;
+    const wave2 = Math.sin((i + offset * 5) * frequency * 2.1) * 0.15;
+    const pseudoRandom = ((seed * (i + 1)) % 100) / 500 - 0.1;
+    
+    const height = base + wave1 + wave2 + pseudoRandom;
+    bars.push(Math.max(0.1, Math.min(1, height)));
   }
   return bars;
 }
@@ -28,7 +46,7 @@ export default function SimpleWaveform({
   isPlaying = false 
 }: SimpleWaveformProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [bars] = useState(() => generateBars(100)); // Fixed 100 bars for consistency
+  const [bars] = useState(() => generateBars(100, trackId)); // Generate unique bars per track
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
 
   const handleBarClick = (index: number) => {
