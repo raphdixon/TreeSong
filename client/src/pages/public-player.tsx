@@ -1,7 +1,7 @@
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import Windows95Layout from "@/components/windows95-layout";
-import WaveformPlayer from "@/components/waveform-player";
+import WaveformPlayer from "@/components/waveform-player-new";
 
 export default function PublicPlayerPage() {
   const { token } = useParams();

@@ -39,6 +39,7 @@ body {
   -moz-osx-font-smoothing: grayscale !important;
 }
 
+/* Only teal for feed view */
 html {
   background: var(--win95-teal) !important;
 }
@@ -46,6 +47,27 @@ html {
 #root {
   background: var(--win95-teal) !important;
   min-height: 100vh;
+}
+
+/* Windows and dialogs should have grey background */
+.window,
+.dialog,
+[role="dialog"],
+.dashboard-window,
+.player-window,
+.desktop-window > .window-body {
+  background: var(--win95-gray) !important;
+}
+
+/* Fix for any teal backgrounds in modals */
+.fixed.inset-0 > div {
+  background: var(--win95-gray) !important;
+}
+
+/* Dashboard specific fixes */
+.dashboard-page,
+.player-container {
+  background: var(--win95-gray) !important;
 }
 
 * {

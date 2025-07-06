@@ -85,7 +85,7 @@ export default function DashboardPage() {
 
   return (
     <Windows95Layout>
-      <div className="window" style={{ 
+      <div className="window dashboard-window" style={{ 
         top: "20px", 
         left: "20px", 
         right: "20px",
@@ -93,7 +93,8 @@ export default function DashboardPage() {
         width: "auto",
         minHeight: "calc(100vh - 120px)",
         maxWidth: "1200px",
-        margin: "0 auto"
+        margin: "0 auto",
+        background: "var(--win95-gray)"
       }}>
         <div className="title-bar">
           <div className="title-bar-text">TreeNote - Dashboard</div>

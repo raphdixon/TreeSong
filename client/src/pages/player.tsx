@@ -2,7 +2,7 @@ import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import Windows95Layout from "@/components/windows95-layout";
-import WaveformPlayer from "@/components/waveform-player";
+import WaveformPlayer from "@/components/waveform-player-new";
 import ShareModal from "@/components/share-modal";
 import { useState } from "react";
 
@@ -74,14 +74,15 @@ export default function PlayerPage() {
 
   return (
     <Windows95Layout>
-      <div className="window" style={{ 
+      <div className="window player-window" style={{ 
         top: "10px", 
         left: "10px", 
         right: "10px",
         bottom: "10px",
         position: "fixed",
         width: "calc(100vw - 20px)",
-        height: "calc(100vh - 20px)"
+        height: "calc(100vh - 20px)",
+        background: "var(--win95-gray)"
       }}>
         <div className="title-bar">
           <div className="title-bar-text">TreeNote - {track.originalName}</div>

@@ -3,7 +3,7 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import EmojiPicker from "./emoji-picker";
-import { initializeWaveSurfer } from "@/lib/wavesurfer";
+import SimpleWaveform from "@/components/simple-waveform";
 
 import { nanoid } from "nanoid";
 
@@ -28,13 +28,10 @@ export default function WaveformPlayer({
   autoPlay = false,
   onTrackEnd
 }: WaveformPlayerProps) {
-  const waveformRef = useRef<HTMLDivElement>(null);
-  const waveSurferRef = useRef<any>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [volume, setVolume] = useState(75);
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [viewOffset, setViewOffset] = useState(0);
 
   
   // New emoji and first-listen functionality
