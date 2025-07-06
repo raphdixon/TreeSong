@@ -414,12 +414,20 @@ export default function WaveformPlayer({
       </div>
 
       {/* Emoji picker */}
-      <EmojiPicker 
-        onEmojiSelect={handleEmojiSelect}
-        disabled={!hasStartedListening}
-        currentCount={emojiCount}
-        showWarning={!hasCompletedFirstListen}
-      />
+      <div className="win95-emoji-grid" style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '4px',
+        width: '100%',
+        marginTop: '8px'
+      }}>
+        <EmojiPicker 
+          onEmojiSelect={handleEmojiSelect}
+          disabled={!hasStartedListening}
+          currentCount={emojiCount}
+          showWarning={!hasCompletedFirstListen}
+        />
+      </div>
     </div>
   );
 }
