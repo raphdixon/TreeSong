@@ -141,14 +141,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Track not found" });
       }
 
-      // Return cached waveform data if available
-      if (track.waveformData) {
+      // Check if we need to regenerate (old data has too many peaks)
+      const needsRegeneration = track.waveformData && 
+        track.waveformData.peaks && 
+        track.waveformData.peaks.length > 500;
+
+      // Return cached waveform data if available and good quality
+      if (track.waveformData && !needsRegeneration) {
         res.json(track.waveformData);
       } else {
-        // Generate waveform data on-demand if not cached
+        // Generate waveform data on-demand if not cached or needs regeneration
         const filePath = path.join(uploadsDir, track.filename);
         if (fs.existsSync(filePath)) {
+          console.log(`Regenerating waveform for track ${req.params.trackId}`);
           const waveformData = await generateWaveformData(filePath);
+          
+          // Update the track with new waveform data
+          await storage.updateTrackWaveform(req.params.trackId, waveformData);
+          
           res.json(waveformData);
         } else {
           res.status(404).json({ message: "Audio file not found" });

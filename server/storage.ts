@@ -31,6 +31,7 @@ export interface IStorage {
   getAllTracks(): Promise<(Track & { creatorUsername: string })[]>;
   getUserTracks(userId: string): Promise<Track[]>;
   createTrack(track: InsertTrack): Promise<Track>;
+  updateTrackWaveform(trackId: string, waveformData: any): Promise<void>;
   deleteTrack(id: string): Promise<void>;
   
   // Emoji reaction methods
@@ -146,6 +147,13 @@ export class DatabaseStorage implements IStorage {
       .returning();
       
     return track;
+  }
+
+  async updateTrackWaveform(trackId: string, waveformData: any): Promise<void> {
+    await db
+      .update(tracks)
+      .set({ waveformData })
+      .where(eq(tracks.id, trackId));
   }
 
   async deleteTrack(id: string): Promise<void> {

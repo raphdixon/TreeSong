@@ -66,6 +66,7 @@ function createWaveSurfer(container: HTMLElement, audioUrl: string, waveformData
   // Use cached waveform data if available, otherwise load the audio
   if (waveformData && waveformData.peaks && waveformData.peaks.length > 0) {
     console.log('Using cached waveform data with', waveformData.peaks.length, 'peaks');
+    // Load with peaks array as the second parameter
     waveSurfer.load(audioUrl, waveformData.peaks);
   } else {
     console.log('Loading waveform from audio file');
