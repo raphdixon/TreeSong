@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import Windows95Layout from "@/components/windows95-layout";
 
 export default function RegisterPage() {
   const [, setLocation] = useLocation();
-  const { login } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,9 +35,8 @@ export default function RegisterPage() {
       return response.json();
     },
     onSuccess: (data) => {
-      login(data.user, data.token || "");
-      toast({ title: "Welcome!", description: "Your account has been created successfully." });
-      setLocation("/dashboard");
+      // Redirect to Replit Auth login
+      window.location.href = "/api/login";
     },
     onError: (error: any) => {
       toast({ 

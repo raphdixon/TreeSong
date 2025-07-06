@@ -1,6 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth";
 import Windows95Layout from "@/components/windows95-layout";
 import WaveformPlayer from "@/components/waveform-player";
 import ShareModal from "@/components/share-modal";
@@ -12,9 +12,9 @@ export default function PlayerPage() {
   const { user } = useAuth();
   const [showShare, setShowShare] = useState(false);
 
-  // Redirect if not logged in
+  // Redirect if not logged in  
   if (!user) {
-    setLocation("/login");
+    setLocation("/");
     return null;
   }
 

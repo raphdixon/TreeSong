@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import Windows95Layout from "@/components/windows95-layout";
 
@@ -11,18 +11,18 @@ export default function LandingPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [notepadOpen, setNotepadOpen] = useState(true);
-  const { login } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const loginMutation = useMutation({
     mutationFn: async (data: { email: string; password: string }) => {
-      const response = await apiRequest("POST", "/api/auth/login", data);
-      return response.json();
+      // Redirect to Replit Auth instead of JWT login
+      window.location.href = "/api/login";
+      return {};
     },
     onSuccess: (data) => {
-      login(data.user, data.token || "");
-      toast({ title: "Welcome back!", description: "You have been logged in successfully." });
-      setLocation("/dashboard");
+      // Redirect to Replit Auth login
+      window.location.href = "/api/login";
     },
     onError: (error: any) => {
       toast({ 
