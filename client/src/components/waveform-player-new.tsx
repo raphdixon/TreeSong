@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import EmojiPicker from "./emoji-picker";
 import SimpleWaveform from "@/components/simple-waveform";
 import { nanoid } from "nanoid";
+import { useGlobalVolume } from "@/pages/feed";
 
 interface WaveformPlayerProps {
   trackId: string;
@@ -30,7 +31,8 @@ export default function WaveformPlayer({
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [volume, setVolume] = useState(75);
+  const globalVolume = useGlobalVolume();
+
   
   // First-listen functionality
   const [hasCompletedFirstListen, setHasCompletedFirstListen] = useState(false);
@@ -108,7 +110,7 @@ export default function WaveformPlayer({
   // Initialize audio element
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = volume / 100;
+      audioRef.current.volume = globalVolume / 100;
       
       // Auto-play if requested
       if (autoPlay) {
@@ -118,14 +120,14 @@ export default function WaveformPlayer({
         }).catch(console.error);
       }
     }
-  }, [audioUrl, autoPlay]);
+  }, [audioUrl, autoPlay, globalVolume]);
 
   // Update volume
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = volume / 100;
+      audioRef.current.volume = globalVolume / 100;
     }
-  }, [volume]);
+  }, [globalVolume]);
 
   // Handle audio events
   useEffect(() => {
@@ -414,22 +416,7 @@ export default function WaveformPlayer({
           {formatTime(currentTime)} / {formatTime(duration)}
         </div>
 
-        <div style={{
-          marginLeft: 'auto',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px'
-        }}>
-          <span style={{ fontSize: '10px' }}>🔊</span>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={volume}
-            onChange={(e) => setVolume(Number(e.target.value))}
-            style={{ width: '80px' }}
-          />
-        </div>
+
       </div>
 
       {/* Emoji picker */}

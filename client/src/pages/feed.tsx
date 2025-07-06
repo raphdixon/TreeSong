@@ -8,6 +8,185 @@ import WaveformPlayer from "@/components/waveform-player-new";
 import AuthPromptCard from "@/components/auth-prompt-card";
 import { ChevronUp, ChevronDown, User, LogIn, Upload } from "lucide-react";
 
+// Global volume state
+let globalVolume = 70;
+const volumeListeners: ((volume: number) => void)[] = [];
+
+function VolumeControl() {
+  const [showVolumePopup, setShowVolumePopup] = useState(false);
+  const [volume, setVolume] = useState(globalVolume);
+  const popupRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
+        setShowVolumePopup(false);
+      }
+    };
+
+    if (showVolumePopup) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showVolumePopup]);
+
+  const handleVolumeChange = (newVolume: number) => {
+    setVolume(newVolume);
+    globalVolume = newVolume;
+    
+    // Update all audio elements
+    volumeListeners.forEach(listener => listener(newVolume));
+    
+    // Update any currently playing audio
+    const audioElements = document.querySelectorAll('audio');
+    audioElements.forEach(audio => {
+      audio.volume = newVolume / 100;
+    });
+  };
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button 
+        className="win95-taskbar-btn"
+        onClick={() => setShowVolumePopup(!showVolumePopup)}
+        title="Volume Control"
+        style={{ minWidth: '30px' }}
+      >
+        🔊
+      </button>
+      
+      {showVolumePopup && (
+        <div
+          ref={popupRef}
+          style={{
+            position: 'absolute',
+            bottom: '30px',
+            right: '0',
+            width: '120px',
+            background: 'var(--win95-gray)',
+            border: '2px outset var(--win95-gray)',
+            padding: '8px',
+            zIndex: 2000
+          }}
+        >
+          {/* Title bar */}
+          <div style={{
+            background: 'linear-gradient(90deg, var(--win95-blue), #0000FF)',
+            color: 'white',
+            padding: '2px 4px',
+            fontSize: '10px',
+            fontWeight: 'bold',
+            marginBottom: '4px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <span>Volume</span>
+            <button
+              onClick={() => setShowVolumePopup(false)}
+              style={{
+                background: 'var(--win95-gray)',
+                border: '1px outset var(--win95-gray)',
+                width: '16px',
+                height: '14px',
+                fontSize: '8px',
+                cursor: 'pointer',
+                padding: '0'
+              }}
+            >
+              ×
+            </button>
+          </div>
+          
+          {/* Volume slider */}
+          <div style={{ textAlign: 'center', marginBottom: '4px' }}>
+            <div style={{ fontSize: '8px', marginBottom: '2px' }}>
+              Volume: {volume}%
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={volume}
+              onChange={(e) => handleVolumeChange(Number(e.target.value))}
+              style={{
+                width: '90px',
+                height: '16px'
+              }}
+            />
+          </div>
+          
+          {/* Quick volume buttons */}
+          <div style={{ 
+            display: 'flex', 
+            gap: '2px', 
+            justifyContent: 'center'
+          }}>
+            <button
+              onClick={() => handleVolumeChange(0)}
+              style={{
+                background: 'var(--win95-gray)',
+                border: '1px outset var(--win95-gray)',
+                padding: '2px 4px',
+                fontSize: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              Mute
+            </button>
+            <button
+              onClick={() => handleVolumeChange(50)}
+              style={{
+                background: 'var(--win95-gray)',
+                border: '1px outset var(--win95-gray)',
+                padding: '2px 4px',
+                fontSize: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              50%
+            </button>
+            <button
+              onClick={() => handleVolumeChange(100)}
+              style={{
+                background: 'var(--win95-gray)',
+                border: '1px outset var(--win95-gray)',
+                padding: '2px 4px',
+                fontSize: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              Max
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Export the volume management functions
+export const useGlobalVolume = () => {
+  const [volume, setVolume] = useState(globalVolume);
+  
+  useEffect(() => {
+    const listener = (newVolume: number) => setVolume(newVolume);
+    volumeListeners.push(listener);
+    
+    return () => {
+      const index = volumeListeners.indexOf(listener);
+      if (index > -1) {
+        volumeListeners.splice(index, 1);
+      }
+    };
+  }, []);
+  
+  return volume;
+};
+
 interface Track {
   id: string;
   originalName: string;
@@ -317,6 +496,7 @@ export default function FeedPage() {
               🔐 Login
             </button>
           )}
+          <VolumeControl />
         </div>
       </div>
       {/* Main Content - Win95 Audio Player */}
