@@ -484,6 +484,13 @@ export default function FeedPage() {
   }, [topTrackSlug, recommendedTracks, displayItems]);
 
   const navigateTrack = (direction: 'up' | 'down') => {
+    console.log('[FEED] navigateTrack called:', {
+      direction,
+      currentIndex: currentTrackIndex,
+      isScrolling,
+      caller: new Error().stack?.split('\n')[2]
+    });
+    
     if (isScrolling) return;
     
     setIsScrolling(true);
@@ -493,6 +500,7 @@ export default function FeedPage() {
       : Math.max(currentTrackIndex - 1, 0);
     
     if (newIndex !== currentTrackIndex) {
+      console.log('[FEED] Changing track index from', currentTrackIndex, 'to', newIndex);
       setCurrentTrackIndex(newIndex);
       
       // Track view for actual tracks (not auth prompts)
@@ -531,12 +539,23 @@ export default function FeedPage() {
     const handleWheel = (e: WheelEvent) => {
       // Check if the wheel event is coming from within the player or emoji picker
       const target = e.target as HTMLElement;
+      
+      console.log('[FEED] Wheel event detected:', {
+        deltaY: e.deltaY,
+        target: target.className,
+        closestPlayer: !!target.closest('.win95-audio-player'),
+        closestEmojiPicker: !!target.closest('.emoji-picker-wrapper'),
+        closestEmojiGrid: !!target.closest('.emoji-grid'),
+        closestEmojiButton: !!target.closest('.emoji-button'),
+        closestWaveform: !!target.closest('.win95-waveform-container')
+      });
+      
       if (target.closest('.win95-audio-player') || 
           target.closest('.emoji-picker-wrapper') ||
           target.closest('.emoji-grid') ||
           target.closest('.emoji-button') ||
           target.closest('.win95-waveform-container')) {
-        // Don't navigate tracks when interacting with player components
+        console.log('[FEED] Wheel event ignored - inside player component');
         return;
       }
       
@@ -699,7 +718,17 @@ export default function FeedPage() {
             }}
           />
         ) : currentTrack ? (
-          <div className="win95-audio-player">
+          <div 
+            className="win95-audio-player"
+            onClick={(e) => {
+              console.log('[FEED] Audio player container clicked:', {
+                target: (e.target as HTMLElement).className,
+                currentTarget: e.currentTarget.className,
+                isDefaultPrevented: e.defaultPrevented,
+                isPropagationStopped: e.isPropagationStopped
+              });
+            }}
+          >
             {/* Title Bar */}
             <div className="win95-title-bar ml-[0px] mr-[0px] mt-[0px] mb-[0px] pt-[14px] pb-[14px]">
               <div className="win95-title-text">

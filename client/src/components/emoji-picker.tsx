@@ -71,9 +71,19 @@ export default function EmojiPicker({
             key={emoji}
             className="emoji-button"
             onClick={(e) => {
+              console.log('[EMOJI-PICKER] Emoji button clicked:', {
+                emoji,
+                eventType: e.type,
+                target: e.target,
+                currentTarget: e.currentTarget,
+                bubbles: e.bubbles,
+                defaultPrevented: e.defaultPrevented
+              });
               e.stopPropagation();
               e.preventDefault();
+              console.log('[EMOJI-PICKER] After stopPropagation, calling onEmojiSelect');
               onEmojiSelect(emoji);
+              console.log('[EMOJI-PICKER] onEmojiSelect completed');
             }}
             disabled={disabled}
             title={`Add ${emoji} reaction`}

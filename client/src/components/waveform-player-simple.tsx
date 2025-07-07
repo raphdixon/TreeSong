@@ -240,6 +240,12 @@ export default function WaveformPlayer({
   };
 
   const handleEmojiSelect = (emoji: string) => {
+    console.log('[WAVEFORM-PLAYER] handleEmojiSelect called:', {
+      emoji,
+      trackId,
+      currentTime: audioRef.current?.currentTime || 0,
+      audioElement: !!audioRef.current
+    });
     const time = audioRef.current?.currentTime || 0;
     addEmojiMutation.mutate({ emoji, time });
   };
