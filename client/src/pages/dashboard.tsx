@@ -222,12 +222,28 @@ export default function DashboardPage() {
           fontSize: "11px",
           display: "flex",
           justifyContent: "space-between",
+          alignItems: "center",
           position: "absolute",
           bottom: "0",
           left: "0",
           right: "0"
         }}>
-          <span>Ready</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <button 
+              className="btn"
+              onClick={() => setLocation("/")}
+              style={{ 
+                fontSize: "10px", 
+                padding: "2px 6px",
+                background: "#C0C0C0",
+                border: "1px outset #C0C0C0"
+              }}
+              title="Return to music feed"
+            >
+              ← Feed
+            </button>
+            <span>Ready</span>
+          </div>
           <span>Artist: {userData?.artistName || userData?.email || 'Loading...'}</span>
         </div>
       </div>
