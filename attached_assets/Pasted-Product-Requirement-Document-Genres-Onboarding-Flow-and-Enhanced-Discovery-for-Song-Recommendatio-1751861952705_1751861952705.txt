@@ -1,0 +1,104 @@
+Product Requirement Document: Genres, Onboarding Flow, and Enhanced Discovery for Song Recommendations
+
+1. Genre List (30 total)
+	1.	Hiphop
+	2.	Pop
+	3.	R&B
+	4.	Indie
+	5.	Electronic
+	6.	House
+	7.	Techno
+	8.	Drum & Bass
+	9.	Dubstep
+	10.	Trap
+	11.	Ambient
+	12.	Folk
+	13.	Rock
+	14.	Metal
+	15.	Jazz
+	16.	Soul
+	17.	Funk
+	18.	Disco
+	19.	Reggae
+	20.	World
+	21.	Classical
+	22.	Blues
+	23.	Punk
+	24.	Garage
+	25.	Synthwave
+	26.	Chillout
+	27.	Experimental
+	28.	Acoustic
+	29.	Lo-fi
+	30.	Country
+
+⸻
+
+2. Track Upload: Genre Selection
+	•	When uploading a track, the user must select 2–3 genres from the above list.
+	•	UI: Multi-select dropdown or tag picker, max 3.
+	•	Track metadata stores selected genres.
+
+⸻
+
+3. Logged-Out User Feed
+	•	The first two tracks for all logged-out users are always the same, settable by admin in the dashboard/config.
+	•	After these two tracks, proceed with the regular recommendation/feed logic described below.
+
+⸻
+
+4. Genre Onboarding & Ongoing Genre Ratings
+	•	After a user listens to or scrolls past two songs, show an onboarding module asking them to rate 5 random genres (from those not yet rated) on a scale of 1–5.
+	•	The genre rating module appears in the feed just like a song, and slides away once the last rating is given.
+	•	After the onboarding step, every 4 songs played, show another genre rating module with 5 more unrated genres (until all 30 genres have been rated).
+	•	Once the user has rated all 30 genres, stop showing the genre rating module.
+	•	Ratings from this module are used as initial user genre affinity.
+
+⸻
+
+5. Recommendation Algorithm (Feed Assembly)
+
+General Feed Logic (logged-in users)
+	•	Maintain a queue of at least 10 tracks in advance for each user.
+	•	For every 20 tracks in the feed:
+	•	1 track is selected from a random genre (not limited by user preferences).
+	•	1 track is a recent upload with very few plays (“fresh track”).
+	•	The remaining 18 tracks:
+	•	Selected according to the user’s genre affinity vector, calculated from:
+	•	Initial genre ratings
+	•	Ongoing user interactions (plays, completions, emoji, repeats)
+	•	Within each genre selection:
+	•	50% chance: high engagement (recent likes/plays/emojis)
+	•	50% chance: random/newer track in genre
+	•	Exclude tracks the user has already listened to.
+
+Logged-out users
+	•	First two tracks = admin-selected
+	•	Feed then follows the same logic as above, using a default (flat) genre affinity distribution.
+
+⸻
+
+6. Playback & Feedback Loop
+	•	Users cannot skip within the first listen of any track.
+	•	Emoji reactions, listens, completions, and repeats update the user’s genre affinity scores in real time.
+	•	Feed is continuously rebalanced as scores change.
+	•	Genre rating modules stop appearing after all 30 genres have been rated.
+
+⸻
+
+7. Technical/UX Notes
+	•	Genre rating modules look and behave like a song in the feed, sliding away on completion.
+	•	All manual genre ratings and user interaction data are stored in the user profile for future ML upgrades.
+	•	Admin can set/change the two initial tracks for logged-out users via the dashboard.
+
+⸻
+
+Acceptance Criteria
+	•	All tracks require 2–3 genres on upload.
+	•	Logged-out feed always starts with two admin-chosen tracks.
+	•	New users are prompted to rate genres after 2 songs, then every 4 songs, 5 genres at a time, until all are rated.
+	•	Feed includes 1 in 20 tracks of a random genre and 1 in 20 “fresh” tracks with low play counts.
+	•	Recommendations adapt based on manual genre ratings and real-time user interactions.
+	•	Feed always has at least 10 tracks pre-fetched per user.
+	•	No skipping within the first listen of a track.
+	•	Feed and recommendation logic continuously update to reflect changing user affinities and new uploads.
