@@ -284,7 +284,7 @@ export default function ArtistPage() {
               {/* Track Info */}
               <div className="win95-track-info">
                 <div className="win95-creator">
-                  👤 {currentTrack.creatorUsername || 'Unknown Artist'}
+                  👤 {currentTrack.creatorArtistName || currentTrack.creatorUsername || 'Unknown Artist'}
                 </div>
                 <div className="win95-reactions-count">
                   {currentTrack.emojiReactions?.length || 0} reactions

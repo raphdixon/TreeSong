@@ -520,7 +520,7 @@ export default function FeedPage() {
                   }}
                   title={`View ${currentTrack.creatorUsername}'s tracks`}
                 >
-                  👤 {currentTrack.creatorUsername || 'Unknown Artist'}
+                  👤 {currentTrack.creatorArtistName || currentTrack.creatorUsername || 'Unknown Artist'}
                 </button>
                 <div className="win95-reactions-count">
                   {reactionCounts[currentTrack.id] ?? (currentTrack.emojiReactions?.length || 0)} reactions

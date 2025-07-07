@@ -127,6 +127,12 @@ DemoTree is a public music sharing platform where musicians can upload their dem
 
 ```
 Changelog:
+- July 07, 2025. Fixed Artist Name Display in All UI Components
+  - Fixed issue where tracks were showing "Unknown Artist" instead of the artist name
+  - The username field is empty for Replit Auth users (legacy field from previous auth system)
+  - Updated feed and artist pages to prioritize creatorArtistName over creatorUsername
+  - Backend no longer defaults empty usernames to "Unknown Artist"
+  - Frontend components consistently check artistName first before falling back to username
 - July 07, 2025. Fixed Emoji Persistence Issue & Enhanced Real-Time Updates
   - Fixed emoji reactions disappearing when scrolling away and back to a track
   - Separated track switching logic from emoji data loading logic
