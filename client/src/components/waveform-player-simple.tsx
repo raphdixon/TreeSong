@@ -16,6 +16,7 @@ interface WaveformPlayerProps {
   fileDeletedAt?: string | null;
   autoPlay?: boolean;
   onTrackEnd?: () => void;
+  onReactionCountChange?: (count: number) => void;
 }
 
 export default function WaveformPlayer({ 
@@ -26,7 +27,8 @@ export default function WaveformPlayer({
   isPublic,
   fileDeletedAt,
   autoPlay = false,
-  onTrackEnd
+  onTrackEnd,
+  onReactionCountChange
 }: WaveformPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -148,7 +150,12 @@ export default function WaveformPlayer({
       if (data.allReactions) {
         console.log('[DEBUG] Setting displayEmojis to allReactions:', data.allReactions);
         setDisplayEmojis(data.allReactions);
-        setEmojiCount(data.currentCount || data.allReactions.length);
+        const newCount = data.currentCount || data.allReactions.length;
+        setEmojiCount(newCount);
+        // Call the callback to update parent component
+        if (onReactionCountChange) {
+          onReactionCountChange(newCount);
+        }
       } else if (data.reaction) {
         // Fallback: add just the new reaction if allReactions not provided
         console.log('[DEBUG] Adding single reaction:', data.reaction);
@@ -157,7 +164,12 @@ export default function WaveformPlayer({
           console.log('[DEBUG] Updated displayEmojis:', updated);
           return updated;
         });
-        setEmojiCount(data.currentCount || 0);
+        const newCount = data.currentCount || 0;
+        setEmojiCount(newCount);
+        // Call the callback to update parent component
+        if (onReactionCountChange) {
+          onReactionCountChange(newCount);
+        }
       }
       
       // Invalidate queries to refresh data

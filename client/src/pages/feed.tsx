@@ -228,6 +228,7 @@ export default function FeedPage() {
   const [isScrolling, setIsScrolling] = useState(false);
   const [hasViewedTrack, setHasViewedTrack] = useState<Set<string>>(new Set());
   const feedRef = useRef<HTMLDivElement>(null);
+  const [reactionCounts, setReactionCounts] = useState<Record<string, number>>({});
   
   const { 
     tracksViewed, 
@@ -524,7 +525,7 @@ export default function FeedPage() {
                   👤 {currentTrack.creatorUsername || 'Unknown Artist'}
                 </button>
                 <div className="win95-reactions-count">
-                  {currentTrack.emojiReactions?.length || 0} reactions
+                  {reactionCounts[currentTrack.id] ?? (currentTrack.emojiReactions?.length || 0)} reactions
                 </div>
               </div>
               
@@ -537,6 +538,13 @@ export default function FeedPage() {
                 isPublic={true}
                 autoPlay={true}
                 onTrackEnd={() => navigateTrack('down')}
+                onReactionCountChange={(newCount) => {
+                  // Update the reaction count in the state
+                  setReactionCounts(prev => ({
+                    ...prev,
+                    [currentTrack.id]: newCount
+                  }));
+                }}
               />
             </div>
           </div>
