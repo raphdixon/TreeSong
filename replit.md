@@ -127,6 +127,16 @@ DemoTree is a public music sharing platform where musicians can upload their dem
 
 ```
 Changelog:
+- July 07, 2025. Implemented Genre-Based Recommendation System with Onboarding Flow
+  - Added 30 predefined music genres seeded automatically on startup (Hip-hop, Pop, R&B, Indie, Electronic, etc.)
+  - Tracks now require 2-3 genres to be selected during upload with multi-select interface
+  - Built progressive genre rating onboarding that appears after 2 tracks viewed, then every 4 tracks
+  - Users rate genres on 1-5 scale to personalize their feed recommendations
+  - Enhanced feed algorithm: 60% genre affinity, 25% fresh tracks, 15% random discovery
+  - Feed now uses smart recommendation endpoint that considers user's genre preferences
+  - Genre rating components integrate seamlessly with Windows 95 aesthetic
+  - Backend tracks plays per session for fresh content rotation
+  - Admin can set initial tracks for logged-out users via admin interface
 - July 07, 2025. Integrated Playlists with Main Feed for Seamless Playback
   - Removed separate playlist player page and integrated playlists directly with main feed
   - Updated URL structure to /pl/{playlist-id} and /pl/{username}/{playlist-name}

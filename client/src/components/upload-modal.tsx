@@ -1,7 +1,8 @@
-import { useState, useRef } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useRef, useEffect } from "react";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import type { Genre } from "@shared/schema";
 
 interface UploadModalProps {
   onClose: () => void;
@@ -10,10 +11,16 @@ interface UploadModalProps {
 export default function UploadModal({ onClose }: UploadModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+
+  // Fetch genres
+  const { data: genres = [], isLoading: genresLoading } = useQuery({
+    queryKey: ['/api/genres']
+  });
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -84,6 +91,15 @@ export default function UploadModal({ onClose }: UploadModalProps) {
       return;
     }
 
+    if (selectedGenres.length < 2 || selectedGenres.length > 3) {
+      toast({
+        title: "Genre selection required",
+        description: "Please select 2-3 genres for your track.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Create audio element to get duration
     const audio = new Audio();
     audio.src = URL.createObjectURL(file);
@@ -94,6 +110,7 @@ export default function UploadModal({ onClose }: UploadModalProps) {
       const formData = new FormData();
       formData.append('audio', file);
       formData.append('duration', duration.toString());
+      formData.append('genres', JSON.stringify(selectedGenres));
       
       uploadMutation.mutate(formData);
       
@@ -210,6 +227,76 @@ export default function UploadModal({ onClose }: UploadModalProps) {
                     }
                   }}
                 />
+              </div>
+            </div>
+
+            {/* Genre Selection */}
+            <div style={{ 
+              marginTop: "16px",
+              marginBottom: "16px",
+              padding: "12px",
+              border: "1px inset #c0c0c0",
+              backgroundColor: "#ffffff"
+            }}>
+              <div style={{ 
+                fontWeight: "bold",
+                marginBottom: "8px",
+                color: "#000080"
+              }}>
+                Select 2-3 Genres for Your Track:
+              </div>
+              
+              {genresLoading ? (
+                <div>Loading genres...</div>
+              ) : (
+                <div style={{ 
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, 1fr)",
+                  gap: "4px",
+                  maxHeight: "200px",
+                  overflowY: "auto",
+                  padding: "4px"
+                }}>
+                  {(genres as Genre[]).map((genre) => (
+                    <label
+                      key={genre.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        cursor: "pointer",
+                        padding: "2px 4px",
+                        backgroundColor: selectedGenres.includes(genre.id) ? "#000080" : "transparent",
+                        color: selectedGenres.includes(genre.id) ? "#ffffff" : "#000000",
+                        userSelect: "none"
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedGenres.includes(genre.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            if (selectedGenres.length < 3) {
+                              setSelectedGenres([...selectedGenres, genre.id]);
+                            }
+                          } else {
+                            setSelectedGenres(selectedGenres.filter(id => id !== genre.id));
+                          }
+                        }}
+                        style={{ marginRight: "4px" }}
+                      />
+                      <span style={{ fontSize: "10px" }}>{genre.name}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+              
+              <div style={{ 
+                marginTop: "8px",
+                fontSize: "10px",
+                color: "#666666",
+                textAlign: "center"
+              }}>
+                Selected: {selectedGenres.length}/3
               </div>
             </div>
 

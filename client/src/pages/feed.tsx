@@ -7,7 +7,9 @@ import Windows95Layout from "@/components/windows95-layout";
 import WaveformPlayer from "@/components/waveform-player-simple";
 import AuthPromptCard from "@/components/auth-prompt-card";
 import SaveTrackDialog from "@/components/save-track-dialog";
+import GenreRating from "@/components/genre-rating";
 import { ChevronUp, ChevronDown, User, LogIn, Upload } from "lucide-react";
+import type { Genre } from "@shared/schema";
 
 // Global volume state
 let globalVolume = 70;
@@ -233,6 +235,7 @@ export default function FeedPage() {
   const [reactionCounts, setReactionCounts] = useState<Record<string, number>>({});
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [saveTrackId, setSaveTrackId] = useState<string | null>(null);
+  const [genreRatingCompleted, setGenreRatingCompleted] = useState(false);
   
   // Get URL parameters
   const searchParams = new URLSearchParams(window.location.search);
@@ -241,6 +244,37 @@ export default function FeedPage() {
   // Get playlist parameters from URL
   const params = useParams<{ username?: string; playlistName?: string; playlistId?: string }>();
   const isPlaylistUrl = !!(params.username && params.playlistName) || !!params.playlistId;
+  
+  // Fetch unrated genres for authenticated users
+  const { data: unratedGenres = [] } = useQuery<Genre[]>({
+    queryKey: ['/api/genres/unrated'],
+    enabled: isAuthenticated && !genreRatingCompleted,
+    queryFn: async () => {
+      const response = await fetch('/api/genres/unrated?limit=5', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch unrated genres');
+      }
+      return response.json();
+    }
+  });
+  
+  // Check if all genres have been rated
+  const { data: hasRatedAll = false } = useQuery<boolean>({
+    queryKey: ['/api/genres/rated-all'],
+    enabled: isAuthenticated && !genreRatingCompleted,
+    queryFn: async () => {
+      const response = await fetch('/api/genres/rated-all', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to check genre rating status');
+      }
+      const data = await response.json();
+      return data.hasRatedAll;
+    }
+  });
   
   const { 
     tracksViewed, 
@@ -275,11 +309,13 @@ export default function FeedPage() {
     }
   });
 
-  // Fetch all public tracks for the feed
+  // Fetch enhanced feed tracks with genre-based recommendations
   const { data: allTracks = [], isLoading } = useQuery({
-    queryKey: ["/api/tracks/public"],
+    queryKey: ["/api/feed/tracks"],
     queryFn: async () => {
-      const response = await fetch("/api/tracks/public");
+      const response = await fetch("/api/feed/tracks", {
+        credentials: 'include'
+      });
       if (!response.ok) {
         throw new Error("Failed to fetch tracks");
       }
@@ -355,20 +391,42 @@ export default function FeedPage() {
     }
   }, [user, isAuthenticated]);
 
-  // Create display items list with auth prompts injected
+  // Create display items list with auth prompts and genre ratings injected
   const createDisplayItems = () => {
     if (!recommendedTracks.length) return [];
     
-    const items: Array<{ type: 'track' | 'auth', data?: Track, index: number }> = [];
+    const items: Array<{ type: 'track' | 'auth' | 'genre-rating', data?: Track, index: number }> = [];
     let trackIndex = 0;
+    let tracksSeenForRating = 0;
+    let genreRatingsShown = 0;
     
-    for (let i = 0; i < recommendedTracks.length + Math.floor(recommendedTracks.length / TRACKS_BEFORE_AUTH); i++) {
+    for (let i = 0; i < recommendedTracks.length + Math.floor(recommendedTracks.length / TRACKS_BEFORE_AUTH) + 10; i++) {
+      // Check if we should show a genre rating
+      if (isAuthenticated && !hasRatedAll && unratedGenres.length > 0) {
+        const shouldShowRating = (genreRatingsShown === 0 && tracksSeenForRating >= 2) || 
+                                (genreRatingsShown > 0 && tracksSeenForRating >= 4);
+        
+        if (shouldShowRating) {
+          console.log(`[FEED] Injecting genre rating at position ${i} (shown: ${genreRatingsShown}, tracks seen: ${tracksSeenForRating})`);
+          items.push({ type: 'genre-rating', index: i });
+          genreRatingsShown++;
+          tracksSeenForRating = 0;
+          continue;
+        }
+      }
+      
+      // Check for auth prompt
       if (!isAuthenticated && shouldShowAuthPrompt(i)) {
         console.log(`[FEED] Injecting auth prompt at position ${i}`);
         items.push({ type: 'auth', index: i });
       } else if (trackIndex < recommendedTracks.length) {
         items.push({ type: 'track', data: recommendedTracks[trackIndex], index: i });
         trackIndex++;
+        
+        // Count tracks for genre rating logic (only for authenticated users)
+        if (isAuthenticated) {
+          tracksSeenForRating++;
+        }
       }
     }
     
@@ -597,6 +655,19 @@ export default function FeedPage() {
       }}>
         {currentItem?.type === 'auth' ? (
           <AuthPromptCard onLogin={handleLogin} />
+        ) : currentItem?.type === 'genre-rating' ? (
+          <GenreRating 
+            genres={unratedGenres} 
+            onComplete={() => {
+              console.log('[FEED] Genre rating completed');
+              // If all genres are rated, set completed flag
+              if (hasRatedAll) {
+                setGenreRatingCompleted(true);
+              }
+              // Navigate to next item
+              navigateTrack('down');
+            }}
+          />
         ) : currentTrack ? (
           <div className="win95-audio-player">
             {/* Title Bar */}

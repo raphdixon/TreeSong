@@ -1,5 +1,6 @@
 import {
   users, tracks, emojiReactions, shares, playlists, savedTracks,
+  genres, trackGenres, userGenreRatings, trackPlays, adminSettings,
   type User,
   type InsertUser,
   type UpsertUser,
@@ -12,7 +13,17 @@ import {
   type Playlist,
   type InsertPlaylist,
   type SavedTrack,
-  type InsertSavedTrack
+  type InsertSavedTrack,
+  type Genre,
+  type InsertGenre,
+  type TrackGenre,
+  type InsertTrackGenre,
+  type UserGenreRating,
+  type InsertUserGenreRating,
+  type TrackPlay,
+  type InsertTrackPlay,
+  type AdminSetting,
+  type InsertAdminSetting
 } from "@shared/schema";
 import { nanoid } from "nanoid";
 import bcrypt from "bcrypt";
@@ -69,6 +80,44 @@ export interface IStorage {
   getPlaylistTracks(playlistId: string): Promise<(SavedTrack & { track: Track & { creatorUsername: string; creatorArtistName: string; creatorEmail: string } })[]>;
   isTrackInPlaylist(playlistId: string, trackId: string): Promise<boolean>;
   getNextPosition(playlistId: string): Promise<number>;
+  
+  // Genre methods
+  createGenre(genre: InsertGenre): Promise<Genre>;
+  getAllGenres(): Promise<Genre[]>;
+  getGenre(id: string): Promise<Genre | undefined>;
+  seedGenres(): Promise<void>;
+  
+  // Track genre methods
+  addGenresToTrack(trackId: string, genreIds: string[]): Promise<void>;
+  getTrackGenres(trackId: string): Promise<Genre[]>;
+  
+  // User genre rating methods
+  getUserGenreRatings(userId: string): Promise<UserGenreRating[]>;
+  rateGenre(rating: InsertUserGenreRating): Promise<UserGenreRating>;
+  getUnratedGenres(userId: string, limit: number): Promise<Genre[]>;
+  hasRatedAllGenres(userId: string): Promise<boolean>;
+  
+  // Track play methods
+  recordTrackPlay(play: InsertTrackPlay): Promise<TrackPlay>;
+  getUserPlayedTracks(userId: string): Promise<string[]>;
+  getTrackPlayCount(trackId: string): Promise<number>;
+  getRecentlyPlayedTracksForSession(sessionId: string, limit: number): Promise<string[]>;
+  
+  // Admin settings methods
+  getAdminSetting(key: string): Promise<string | undefined>;
+  setAdminSetting(key: string, value: string): Promise<void>;
+  
+  // Recommendation methods
+  getTracksWithGenreAndPlayInfo(): Promise<(Track & { 
+    genres: Genre[]; 
+    playCount: number; 
+    creatorUsername: string;
+    creatorArtistName: string;
+    creatorEmail: string;
+  })[]>;
+  getUserGenreAffinity(userId: string): Promise<Map<string, number>>;
+  getRandomGenreTrack(genreId: string, excludeTrackIds: string[]): Promise<Track | undefined>;
+  getFreshTracks(excludeTrackIds: string[], limit: number): Promise<Track[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -412,6 +461,323 @@ export class DatabaseStorage implements IStorage {
       .where(eq(savedTracks.playlistId, playlistId));
     
     return result.maxPosition + 1;
+  }
+
+  // Genre methods
+  async createGenre(insertGenre: InsertGenre): Promise<Genre> {
+    const [genre] = await db
+      .insert(genres)
+      .values({
+        id: nanoid(),
+        ...insertGenre
+      })
+      .returning();
+    
+    return genre;
+  }
+
+  async getAllGenres(): Promise<Genre[]> {
+    return await db
+      .select()
+      .from(genres)
+      .orderBy(asc(genres.displayOrder));
+  }
+
+  async getGenre(id: string): Promise<Genre | undefined> {
+    const [genre] = await db
+      .select()
+      .from(genres)
+      .where(eq(genres.id, id));
+    
+    return genre;
+  }
+
+  async seedGenres(): Promise<void> {
+    const genreList = [
+      'Hiphop', 'Pop', 'R&B', 'Indie', 'Electronic',
+      'House', 'Techno', 'Drum & Bass', 'Dubstep', 'Trap',
+      'Ambient', 'Folk', 'Rock', 'Metal', 'Jazz',
+      'Soul', 'Funk', 'Disco', 'Reggae', 'World',
+      'Classical', 'Blues', 'Punk', 'Garage', 'Synthwave',
+      'Chillout', 'Experimental', 'Acoustic', 'Lo-fi', 'Country'
+    ];
+
+    const existingGenres = await this.getAllGenres();
+    if (existingGenres.length > 0) {
+      return; // Already seeded
+    }
+
+    const genresToInsert = genreList.map((name, index) => ({
+      id: nanoid(),
+      name,
+      displayOrder: index
+    }));
+
+    await db.insert(genres).values(genresToInsert);
+  }
+
+  // Track genre methods
+  async addGenresToTrack(trackId: string, genreIds: string[]): Promise<void> {
+    if (genreIds.length === 0) return;
+
+    const trackGenresToInsert = genreIds.map(genreId => ({
+      id: nanoid(),
+      trackId,
+      genreId
+    }));
+
+    await db.insert(trackGenres).values(trackGenresToInsert);
+  }
+
+  async getTrackGenres(trackId: string): Promise<Genre[]> {
+    const results = await db
+      .select({
+        genre: genres
+      })
+      .from(trackGenres)
+      .innerJoin(genres, eq(trackGenres.genreId, genres.id))
+      .where(eq(trackGenres.trackId, trackId))
+      .orderBy(asc(genres.displayOrder));
+
+    return results.map(r => r.genre);
+  }
+
+  // User genre rating methods
+  async getUserGenreRatings(userId: string): Promise<UserGenreRating[]> {
+    return await db
+      .select()
+      .from(userGenreRatings)
+      .where(eq(userGenreRatings.userId, userId));
+  }
+
+  async rateGenre(rating: InsertUserGenreRating): Promise<UserGenreRating> {
+    const [userRating] = await db
+      .insert(userGenreRatings)
+      .values({
+        id: nanoid(),
+        ...rating
+      })
+      .onConflictDoUpdate({
+        target: [userGenreRatings.userId, userGenreRatings.genreId],
+        set: {
+          rating: rating.rating,
+          ratedAt: new Date()
+        }
+      })
+      .returning();
+    
+    return userRating;
+  }
+
+  async getUnratedGenres(userId: string, limit: number): Promise<Genre[]> {
+    // Get genres that user hasn't rated yet
+    const unratedGenres = await db
+      .select({
+        genre: genres
+      })
+      .from(genres)
+      .leftJoin(
+        userGenreRatings,
+        and(
+          eq(userGenreRatings.genreId, genres.id),
+          eq(userGenreRatings.userId, userId)
+        )
+      )
+      .where(sql`${userGenreRatings.id} IS NULL`)
+      .orderBy(sql`random()`)
+      .limit(limit);
+
+    return unratedGenres.map(r => r.genre);
+  }
+
+  async hasRatedAllGenres(userId: string): Promise<boolean> {
+    const [result] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(userGenreRatings)
+      .where(eq(userGenreRatings.userId, userId));
+    
+    const [totalGenres] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(genres);
+    
+    return result.count >= totalGenres.count;
+  }
+
+  // Track play methods
+  async recordTrackPlay(play: InsertTrackPlay): Promise<TrackPlay> {
+    const [trackPlay] = await db
+      .insert(trackPlays)
+      .values({
+        id: nanoid(),
+        ...play
+      })
+      .returning();
+    
+    return trackPlay;
+  }
+
+  async getUserPlayedTracks(userId: string): Promise<string[]> {
+    const plays = await db
+      .select({ trackId: trackPlays.trackId })
+      .from(trackPlays)
+      .where(eq(trackPlays.userId, userId))
+      .groupBy(trackPlays.trackId);
+    
+    return plays.map(p => p.trackId);
+  }
+
+  async getTrackPlayCount(trackId: string): Promise<number> {
+    const [result] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(trackPlays)
+      .where(eq(trackPlays.trackId, trackId));
+    
+    return result.count;
+  }
+
+  async getRecentlyPlayedTracksForSession(sessionId: string, limit: number): Promise<string[]> {
+    const plays = await db
+      .select({ trackId: trackPlays.trackId })
+      .from(trackPlays)
+      .where(eq(trackPlays.sessionId, sessionId))
+      .orderBy(desc(trackPlays.playedAt))
+      .limit(limit);
+    
+    return plays.map(p => p.trackId);
+  }
+
+  // Admin settings methods
+  async getAdminSetting(key: string): Promise<string | undefined> {
+    const [setting] = await db
+      .select()
+      .from(adminSettings)
+      .where(eq(adminSettings.key, key));
+    
+    return setting?.value;
+  }
+
+  async setAdminSetting(key: string, value: string): Promise<void> {
+    await db
+      .insert(adminSettings)
+      .values({
+        id: nanoid(),
+        key,
+        value
+      })
+      .onConflictDoUpdate({
+        target: adminSettings.key,
+        set: {
+          value,
+          updatedAt: new Date()
+        }
+      });
+  }
+
+  // Recommendation methods
+  async getTracksWithGenreAndPlayInfo(): Promise<(Track & { 
+    genres: Genre[]; 
+    playCount: number; 
+    creatorUsername: string;
+    creatorArtistName: string;
+    creatorEmail: string;
+  })[]> {
+    // Get all tracks with their genres and play counts
+    const tracksWithInfo = await db
+      .select({
+        track: tracks,
+        user: users,
+        playCount: sql<number>`count(distinct ${trackPlays.id})::int`
+      })
+      .from(tracks)
+      .leftJoin(users, eq(tracks.uploaderUserId, users.id))
+      .leftJoin(trackPlays, eq(tracks.id, trackPlays.trackId))
+      .groupBy(tracks.id, users.id);
+
+    // Get genres for each track
+    const trackIds = tracksWithInfo.map(t => t.track.id);
+    const trackGenreMap = new Map<string, Genre[]>();
+    
+    if (trackIds.length > 0) {
+      const allTrackGenres = await db
+        .select({
+          trackId: trackGenres.trackId,
+          genre: genres
+        })
+        .from(trackGenres)
+        .innerJoin(genres, eq(trackGenres.genreId, genres.id))
+        .where(sql`${trackGenres.trackId} IN ${sql.raw(`(${trackIds.map(() => '?').join(', ')})`)}`);
+      
+      for (const tg of allTrackGenres) {
+        if (!trackGenreMap.has(tg.trackId)) {
+          trackGenreMap.set(tg.trackId, []);
+        }
+        trackGenreMap.get(tg.trackId)!.push(tg.genre);
+      }
+    }
+
+    return tracksWithInfo.map(({ track, user, playCount }) => ({
+      ...track,
+      genres: trackGenreMap.get(track.id) || [],
+      playCount,
+      creatorUsername: user?.username || '',
+      creatorArtistName: user?.artistName || 'Unknown Artist',
+      creatorEmail: user?.email || ''
+    }));
+  }
+
+  async getUserGenreAffinity(userId: string): Promise<Map<string, number>> {
+    const affinityMap = new Map<string, number>();
+    
+    // Get user's manual genre ratings
+    const ratings = await this.getUserGenreRatings(userId);
+    for (const rating of ratings) {
+      affinityMap.set(rating.genreId, rating.rating);
+    }
+    
+    // TODO: Factor in user interactions (plays, emoji reactions, etc.)
+    // This would require joining multiple tables and calculating weighted scores
+    
+    return affinityMap;
+  }
+
+  async getRandomGenreTrack(genreId: string, excludeTrackIds: string[]): Promise<Track | undefined> {
+    const query = db
+      .select({ track: tracks })
+      .from(tracks)
+      .innerJoin(trackGenres, eq(tracks.id, trackGenres.trackId))
+      .where(eq(trackGenres.genreId, genreId));
+    
+    if (excludeTrackIds.length > 0) {
+      // @ts-ignore - sql.raw works with dynamic values
+      query.where(sql`${tracks.id} NOT IN ${sql.raw(`(${excludeTrackIds.map(() => '?').join(', ')})`)}`);
+    }
+    
+    const results = await query.orderBy(sql`random()`).limit(1);
+    
+    return results[0]?.track;
+  }
+
+  async getFreshTracks(excludeTrackIds: string[], limit: number): Promise<Track[]> {
+    const query = db
+      .select({
+        track: tracks,
+        playCount: sql<number>`count(${trackPlays.id})::int`
+      })
+      .from(tracks)
+      .leftJoin(trackPlays, eq(tracks.id, trackPlays.trackId))
+      .groupBy(tracks.id)
+      .having(sql`count(${trackPlays.id}) < 5`) // Consider "fresh" if less than 5 plays
+      .orderBy(desc(tracks.uploadDate))
+      .limit(limit);
+    
+    if (excludeTrackIds.length > 0) {
+      // @ts-ignore - sql.raw works with dynamic values
+      query.where(sql`${tracks.id} NOT IN ${sql.raw(`(${excludeTrackIds.map(() => '?').join(', ')})`)}`);
+    }
+    
+    const results = await query;
+    
+    return results.map(r => r.track);
   }
 }
 

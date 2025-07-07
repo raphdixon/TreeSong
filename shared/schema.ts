@@ -94,6 +94,60 @@ export const savedTracks = pgTable("saved_tracks", {
   index("idx_playlist_position").on(table.playlistId, table.position)
 ]);
 
+// Genre System
+export const genres = pgTable("genres", {
+  id: varchar("id").primaryKey().notNull(),
+  name: varchar("name").notNull().unique(),
+  displayOrder: integer("display_order").notNull()
+});
+
+// Track Genres (many-to-many)
+export const trackGenres = pgTable("track_genres", {
+  id: varchar("id").primaryKey().notNull(),
+  trackId: varchar("track_id").notNull().references(() => tracks.id, { onDelete: 'cascade' }),
+  genreId: varchar("genre_id").notNull().references(() => genres.id, { onDelete: 'cascade' })
+}, (table) => [
+  index("idx_track_genre").on(table.trackId, table.genreId),
+  index("idx_track_genres_track").on(table.trackId),
+  index("idx_track_genres_genre").on(table.genreId)
+]);
+
+// User Genre Ratings
+export const userGenreRatings = pgTable("user_genre_ratings", {
+  id: varchar("id").primaryKey().notNull(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  genreId: varchar("genre_id").notNull().references(() => genres.id, { onDelete: 'cascade' }),
+  rating: integer("rating").notNull(), // 1-5 scale
+  ratedAt: timestamp("rated_at").defaultNow().notNull()
+}, (table) => [
+  index("idx_user_genre").on(table.userId, table.genreId),
+  index("idx_user_genre_ratings_user").on(table.userId)
+]);
+
+// Track Play History
+export const trackPlays = pgTable("track_plays", {
+  id: varchar("id").primaryKey().notNull(),
+  trackId: varchar("track_id").notNull().references(() => tracks.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }), // null for anonymous
+  sessionId: varchar("session_id").notNull(), // for anonymous tracking
+  playedAt: timestamp("played_at").defaultNow().notNull(),
+  completionRate: real("completion_rate").notNull().default(0), // 0-1 representing % of track played
+  isRepeat: boolean("is_repeat").notNull().default(false)
+}, (table) => [
+  index("idx_track_plays_track").on(table.trackId),
+  index("idx_track_plays_user").on(table.userId),
+  index("idx_track_plays_session").on(table.sessionId),
+  index("idx_track_plays_played_at").on(table.playedAt)
+]);
+
+// Admin Settings
+export const adminSettings = pgTable("admin_settings", {
+  id: varchar("id").primaryKey().notNull(),
+  key: varchar("key").notNull().unique(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 // Insert schemas
 export const insertTrackSchema = createInsertSchema(tracks).omit({
   id: true,
@@ -123,6 +177,29 @@ export const insertSavedTrackSchema = createInsertSchema(savedTracks).omit({
   savedAt: true
 });
 
+export const insertGenreSchema = createInsertSchema(genres).omit({
+  id: true
+});
+
+export const insertTrackGenreSchema = createInsertSchema(trackGenres).omit({
+  id: true
+});
+
+export const insertUserGenreRatingSchema = createInsertSchema(userGenreRatings).omit({
+  id: true,
+  ratedAt: true
+});
+
+export const insertTrackPlaySchema = createInsertSchema(trackPlays).omit({
+  id: true,
+  playedAt: true
+});
+
+export const insertAdminSettingSchema = createInsertSchema(adminSettings).omit({
+  id: true,
+  updatedAt: true
+});
+
 // Types
 export type InsertTrack = z.infer<typeof insertTrackSchema>;
 export type Track = typeof tracks.$inferSelect;
@@ -136,3 +213,14 @@ export type InsertPlaylist = z.infer<typeof insertPlaylistSchema>;
 export type Playlist = typeof playlists.$inferSelect;
 export type InsertSavedTrack = z.infer<typeof insertSavedTrackSchema>;
 export type SavedTrack = typeof savedTracks.$inferSelect;
+
+export type InsertGenre = z.infer<typeof insertGenreSchema>;
+export type Genre = typeof genres.$inferSelect;
+export type InsertTrackGenre = z.infer<typeof insertTrackGenreSchema>;
+export type TrackGenre = typeof trackGenres.$inferSelect;
+export type InsertUserGenreRating = z.infer<typeof insertUserGenreRatingSchema>;
+export type UserGenreRating = typeof userGenreRatings.$inferSelect;
+export type InsertTrackPlay = z.infer<typeof insertTrackPlaySchema>;
+export type TrackPlay = typeof trackPlays.$inferSelect;
+export type InsertAdminSetting = z.infer<typeof insertAdminSettingSchema>;
+export type AdminSetting = typeof adminSettings.$inferSelect;

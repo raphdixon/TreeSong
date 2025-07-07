@@ -70,6 +70,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Setup Replit Auth middleware
   await setupAuth(app);
+  
+  // Initialize genres if not already present
+  try {
+    const genres = await storage.getAllGenres();
+    if (genres.length === 0) {
+      console.log("No genres found, seeding genres...");
+      await storage.seedGenres();
+      console.log("Genres seeded successfully");
+    } else {
+      console.log(`Found ${genres.length} genres in database`);
+    }
+  } catch (error) {
+    console.error("Failed to initialize genres:", error);
+  }
 
   // Serve uploaded files
   app.use('/uploads', express.static(uploadsDir));
@@ -240,6 +254,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const waveformData = await generateWaveformData(newPath);
       console.log("Waveform generated with", waveformData.peaks.length, "peaks");
 
+      // Parse genres from request body
+      let genreIds: string[] = [];
+      try {
+        if (req.body.genres) {
+          genreIds = JSON.parse(req.body.genres);
+          console.log("Parsed genre IDs:", genreIds);
+          
+          // Validate that 2-3 genres are selected
+          if (genreIds.length < 2 || genreIds.length > 3) {
+            return res.status(400).json({ message: "Please select 2-3 genres for your track" });
+          }
+        }
+      } catch (error) {
+        console.error("Failed to parse genres:", error);
+        return res.status(400).json({ message: "Invalid genre data" });
+      }
+
       const trackData = insertTrackSchema.parse({
         uploaderUserId: userId,
         filename,
@@ -251,6 +282,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Creating track with data:", trackData);
       const track = await storage.createTrack(trackData);
       console.log("Track created successfully:", track.id);
+      
+      // Add genres to track
+      if (genreIds.length > 0) {
+        console.log("Adding genres to track:", genreIds);
+        await storage.addGenresToTrack(track.id, genreIds);
+      }
       
       // Generate waveform data asynchronously after track creation
       const filePath = path.join(uploadsDir, track.filename);
@@ -706,6 +743,225 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to delete playlist:", error);
       res.status(500).json({ message: "Failed to delete playlist" });
+    }
+  });
+
+  // Genre routes
+  app.post("/api/genres/seed", isAdmin, async (req, res) => {
+    try {
+      await storage.seedGenres();
+      res.json({ message: "Genres seeded successfully" });
+    } catch (error) {
+      console.error("Failed to seed genres:", error);
+      res.status(500).json({ message: "Failed to seed genres" });
+    }
+  });
+
+  app.get("/api/genres", async (req, res) => {
+    try {
+      const genres = await storage.getAllGenres();
+      res.json(genres);
+    } catch (error) {
+      console.error("Failed to fetch genres:", error);
+      res.status(500).json({ message: "Failed to fetch genres" });
+    }
+  });
+
+  // User genre rating routes
+  app.get("/api/genres/unrated", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const limit = parseInt(req.query.limit as string) || 5;
+      
+      const unratedGenres = await storage.getUnratedGenres(userId, limit);
+      res.json(unratedGenres);
+    } catch (error) {
+      console.error("Failed to fetch unrated genres:", error);
+      res.status(500).json({ message: "Failed to fetch unrated genres" });
+    }
+  });
+
+  app.post("/api/genres/rate", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { genreId, rating } = req.body;
+      
+      if (!genreId || !rating) {
+        return res.status(400).json({ message: "Genre ID and rating are required" });
+      }
+      
+      if (rating < 1 || rating > 5) {
+        return res.status(400).json({ message: "Rating must be between 1 and 5" });
+      }
+      
+      const userRating = await storage.rateGenre({
+        userId,
+        genreId,
+        rating
+      });
+      
+      res.json(userRating);
+    } catch (error) {
+      console.error("Failed to rate genre:", error);
+      res.status(500).json({ message: "Failed to rate genre" });
+    }
+  });
+
+  app.get("/api/genres/rated-all", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const hasRatedAll = await storage.hasRatedAllGenres(userId);
+      res.json({ hasRatedAll });
+    } catch (error) {
+      console.error("Failed to check if user rated all genres:", error);
+      res.status(500).json({ message: "Failed to check genre ratings" });
+    }
+  });
+
+  // Track play recording
+  app.post("/api/tracks/:id/play", async (req: any, res) => {
+    try {
+      const { sessionId, completionRate = 0, isRepeat = false } = req.body;
+      const userId = req.user?.claims?.sub || null;
+      
+      if (!sessionId) {
+        return res.status(400).json({ message: "Session ID is required" });
+      }
+      
+      const trackPlay = await storage.recordTrackPlay({
+        trackId: req.params.id,
+        userId,
+        sessionId,
+        completionRate,
+        isRepeat
+      });
+      
+      res.json(trackPlay);
+    } catch (error) {
+      console.error("Failed to record track play:", error);
+      res.status(500).json({ message: "Failed to record track play" });
+    }
+  });
+
+  // Admin settings routes
+  app.get("/api/admin/settings/:key", isAdmin, async (req, res) => {
+    try {
+      const value = await storage.getAdminSetting(req.params.key);
+      res.json({ key: req.params.key, value });
+    } catch (error) {
+      console.error("Failed to fetch admin setting:", error);
+      res.status(500).json({ message: "Failed to fetch admin setting" });
+    }
+  });
+
+  app.post("/api/admin/settings", isAdmin, async (req, res) => {
+    try {
+      const { key, value } = req.body;
+      
+      if (!key || !value) {
+        return res.status(400).json({ message: "Key and value are required" });
+      }
+      
+      await storage.setAdminSetting(key, value);
+      res.json({ message: "Setting updated successfully" });
+    } catch (error) {
+      console.error("Failed to update admin setting:", error);
+      res.status(500).json({ message: "Failed to update admin setting" });
+    }
+  });
+
+  // Enhanced feed endpoint with genre-based recommendations
+  app.get("/api/tracks/feed", async (req: any, res) => {
+    try {
+      const sessionId = req.query.sessionId as string;
+      const userId = req.user?.claims?.sub || null;
+      const page = parseInt(req.query.page as string) || 0;
+      const pageSize = 10;
+      
+      if (!sessionId) {
+        return res.status(400).json({ message: "Session ID is required" });
+      }
+      
+      // Get recently played tracks to exclude
+      const recentlyPlayed = await storage.getRecentlyPlayedTracksForSession(sessionId, 50);
+      
+      // Get user's played tracks to exclude (if logged in)
+      let userPlayedTracks: string[] = [];
+      if (userId) {
+        userPlayedTracks = await storage.getUserPlayedTracks(userId);
+      }
+      
+      const excludeTrackIds = [...new Set([...recentlyPlayed, ...userPlayedTracks])];
+      
+      // Check if we need to show initial tracks for logged-out users
+      let feedTracks: any[] = [];
+      
+      if (!userId && page === 0) {
+        // Get admin-selected initial tracks for logged-out users
+        const initialTrack1Id = await storage.getAdminSetting('initial_track_1');
+        const initialTrack2Id = await storage.getAdminSetting('initial_track_2');
+        
+        if (initialTrack1Id) {
+          const track1 = await storage.getTrack(initialTrack1Id);
+          if (track1) {
+            const genres = await storage.getTrackGenres(track1.id);
+            const playCount = await storage.getTrackPlayCount(track1.id);
+            const user = await storage.getUser(track1.uploaderUserId);
+            feedTracks.push({
+              ...track1,
+              genres,
+              playCount,
+              creatorUsername: user?.username || '',
+              creatorArtistName: user?.artistName || 'Unknown Artist',
+              creatorEmail: user?.email || ''
+            });
+          }
+        }
+        
+        if (initialTrack2Id) {
+          const track2 = await storage.getTrack(initialTrack2Id);
+          if (track2) {
+            const genres = await storage.getTrackGenres(track2.id);
+            const playCount = await storage.getTrackPlayCount(track2.id);
+            const user = await storage.getUser(track2.uploaderUserId);
+            feedTracks.push({
+              ...track2,
+              genres,
+              playCount,
+              creatorUsername: user?.username || '',
+              creatorArtistName: user?.artistName || 'Unknown Artist',
+              creatorEmail: user?.email || ''
+            });
+          }
+        }
+      }
+      
+      // Get all tracks with genre and play info
+      const allTracks = await storage.getTracksWithGenreAndPlayInfo();
+      
+      // Filter out excluded tracks
+      const availableTracks = allTracks.filter(t => !excludeTrackIds.includes(t.id));
+      
+      // Get user's genre affinity (if logged in)
+      let genreAffinity = new Map<string, number>();
+      if (userId) {
+        genreAffinity = await storage.getUserGenreAffinity(userId);
+      }
+      
+      // Build the rest of the feed
+      const remainingSlots = pageSize - feedTracks.length;
+      
+      if (remainingSlots > 0) {
+        // TODO: Implement the complex recommendation algorithm
+        // For now, just return random tracks
+        const shuffled = availableTracks.sort(() => Math.random() - 0.5);
+        feedTracks.push(...shuffled.slice(0, remainingSlots));
+      }
+      
+      res.json(feedTracks);
+    } catch (error) {
+      console.error("Failed to fetch feed:", error);
+      res.status(500).json({ message: "Failed to fetch feed" });
     }
   });
 
