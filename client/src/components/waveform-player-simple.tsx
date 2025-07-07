@@ -114,15 +114,14 @@ export default function WaveformPlayer({
     };
   }, [onTrackEnd]);
 
-  // Initialize emoji display only once on mount
+  // Initialize emoji display when track or emojis change
   useEffect(() => {
-    console.log('[DEBUG] Initializing emojis from props:', emojiReactions?.length || 0);
+    console.log('[DEBUG] Initializing emojis from props for track:', trackId, 'emojis:', emojiReactions?.length || 0);
     
-    if (emojiReactions) {
-      setDisplayEmojis(emojiReactions);
-      setEmojiCount(emojiReactions.length);
-    }
-  }, []); // Empty dependency array - run only once on mount
+    // Reset emojis for new track
+    setDisplayEmojis(emojiReactions || []);
+    setEmojiCount(emojiReactions?.length || 0);
+  }, [trackId, emojiReactions]); // Reset when track or emoji data changes
   
   // Update emoji count from user emojis
   useEffect(() => {
