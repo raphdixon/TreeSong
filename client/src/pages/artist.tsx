@@ -14,6 +14,8 @@ interface Track {
   uploadDate: string;
   uploaderUserId: string;
   creatorUsername: string;
+  creatorArtistName: string;
+  creatorEmail: string;
   emojiReactions: any[];
   reactionScore: number;
   recencyScore: number;
@@ -49,7 +51,7 @@ function FeedItem({ track, isActive, onTrackEnd }: FeedItemProps) {
         {/* Track Info */}
         <div className="win95-track-info">
           <div className="win95-creator">
-            👤 {track.creatorUsername || 'Unknown Artist'}
+            👤 {track.creatorArtistName || track.creatorUsername || 'Unknown Artist'}
           </div>
           <div className="win95-reactions-count">
             {track.emojiReactions?.length || 0} reactions

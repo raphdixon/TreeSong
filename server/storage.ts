@@ -114,7 +114,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(tracks).where(eq(tracks.uploaderUserId, userId));
   }
 
-  async getAllTracksForFeed(): Promise<(Track & { creatorUsername: string })[]> {
+  async getAllTracksForFeed(): Promise<(Track & { creatorUsername: string; creatorArtistName: string; creatorEmail: string })[]> {
     const result = await db
       .select({
         id: tracks.id,
@@ -125,14 +125,18 @@ export class DatabaseStorage implements IStorage {
         waveformData: tracks.waveformData,
         fileDeletedAt: tracks.fileDeletedAt,
         uploadDate: tracks.uploadDate,
-        creatorUsername: users.username
+        creatorUsername: users.username,
+        creatorArtistName: users.artistName,
+        creatorEmail: users.email
       })
       .from(tracks)
       .leftJoin(users, eq(tracks.uploaderUserId, users.id));
       
     return result.map(row => ({
       ...row,
-      creatorUsername: row.creatorUsername || 'Unknown Artist'
+      creatorUsername: row.creatorUsername || 'Unknown Artist',
+      creatorArtistName: row.creatorArtistName || row.creatorEmail || 'Unknown Artist',
+      creatorEmail: row.creatorEmail || ''
     }));
   }
 
