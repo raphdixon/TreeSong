@@ -328,6 +328,7 @@ export default function WaveformPlayer({
         onEmojiSelect={handleEmojiSelect}
         disabled={addEmojiMutation.isPending}
         currentCount={emojiCount}
+        maxCount={10}
       />
     </div>
   );

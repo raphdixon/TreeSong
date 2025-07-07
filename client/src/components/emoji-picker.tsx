@@ -15,13 +15,15 @@ interface EmojiPickerProps {
   disabled?: boolean;
   currentCount?: number;
   showWarning?: boolean;
+  maxCount?: number;
 }
 
 export default function EmojiPicker({ 
   onEmojiSelect, 
   disabled = false, 
   currentCount = 0, 
-  showWarning = false 
+  showWarning = false,
+  maxCount = 10
 }: EmojiPickerProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const totalPages = Math.ceil(EMOJI_OPTIONS.length / EMOJIS_PER_PAGE);
@@ -45,12 +47,44 @@ export default function EmojiPicker({
       border: '2px inset var(--win95-gray)',
       padding: '4px'
     }}>
+      {/* Emoji counter */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'flex-end',
+        marginBottom: '4px',
+        paddingRight: '4px'
+      }}>
+        <div style={{
+          fontSize: '10px',
+          color: '#333',
+          fontFamily: 'monospace',
+          fontWeight: 'bold'
+        }}>
+          {currentCount}/{maxCount}
+        </div>
+      </div>
+      
+      {/* Emoji grid */}
+      <div className="emoji-grid">
+        {currentEmojis.map((emoji) => (
+          <button
+            key={emoji}
+            className="emoji-button"
+            onClick={() => onEmojiSelect(emoji)}
+            disabled={disabled}
+            title={`Add ${emoji} reaction`}
+          >
+            {emoji}
+          </button>
+        ))}
+      </div>
+      
       {/* Pagination controls */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '4px',
+        marginTop: '4px',
         padding: '2px'
       }}>
         <button
@@ -98,21 +132,6 @@ export default function EmojiPicker({
         >
           ▶
         </button>
-      </div>
-      
-      {/* Emoji grid */}
-      <div className="emoji-grid">
-        {currentEmojis.map((emoji) => (
-          <button
-            key={emoji}
-            className="emoji-button"
-            onClick={() => onEmojiSelect(emoji)}
-            disabled={disabled}
-            title={`Add ${emoji} reaction`}
-          >
-            {emoji}
-          </button>
-        ))}
       </div>
     </div>
   );
