@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import EmojiPicker from "./emoji-picker";
 import SimpleWaveform from "@/components/simple-waveform";
 import { nanoid } from "nanoid";
-import { useGlobalVolume } from "@/pages/feed";
+// Volume hook replacement for playlist mode
 
 interface WaveformPlayerProps {
   trackId: string;
@@ -37,7 +37,7 @@ export default function WaveformPlayer({
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const globalVolume = useGlobalVolume();
+  const [volume, setVolume] = useState(70); // Local volume state for playlist mode
 
   const [sessionId] = useState(() => {
     const existingSessionId = localStorage.getItem('demoTreeSessionId');
@@ -68,7 +68,7 @@ export default function WaveformPlayer({
   // Initialize audio element
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = globalVolume / 100;
+      audioRef.current.volume = volume / 100;
       
       // Auto-play if requested
       if (autoPlay) {
@@ -77,14 +77,14 @@ export default function WaveformPlayer({
         }).catch(console.error);
       }
     }
-  }, [audioUrl, autoPlay, globalVolume]);
+  }, [audioUrl, autoPlay, volume]);
 
   // Update volume
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = globalVolume / 100;
+      audioRef.current.volume = volume / 100;
     }
-  }, [globalVolume]);
+  }, [volume]);
 
   // Handle audio events
   useEffect(() => {
