@@ -1,5 +1,5 @@
 import {
-  users, tracks, emojiReactions, shares,
+  users, tracks, emojiReactions, shares, playlists, savedTracks,
   type User,
   type InsertUser,
   type UpsertUser,
@@ -8,7 +8,11 @@ import {
   type EmojiReaction,
   type InsertEmojiReaction,
   type Share,
-  type InsertShare
+  type InsertShare,
+  type Playlist,
+  type InsertPlaylist,
+  type SavedTrack,
+  type InsertSavedTrack
 } from "@shared/schema";
 import { nanoid } from "nanoid";
 import bcrypt from "bcrypt";
@@ -51,6 +55,20 @@ export interface IStorage {
   updateTrack(id: string, updates: Partial<Track>): Promise<void>;
   updateUser(id: string, updates: Partial<User>): Promise<void>;
   deleteUser(id: string): Promise<void>;
+  
+  // Playlist methods
+  createPlaylist(playlist: InsertPlaylist): Promise<Playlist>;
+  getUserPlaylists(userId: string): Promise<Playlist[]>;
+  getPlaylist(id: string): Promise<Playlist | undefined>;
+  updatePlaylist(id: string, updates: Partial<Playlist>): Promise<void>;
+  deletePlaylist(id: string): Promise<void>;
+  
+  // Saved track methods
+  saveTrackToPlaylist(savedTrack: InsertSavedTrack): Promise<SavedTrack>;
+  removeTrackFromPlaylist(playlistId: string, trackId: string): Promise<void>;
+  getPlaylistTracks(playlistId: string): Promise<(SavedTrack & { track: Track & { creatorUsername: string; creatorArtistName: string; creatorEmail: string } })[]>;
+  isTrackInPlaylist(playlistId: string, trackId: string): Promise<boolean>;
+  getNextPosition(playlistId: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -275,6 +293,125 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(users)
       .where(eq(users.id, id));
+  }
+
+  // Playlist methods
+  async createPlaylist(insertPlaylist: InsertPlaylist): Promise<Playlist> {
+    const [playlist] = await db
+      .insert(playlists)
+      .values({
+        ...insertPlaylist,
+        id: insertPlaylist.id || nanoid()
+      })
+      .returning();
+    
+    console.log('[STORAGE] Created playlist:', playlist);
+    return playlist;
+  }
+
+  async getUserPlaylists(userId: string): Promise<Playlist[]> {
+    const userPlaylists = await db
+      .select()
+      .from(playlists)
+      .where(eq(playlists.userId, userId))
+      .orderBy(desc(playlists.createdAt));
+    
+    console.log('[STORAGE] Found', userPlaylists.length, 'playlists for user:', userId);
+    return userPlaylists;
+  }
+
+  async getPlaylist(id: string): Promise<Playlist | undefined> {
+    const [playlist] = await db
+      .select()
+      .from(playlists)
+      .where(eq(playlists.id, id));
+    
+    return playlist;
+  }
+
+  async updatePlaylist(id: string, updates: Partial<Playlist>): Promise<void> {
+    await db
+      .update(playlists)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(playlists.id, id));
+  }
+
+  async deletePlaylist(id: string): Promise<void> {
+    // Cascade delete will handle removing saved tracks
+    await db
+      .delete(playlists)
+      .where(eq(playlists.id, id));
+  }
+
+  // Saved track methods
+  async saveTrackToPlaylist(insertSavedTrack: InsertSavedTrack): Promise<SavedTrack> {
+    const [savedTrack] = await db
+      .insert(savedTracks)
+      .values({
+        ...insertSavedTrack,
+        id: insertSavedTrack.id || nanoid()
+      })
+      .returning();
+    
+    console.log('[STORAGE] Saved track to playlist:', savedTrack);
+    return savedTrack;
+  }
+
+  async removeTrackFromPlaylist(playlistId: string, trackId: string): Promise<void> {
+    await db
+      .delete(savedTracks)
+      .where(and(
+        eq(savedTracks.playlistId, playlistId),
+        eq(savedTracks.trackId, trackId)
+      ));
+  }
+
+  async getPlaylistTracks(playlistId: string): Promise<(SavedTrack & { track: Track & { creatorUsername: string; creatorArtistName: string; creatorEmail: string } })[]> {
+    const playlistTracks = await db
+      .select({
+        savedTrack: savedTracks,
+        track: tracks,
+        user: users
+      })
+      .from(savedTracks)
+      .innerJoin(tracks, eq(savedTracks.trackId, tracks.id))
+      .leftJoin(users, eq(tracks.uploaderUserId, users.id))
+      .where(eq(savedTracks.playlistId, playlistId))
+      .orderBy(asc(savedTracks.position));
+    
+    return playlistTracks.map(({ savedTrack, track, user }) => ({
+      ...savedTrack,
+      track: {
+        ...track,
+        creatorUsername: user?.username || '',
+        creatorArtistName: user?.artistName || 'Unknown Artist',
+        creatorEmail: user?.email || ''
+      }
+    }));
+  }
+
+  async isTrackInPlaylist(playlistId: string, trackId: string): Promise<boolean> {
+    const [exists] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(savedTracks)
+      .where(and(
+        eq(savedTracks.playlistId, playlistId),
+        eq(savedTracks.trackId, trackId)
+      ));
+    
+    return exists.count > 0;
+  }
+
+  async getNextPosition(playlistId: string): Promise<number> {
+    const [result] = await db
+      .select({ maxPosition: sql<number>`coalesce(max(position), -1)` })
+      .from(savedTracks)
+      .where(eq(savedTracks.playlistId, playlistId));
+    
+    return result.maxPosition + 1;
   }
 }
 

@@ -6,6 +6,7 @@ import { useTrackCounter } from "@/hooks/use-track-counter";
 import Windows95Layout from "@/components/windows95-layout";
 import WaveformPlayer from "@/components/waveform-player-simple";
 import AuthPromptCard from "@/components/auth-prompt-card";
+import SaveTrackDialog from "@/components/save-track-dialog";
 import { ChevronUp, ChevronDown, User, LogIn, Upload } from "lucide-react";
 
 // Global volume state
@@ -230,6 +231,8 @@ export default function FeedPage() {
   const [hasViewedTrack, setHasViewedTrack] = useState<Set<string>>(new Set());
   const feedRef = useRef<HTMLDivElement>(null);
   const [reactionCounts, setReactionCounts] = useState<Record<string, number>>({});
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [saveTrackId, setSaveTrackId] = useState<string | null>(null);
   
   // Get URL parameters
   const searchParams = new URLSearchParams(window.location.search);
@@ -283,6 +286,19 @@ export default function FeedPage() {
   };
 
   const recommendedTracks = getRecommendedTracks(allTracks);
+
+  // Check if user just logged in to save a track
+  useEffect(() => {
+    if (user && isAuthenticated) {
+      const savedTrackId = sessionStorage.getItem('saveTrackId');
+      if (savedTrackId) {
+        console.log('[FEED] User logged in to save track:', savedTrackId);
+        setSaveTrackId(savedTrackId);
+        setShowSaveDialog(true);
+        sessionStorage.removeItem('saveTrackId');
+      }
+    }
+  }, [user, isAuthenticated]);
 
   // Create display items list with auth prompts injected
   const createDisplayItems = () => {
@@ -554,16 +570,40 @@ export default function FeedPage() {
             <div className="win95-player-content">
               {/* Track Info */}
               <div className="win95-track-info">
-                <button 
-                  className="win95-creator win95-creator-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLocation(`/artist/${encodeURIComponent(currentTrack.uploaderUserId)}`);
-                  }}
-                  title={`View artist's tracks`}
-                >
-                  👤 {currentTrack.creatorArtistName || 'Unknown Artist'}
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button 
+                    className="win95-creator win95-creator-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLocation(`/artist/${encodeURIComponent(currentTrack.uploaderUserId)}`);
+                    }}
+                    title={`View artist's tracks`}
+                  >
+                    👤 {currentTrack.creatorArtistName || 'Unknown Artist'}
+                  </button>
+                  <button
+                    className="win95-save-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!user) {
+                        // Save current track ID to redirect back after login
+                        sessionStorage.setItem('saveTrackId', currentTrack.id);
+                        window.location.href = '/api/login';
+                      } else {
+                        setShowSaveDialog(true);
+                        setSaveTrackId(currentTrack.id);
+                      }
+                    }}
+                    title="Save track to playlist"
+                    style={{
+                      padding: '2px 8px',
+                      fontSize: '11px',
+                      fontFamily: '"Press Start 2P", monospace'
+                    }}
+                  >
+                    💾 Save
+                  </button>
+                </div>
                 <div className="win95-reactions-count">
                   {reactionCounts[currentTrack.id] ?? (currentTrack.emojiReactions?.length || 0)} reactions
                 </div>
@@ -620,6 +660,17 @@ export default function FeedPage() {
           ↓
         </button>
       </div>
+      
+      {/* Save Track Dialog */}
+      {showSaveDialog && saveTrackId && (
+        <SaveTrackDialog
+          trackId={saveTrackId}
+          onClose={() => {
+            setShowSaveDialog(false);
+            setSaveTrackId(null);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1128,3 +1128,22 @@ body {
     font-size: 10px !important;
   }
 }
+
+/* Save Button Styles */
+.win95-save-btn {
+  background: #C0C0C0;
+  border: 2px outset #DFDFDF;
+  color: #000000;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: "Press Start 2P", monospace;
+  padding: 2px 8px;
+}
+
+.win95-save-btn:hover:not(:disabled) {
+  background: #D4D4D4;
+}
+
+.win95-save-btn:active:not(:disabled) {
+  border: 2px inset #DFDFDF;
+}

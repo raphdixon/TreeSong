@@ -508,6 +508,180 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Playlist routes
+  app.get("/api/playlists", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const playlists = await storage.getUserPlaylists(userId);
+      console.log('[ROUTES] Fetched playlists for user:', userId, 'count:', playlists.length);
+      res.json(playlists);
+    } catch (error) {
+      console.error("Failed to fetch playlists:", error);
+      res.status(500).json({ message: "Failed to fetch playlists" });
+    }
+  });
+
+  app.post("/api/playlists", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { name } = req.body;
+      
+      if (!name || !name.trim()) {
+        return res.status(400).json({ message: "Playlist name is required" });
+      }
+      
+      const playlist = await storage.createPlaylist({
+        userId,
+        name: name.trim()
+      });
+      
+      console.log('[ROUTES] Created playlist:', playlist);
+      res.json(playlist);
+    } catch (error) {
+      console.error("Failed to create playlist:", error);
+      res.status(500).json({ message: "Failed to create playlist" });
+    }
+  });
+
+  app.get("/api/playlists/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const playlist = await storage.getPlaylist(req.params.id);
+      
+      if (!playlist) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+      
+      // Check if user owns this playlist
+      if (playlist.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      res.json(playlist);
+    } catch (error) {
+      console.error("Failed to fetch playlist:", error);
+      res.status(500).json({ message: "Failed to fetch playlist" });
+    }
+  });
+
+  app.get("/api/playlists/:id/tracks", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const playlist = await storage.getPlaylist(req.params.id);
+      
+      if (!playlist) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+      
+      // Check if user owns this playlist
+      if (playlist.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const tracks = await storage.getPlaylistTracks(req.params.id);
+      console.log('[ROUTES] Fetched tracks for playlist:', req.params.id, 'count:', tracks.length);
+      res.json(tracks);
+    } catch (error) {
+      console.error("Failed to fetch playlist tracks:", error);
+      res.status(500).json({ message: "Failed to fetch playlist tracks" });
+    }
+  });
+
+  app.post("/api/playlists/:id/tracks", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { trackId } = req.body;
+      
+      if (!trackId) {
+        return res.status(400).json({ message: "Track ID is required" });
+      }
+      
+      const playlist = await storage.getPlaylist(req.params.id);
+      
+      if (!playlist) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+      
+      // Check if user owns this playlist
+      if (playlist.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Check if track exists
+      const track = await storage.getTrack(trackId);
+      if (!track) {
+        return res.status(404).json({ message: "Track not found" });
+      }
+      
+      // Check if track is already in playlist
+      const exists = await storage.isTrackInPlaylist(req.params.id, trackId);
+      if (exists) {
+        return res.status(400).json({ message: "Track already in playlist" });
+      }
+      
+      // Get next position
+      const position = await storage.getNextPosition(req.params.id);
+      
+      const savedTrack = await storage.saveTrackToPlaylist({
+        playlistId: req.params.id,
+        trackId,
+        position
+      });
+      
+      console.log('[ROUTES] Added track to playlist:', savedTrack);
+      res.json(savedTrack);
+    } catch (error) {
+      console.error("Failed to add track to playlist:", error);
+      res.status(500).json({ message: "Failed to add track to playlist" });
+    }
+  });
+
+  app.delete("/api/playlists/:id/tracks/:trackId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const playlist = await storage.getPlaylist(req.params.id);
+      
+      if (!playlist) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+      
+      // Check if user owns this playlist
+      if (playlist.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      await storage.removeTrackFromPlaylist(req.params.id, req.params.trackId);
+      console.log('[ROUTES] Removed track from playlist:', req.params.trackId);
+      res.json({ message: "Track removed from playlist" });
+    } catch (error) {
+      console.error("Failed to remove track from playlist:", error);
+      res.status(500).json({ message: "Failed to remove track from playlist" });
+    }
+  });
+
+  app.delete("/api/playlists/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const playlist = await storage.getPlaylist(req.params.id);
+      
+      if (!playlist) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+      
+      // Check if user owns this playlist
+      if (playlist.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      await storage.deletePlaylist(req.params.id);
+      console.log('[ROUTES] Deleted playlist:', req.params.id);
+      res.json({ message: "Playlist deleted successfully" });
+    } catch (error) {
+      console.error("Failed to delete playlist:", error);
+      res.status(500).json({ message: "Failed to delete playlist" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

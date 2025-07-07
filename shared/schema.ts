@@ -73,6 +73,27 @@ export const shares = pgTable("shares", {
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
+// Playlists table
+export const playlists = pgTable("playlists", {
+  id: varchar("id").primaryKey().notNull(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: varchar("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Saved tracks (tracks in playlists)
+export const savedTracks = pgTable("saved_tracks", {
+  id: varchar("id").primaryKey().notNull(),
+  playlistId: varchar("playlist_id").notNull().references(() => playlists.id, { onDelete: 'cascade' }),
+  trackId: varchar("track_id").notNull().references(() => tracks.id, { onDelete: 'cascade' }),
+  position: integer("position").notNull(), // Order of tracks in playlist
+  savedAt: timestamp("saved_at").defaultNow().notNull()
+}, (table) => [
+  index("idx_playlist_track").on(table.playlistId, table.trackId),
+  index("idx_playlist_position").on(table.playlistId, table.position)
+]);
+
 // Insert schemas
 export const insertTrackSchema = createInsertSchema(tracks).omit({
   id: true,
@@ -91,6 +112,17 @@ export const insertShareSchema = createInsertSchema(shares).omit({
   createdAt: true
 });
 
+export const insertPlaylistSchema = createInsertSchema(playlists).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertSavedTrackSchema = createInsertSchema(savedTracks).omit({
+  id: true,
+  savedAt: true
+});
+
 // Types
 export type InsertTrack = z.infer<typeof insertTrackSchema>;
 export type Track = typeof tracks.$inferSelect;
@@ -99,3 +131,8 @@ export type EmojiReaction = typeof emojiReactions.$inferSelect;
 
 export type InsertShare = z.infer<typeof insertShareSchema>;
 export type Share = typeof shares.$inferSelect;
+
+export type InsertPlaylist = z.infer<typeof insertPlaylistSchema>;
+export type Playlist = typeof playlists.$inferSelect;
+export type InsertSavedTrack = z.infer<typeof insertSavedTrackSchema>;
+export type SavedTrack = typeof savedTracks.$inferSelect;
