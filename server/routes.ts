@@ -222,6 +222,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const track = await storage.createTrack(trackData);
       console.log("Track created successfully:", track.id);
       
+      // Generate waveform data asynchronously after track creation
+      const filePath = path.join(uploadsDir, track.filename);
+      generateWaveformData(filePath).then(async (waveformData) => {
+        console.log(`Generated waveform for track ${track.id} with ${waveformData.peaks.length} peaks`);
+        await storage.updateTrackWaveform(track.id, waveformData);
+      }).catch((error) => {
+        console.error(`Failed to generate waveform for track ${track.id}:`, error);
+      });
+      
       res.json(track);
     } catch (error) {
       console.error("Upload error:", error);

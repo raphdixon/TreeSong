@@ -117,6 +117,7 @@ export class DatabaseStorage implements IStorage {
         filename: tracks.filename,
         originalName: tracks.originalName,
         duration: tracks.duration,
+        waveformData: tracks.waveformData,
         fileDeletedAt: tracks.fileDeletedAt,
         uploadDate: tracks.uploadDate,
         creatorUsername: users.username

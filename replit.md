@@ -127,6 +127,14 @@ DemoTree is a public music sharing platform where musicians can upload their dem
 
 ```
 Changelog:
+- July 07, 2025. Real Waveform Generation Implementation
+  - Replaced fake/generated waveforms with real audio analysis using FFmpeg
+  - Waveforms now accurately reflect actual audio content of each track
+  - Implemented server-side waveform generation during file upload
+  - Waveform data stored in database for fast retrieval (no regeneration on page load)
+  - Using fluent-ffmpeg to extract PCM audio data and generate 300 peak points
+  - Waveforms cached permanently for optimal performance
+  - Frontend fetches pre-generated waveform data via /api/tracks/:id/waveform endpoint
 - July 07, 2025. Removed First-Listen Restrictions & Enhanced Volume Control
   - Completely removed first-listen restriction system allowing immediate emoji reactions
   - Eliminated all listen tracking functionality (trackListens table, routes, components)

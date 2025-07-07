@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
 
 interface SimpleWaveformProps {
   trackId: string;
@@ -7,6 +6,36 @@ interface SimpleWaveformProps {
   onSeek?: (time: number) => void;
   currentTime?: number;
   isPlaying?: boolean;
+}
+
+// Generate unique waveform bars based on trackId
+function generateBars(count: number, trackId: string): number[] {
+  const bars: number[] = [];
+  
+  // Create a simple hash from trackId to use as seed
+  let hash = 0;
+  for (let i = 0; i < trackId.length; i++) {
+    const char = trackId.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  
+  // Use hash to create deterministic but unique pattern
+  const seed = Math.abs(hash);
+  const offset = (seed % 100) / 100;
+  const frequency = 0.3 + (seed % 30) / 100;
+  
+  for (let i = 0; i < count; i++) {
+    // Create unique pattern based on track
+    const base = 0.4 + (seed % 20) / 100;
+    const wave1 = Math.sin((i + offset * 10) * frequency) * 0.3;
+    const wave2 = Math.sin((i + offset * 5) * frequency * 2.1) * 0.15;
+    const pseudoRandom = ((seed * (i + 1)) % 100) / 500 - 0.1;
+    
+    const height = base + wave1 + wave2 + pseudoRandom;
+    bars.push(Math.max(0.1, Math.min(1, height)));
+  }
+  return bars;
 }
 
 export default function SimpleWaveform({ 
@@ -17,25 +46,15 @@ export default function SimpleWaveform({
   isPlaying = false 
 }: SimpleWaveformProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [bars] = useState(() => generateBars(100, trackId)); // Generate unique bars per track
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
-  
-  // Fetch waveform data from backend
-  const { data: waveformData, isLoading } = useQuery<{ peaks: number[]; length: number }>({
-    queryKey: [`/api/tracks/${trackId}/waveform`],
-    staleTime: Infinity, // Waveform data doesn't change
-    gcTime: Infinity // v5 uses gcTime instead of cacheTime
-  });
-  
-  // Use real waveform peaks if available, otherwise show loading state
-  const bars = waveformData?.peaks || [];
-  const barsToRender = bars.length > 0 ? bars : new Array(100).fill(0.1);
-  
-  const currentBar = Math.floor((currentTime / duration) * barsToRender.length);
 
   const handleBarClick = (index: number) => {
-    const time = (index / barsToRender.length) * duration;
+    const time = (index / bars.length) * duration;
     onSeek?.(time);
   };
+
+  const currentBar = Math.floor((currentTime / duration) * bars.length);
 
   return (
     <div 
@@ -63,7 +82,7 @@ export default function SimpleWaveform({
           gap: '1px'
         }}
       >
-        {barsToRender.map((height, index) => (
+        {bars.map((height, index) => (
           <div
             key={index}
             onClick={() => handleBarClick(index)}
@@ -79,8 +98,7 @@ export default function SimpleWaveform({
                   : '#0000FF', // Blue for unplayed
               transition: 'none',
               borderRadius: 0,
-              cursor: 'pointer',
-              opacity: isLoading ? 0.3 : 1
+              cursor: 'pointer'
             }}
           />
         ))}
@@ -96,36 +114,9 @@ export default function SimpleWaveform({
           width: '2px',
           background: '#FF0000',
           pointerEvents: 'none',
-          zIndex: 10
+          display: isPlaying ? 'block' : 'none'
         }}
       />
-      
-      {/* Hover time tooltip */}
-      {hoveredBar !== null && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '-20px',
-            left: `${(hoveredBar / barsToRender.length) * 100}%`,
-            transform: 'translateX(-50%)',
-            background: '#000',
-            color: '#FFF',
-            padding: '2px 4px',
-            fontSize: '10px',
-            whiteSpace: 'nowrap',
-            pointerEvents: 'none',
-            zIndex: 20
-          }}
-        >
-          {formatTime((hoveredBar / barsToRender.length) * duration)}
-        </div>
-      )}
     </div>
   );
-}
-
-function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
