@@ -141,6 +141,19 @@ export default function GenreRating({ genres, onComplete }: GenreRatingProps) {
           <div>1 = Not at all | 5 = Love it!</div>
         </div>
 
+        {/* Progress indicator */}
+        <div style={{
+          textAlign: "center",
+          fontSize: "16px",
+          fontWeight: "bold",
+          color: "#000080",
+          marginTop: "16px",
+          marginBottom: "8px",
+          fontFamily: "MS Sans Serif, sans-serif"
+        }}>
+          Question {currentIndex + 1}/{genres.length}
+        </div>
+
         {/* Navigation buttons for multi-genre view */}
         {genres.length > 1 && (
           <div style={{ 
