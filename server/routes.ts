@@ -17,16 +17,18 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Configure multer for file uploads
+// Configure multer for file uploads - MP3 only
 const upload = multer({
   dest: uploadsDir,
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['.mp3', '.wav', '.ogg'];
+    const allowedTypes = ['.mp3'];
+    const allowedMimeTypes = ['audio/mpeg', 'audio/mp3'];
     const ext = path.extname(file.originalname).toLowerCase();
-    if (allowedTypes.includes(ext)) {
+    
+    if (allowedTypes.includes(ext) || allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only MP3, WAV, and OGG files are allowed.'));
+      cb(new Error('Invalid file type. Only MP3 files are allowed.'));
     }
   },
   limits: {

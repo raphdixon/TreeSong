@@ -127,6 +127,14 @@ DemoTree is a public music sharing platform where musicians can upload their dem
 
 ```
 Changelog:
+- July 07, 2025. MP3-Only Upload Restriction & Enhanced Windows 95 Dialogue Boxes
+  - Restricted file uploads to MP3 format only for consistency and performance
+  - Updated frontend validation to only accept MP3 files with improved error messages
+  - Updated backend multer configuration to validate MP3 files by extension and MIME type
+  - Enhanced Windows 95 styling for upload modal with authentic grey backdrop and inset borders
+  - Improved share modal styling with proper Windows 95 dialogue box appearance
+  - Updated upload UI text to clearly indicate "MP3 files only (Max 50MB)"
+  - All dialogue boxes now use consistent Windows 95 aesthetic with proper fonts and spacing
 - July 07, 2025. Real Waveform Generation Implementation
   - Replaced fake/generated waveforms with real audio analysis using FFmpeg
   - Waveforms now accurately reflect actual audio content of each track

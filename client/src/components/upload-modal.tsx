@@ -47,12 +47,14 @@ export default function UploadModal({ onClose }: UploadModalProps) {
   });
 
   const handleFileSelect = (selectedFile: File) => {
-    // Validate file type and size
-    const validTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg'];
-    if (!validTypes.includes(selectedFile.type)) {
+    // Validate file type and size - MP3 only
+    const validTypes = ['audio/mpeg', 'audio/mp3'];
+    const isValidExtension = selectedFile.name.toLowerCase().endsWith('.mp3');
+    
+    if (!validTypes.includes(selectedFile.type) && !isValidExtension) {
       toast({
         title: "Invalid file type",
-        description: "Please select an MP3, WAV, or OGG file.",
+        description: "Please select an MP3 file only.",
         variant: "destructive"
       });
       return;
@@ -129,74 +131,117 @@ export default function UploadModal({ onClose }: UploadModalProps) {
   };
 
   return (
-    <div className="window" style={{ 
-      position: "fixed", 
-      top: "50%", 
-      left: "50%", 
-      transform: "translate(-50%, -50%)",
+    <div style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      backgroundColor: "rgba(128, 128, 128, 0.5)",
       zIndex: 1000,
-      width: "500px",
-      maxWidth: "90vw"
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center"
     }}>
-      <div className="title-bar">
-        <div className="title-bar-text">Upload New Track</div>
-        <div className="title-bar-controls">
-          <button aria-label="Close" onClick={onClose}></button>
+      <div className="window" style={{ 
+        width: "480px",
+        maxWidth: "90vw",
+        fontFamily: "MS Sans Serif, sans-serif",
+        fontSize: "11px"
+      }}>
+        <div className="title-bar">
+          <div className="title-bar-text">Upload New Track</div>
+          <div className="title-bar-controls">
+            <button aria-label="Close" onClick={onClose}></button>
+          </div>
         </div>
-      </div>
-      
-      <div className="window-body" style={{ padding: "20px" }}>
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: "20px", display: "flex", justifyContent: "center" }}>
-            <div
-              className={`sunken-panel ${isDragging ? 'drag-hover' : ''}`}
-              style={{
-                padding: "40px 20px",
-                textAlign: "center",
-                cursor: "pointer",
-                border: isDragging ? "2px dashed #0080ff" : "2px dashed #ccc",
-                backgroundColor: isDragging ? "#f0f8ff" : "#f9f9f9",
-                width: "100%",
-                maxWidth: "400px"
-              }}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <div style={{ fontSize: "24px", marginBottom: "8px" }}>📁</div>
-              <div><strong>
-                {file ? file.name : "Click to select audio file or drag and drop"}
-              </strong></div>
-              <div style={{ fontSize: "11px", color: "#666", marginTop: "4px" }}>
-                Supported formats: MP3, WAV, OGG (Max 50MB)
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".mp3,.wav,.ogg,audio/*"
-                style={{ display: "none" }}
-                onChange={(e) => {
-                  const selectedFile = e.target.files?.[0];
-                  if (selectedFile) {
-                    handleFileSelect(selectedFile);
-                  }
+        
+        <div className="window-body" style={{ padding: "16px" }}>
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: "16px", textAlign: "center" }}>
+              <div
+                className="sunken-panel"
+                style={{
+                  padding: "32px 16px",
+                  textAlign: "center",
+                  cursor: "pointer",
+                  backgroundColor: "#c0c0c0",
+                  border: isDragging ? "2px dashed #000080" : "2px inset #c0c0c0",
+                  minHeight: "120px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center"
                 }}
-              />
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <div style={{ 
+                  fontSize: "32px", 
+                  marginBottom: "8px",
+                  filter: "grayscale(1)"
+                }}>🎵</div>
+                <div style={{ 
+                  fontWeight: "bold",
+                  marginBottom: "4px",
+                  color: "#000"
+                }}>
+                  {file ? file.name : "Select MP3 file"}
+                </div>
+                <div style={{ 
+                  fontSize: "10px", 
+                  color: "#666",
+                  textAlign: "center"
+                }}>
+                  Click here or drag and drop<br/>
+                  MP3 files only (Max 50MB)
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".mp3,audio/mpeg"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    const selectedFile = e.target.files?.[0];
+                    if (selectedFile) {
+                      handleFileSelect(selectedFile);
+                    }
+                  }}
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="field-row" style={{ justifyContent: "center", marginTop: "20px" }}>
-            <button 
-              type="submit" 
-              disabled={!file || uploadMutation.isPending}
-              style={{ marginRight: "10px" }}
-            >
-              {uploadMutation.isPending ? "Uploading..." : "📤 Upload Track"}
-            </button>
-            <button type="button" onClick={onClose}>Cancel</button>
-          </div>
-        </form>
+            <div style={{ 
+              display: "flex", 
+              justifyContent: "center", 
+              gap: "8px",
+              marginTop: "16px" 
+            }}>
+              <button 
+                type="submit" 
+                disabled={!file || uploadMutation.isPending}
+                style={{ 
+                  padding: "4px 16px",
+                  minWidth: "80px"
+                }}
+              >
+                {uploadMutation.isPending ? "Uploading..." : "Upload"}
+              </button>
+              <button 
+                type="button" 
+                onClick={onClose}
+                style={{ 
+                  padding: "4px 16px",
+                  minWidth: "80px"
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

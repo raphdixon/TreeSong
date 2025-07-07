@@ -48,42 +48,82 @@ export default function ShareModal({ trackId, onClose }: ShareModalProps) {
   }, []);
 
   return (
-    <div className="modal-backdrop">
-      <div className="window modal-window" style={{ width: "450px" }}>
+    <div style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      backgroundColor: "rgba(128, 128, 128, 0.5)",
+      zIndex: 1000,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center"
+    }}>
+      <div className="window" style={{ 
+        width: "420px",
+        maxWidth: "90vw",
+        fontFamily: "MS Sans Serif, sans-serif",
+        fontSize: "11px"
+      }}>
         <div className="title-bar">
           <div className="title-bar-text">Share Track</div>
           <div className="title-bar-controls">
-            <div className="title-bar-button" onClick={onClose}>×</div>
+            <button aria-label="Close" onClick={onClose}></button>
           </div>
         </div>
         
-        <div className="window-body">
-          <div className="field-row">
-            <label>Public Share URL:</label>
+        <div className="window-body" style={{ padding: "16px" }}>
+          <div style={{ marginBottom: "12px" }}>
+            <label style={{ fontWeight: "normal" }}>Public Share URL:</label>
           </div>
           
           {createShareMutation.isPending ? (
-            <div style={{ padding: "20px", textAlign: "center" }}>
+            <div style={{ 
+              padding: "20px", 
+              textAlign: "center",
+              backgroundColor: "#c0c0c0",
+              border: "2px inset #c0c0c0",
+              marginBottom: "16px"
+            }}>
               Generating share link...
             </div>
           ) : (
             <>
-              <div className="share-url" style={{ marginBottom: "10px" }}>
+              <div style={{ 
+                backgroundColor: "#ffffff",
+                border: "2px inset #c0c0c0",
+                padding: "4px 8px",
+                marginBottom: "16px",
+                fontFamily: "monospace",
+                fontSize: "10px",
+                wordBreak: "break-all",
+                minHeight: "20px"
+              }}>
                 {shareUrl || "Failed to generate link"}
               </div>
               
-              <div className="field-row" style={{ justifyContent: "center" }}>
+              <div style={{ 
+                display: "flex", 
+                justifyContent: "center", 
+                gap: "8px"
+              }}>
                 <button 
-                  className="btn"
                   onClick={copyToClipboard}
                   disabled={!shareUrl}
+                  style={{ 
+                    padding: "4px 16px",
+                    minWidth: "90px"
+                  }}
                 >
-                  📋 Copy to Clipboard
+                  Copy Link
                 </button>
                 <button 
-                  className="btn"
                   onClick={onClose}
-                  style={{ marginLeft: "10px" }}
+                  style={{ 
+                    padding: "4px 16px",
+                    minWidth: "60px"
+                  }}
                 >
                   Close
                 </button>
@@ -92,11 +132,12 @@ export default function ShareModal({ trackId, onClose }: ShareModalProps) {
           )}
           
           <div style={{ 
-            background: "#F0F0F0", 
+            backgroundColor: "#f0f0f0", 
             padding: "8px", 
-            border: "1px inset #C0C0C0", 
-            fontSize: "11px",
-            marginTop: "15px"
+            border: "2px inset #c0c0c0", 
+            fontSize: "10px",
+            marginTop: "16px",
+            color: "#666"
           }}>
             <strong>ℹ️ Note:</strong> Anyone with this link can view and comment on your track without logging in.
           </div>
