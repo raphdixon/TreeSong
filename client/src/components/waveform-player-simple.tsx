@@ -50,6 +50,7 @@ export default function WaveformPlayer({
   // Emoji state
   const [displayEmojis, setDisplayEmojis] = useState<any[]>(emojiReactions || []);
   const [emojiCount, setEmojiCount] = useState(0);
+  const [currentTrackId, setCurrentTrackId] = useState(trackId);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -114,14 +115,17 @@ export default function WaveformPlayer({
     };
   }, [onTrackEnd]);
 
-  // Reset emoji display only when track ID changes (new track)
+  // Reset emoji display only when switching to a different track
   useEffect(() => {
-    console.log('[DEBUG] Track changed to:', trackId, 'resetting emoji state');
-    
-    // Reset emojis for new track
-    setDisplayEmojis([]);
-    setEmojiCount(0);
-  }, [trackId]); // Only reset when track changes, not when emoji data loads
+    if (trackId !== currentTrackId) {
+      console.log('[DEBUG] Track changed from', currentTrackId, 'to:', trackId, 'resetting emoji state');
+      
+      // Reset emojis for new track
+      setDisplayEmojis([]);
+      setEmojiCount(0);
+      setCurrentTrackId(trackId);
+    }
+  }, [trackId, currentTrackId]); // Only reset when actually changing tracks
   
   // Initialize emoji display from props when data becomes available
   useEffect(() => {
@@ -131,13 +135,32 @@ export default function WaveformPlayer({
     }
   }, [emojiReactions]); // Update display when emoji data loads
   
-  // Update emoji count from user emojis
+  // Update emoji display and count from user session data
   useEffect(() => {
     if (userEmojis) {
       console.log('[DEBUG] Initial emoji count response:', userEmojis);
-      setEmojiCount((userEmojis as any).count || 0);
+      const sessionData = userEmojis as any;
+      setEmojiCount(sessionData.count || 0);
+      
+      // Merge session emojis with existing emojis
+      if (sessionData.reactions && sessionData.reactions.length > 0) {
+        console.log('[DEBUG] Merging session emojis with existing emojis');
+        
+        setDisplayEmojis(prev => {
+          // Get existing emoji IDs to avoid duplicates
+          const existingIds = new Set(prev.map(e => e.id));
+          
+          // Merge unique emojis from session
+          const mergedEmojis = [
+            ...prev,
+            ...sessionData.reactions.filter((r: any) => !existingIds.has(r.id))
+          ];
+          
+          return mergedEmojis;
+        });
+      }
     }
-  }, [userEmojis]);
+  }, [userEmojis, trackId]); // Reset when track changes
 
   // Emoji reaction mutation
   const addEmojiMutation = useMutation({
@@ -182,6 +205,9 @@ export default function WaveformPlayer({
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}/emoji-reactions/session/${sessionId}`] });
       queryClient.invalidateQueries({ queryKey: ['/api/tracks/public'] });
+      
+      // Also invalidate the specific track query to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}`] });
     },
     onError: (error) => {
       console.error('Failed to add emoji reaction:', error);
