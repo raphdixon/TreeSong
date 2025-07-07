@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import Windows95Layout from "@/components/windows95-layout";
 import UploadModal from "@/components/upload-modal";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import type { Playlist } from "@shared/schema";
 
 export default function DashboardPage() {
   const [, setLocation] = useLocation();
@@ -46,6 +48,12 @@ export default function DashboardPage() {
   const { data: tracks = [], isLoading: tracksLoading } = useQuery({
     queryKey: ["/api/tracks"],
     enabled: isAuthenticated, // Only fetch when authenticated
+  });
+
+  // Fetch playlists for user
+  const { data: playlists = [], isLoading: playlistsLoading } = useQuery<Playlist[]>({
+    queryKey: ["/api/playlists"],
+    enabled: isAuthenticated && activeTab === 'playlists',
   });
 
   const handleLogout = () => {
@@ -163,7 +171,44 @@ export default function DashboardPage() {
             </span>
           </div>
 
-          <h3>Your Tracks</h3>
+          {/* Tab Navigation */}
+          <div style={{ 
+            marginBottom: "16px", 
+            borderBottom: "2px solid #808080",
+            display: "flex",
+            gap: "0"
+          }}>
+            <button
+              className={`btn ${activeTab === 'tracks' ? 'active' : ''}`}
+              onClick={() => setActiveTab('tracks')}
+              style={{
+                borderRadius: 0,
+                borderBottom: activeTab === 'tracks' ? '2px solid #C0C0C0' : '2px solid transparent',
+                marginBottom: '-2px',
+                padding: '4px 16px',
+                background: activeTab === 'tracks' ? '#C0C0C0' : '#E0E0E0'
+              }}
+            >
+              🎵 Tracks
+            </button>
+            <button
+              className={`btn ${activeTab === 'playlists' ? 'active' : ''}`}
+              onClick={() => setActiveTab('playlists')}
+              style={{
+                borderRadius: 0,
+                borderBottom: activeTab === 'playlists' ? '2px solid #C0C0C0' : '2px solid transparent',
+                marginBottom: '-2px',
+                padding: '4px 16px',
+                background: activeTab === 'playlists' ? '#C0C0C0' : '#E0E0E0'
+              }}
+            >
+              📁 Playlists
+            </button>
+          </div>
+
+          {activeTab === 'tracks' ? (
+            <>
+              <h3>Your Tracks</h3>
           
           {tracksLoading ? (
             <div>Loading tracks...</div>
@@ -211,6 +256,63 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
+          )}
+            </>
+          ) : (
+            // Playlists Section
+            <>
+              <h3>Your Playlists</h3>
+              
+              {playlistsLoading ? (
+                <div>Loading playlists...</div>
+              ) : playlists.length === 0 ? (
+                <div style={{ 
+                  textAlign: "center", 
+                  padding: "40px",
+                  border: "1px inset #C0C0C0",
+                  background: "#FFFFFF"
+                }}>
+                  <p>No playlists created yet.</p>
+                  <p style={{ fontSize: "11px", marginTop: "8px" }}>
+                    Save tracks to create your first playlist!
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {playlists.map((playlist) => (
+                    <div 
+                      key={playlist.id} 
+                      style={{
+                        background: "#FFFFFF",
+                        border: "1px inset #C0C0C0",
+                        padding: "12px",
+                        cursor: "pointer"
+                      }}
+                      onClick={() => setLocation(`/playlist/${playlist.id}`)}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <h4 style={{ margin: 0, fontSize: "13px" }}>📁 {playlist.name}</h4>
+                          <p style={{ fontSize: "11px", color: "#666", margin: "4px 0 0 0" }}>
+                            Created {new Date(playlist.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <button 
+                          className="btn"
+                          style={{ fontSize: "11px", padding: "2px 8px" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setLocation(`/playlist/${playlist.id}`);
+                          }}
+                        >
+                          ▶ Play
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
 

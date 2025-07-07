@@ -504,13 +504,22 @@ export default function FeedPage() {
         </div>
         <div className="win95-taskbar-right">
           {user ? (
-            <button 
-              className="win95-taskbar-btn"
-              onClick={() => setLocation('/dashboard')}
-              title="Go to Dashboard"
-            >
-              📁 Upload
-            </button>
+            <>
+              <button 
+                className="win95-taskbar-btn"
+                onClick={() => setLocation('/dashboard')}
+                title="Go to My Account"
+              >
+                👤 My Account
+              </button>
+              <button 
+                className="win95-taskbar-btn"
+                onClick={() => setLocation('/upload')}
+                title="Upload Music"
+              >
+                📁 Upload
+              </button>
+            </>
           ) : (
             <button 
               className="win95-taskbar-btn"
