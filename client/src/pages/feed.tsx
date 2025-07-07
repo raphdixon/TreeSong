@@ -309,11 +309,20 @@ export default function FeedPage() {
     }
   });
 
+  // Get session ID from localStorage
+  const sessionId = typeof window !== 'undefined' ? 
+    localStorage.getItem('sessionId') || 
+    (() => {
+      const newSessionId = crypto.randomUUID();
+      localStorage.setItem('sessionId', newSessionId);
+      return newSessionId;
+    })() : '';
+
   // Fetch enhanced feed tracks with genre-based recommendations
   const { data: allTracks = [], isLoading } = useQuery({
-    queryKey: ["/api/feed/tracks"],
+    queryKey: ["/api/feed/tracks", sessionId],
     queryFn: async () => {
-      const response = await fetch("/api/feed/tracks", {
+      const response = await fetch(`/api/feed/tracks?sessionId=${sessionId}`, {
         credentials: 'include'
       });
       if (!response.ok) {

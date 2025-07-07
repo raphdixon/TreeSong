@@ -871,7 +871,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Enhanced feed endpoint with genre-based recommendations
-  app.get("/api/tracks/feed", async (req: any, res) => {
+  app.get("/api/feed/tracks", async (req: any, res) => {
     try {
       const sessionId = req.query.sessionId as string;
       const userId = req.user?.claims?.sub || null;
@@ -891,7 +891,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userPlayedTracks = await storage.getUserPlayedTracks(userId);
       }
       
-      const excludeTrackIds = [...new Set([...recentlyPlayed, ...userPlayedTracks])];
+      const excludeTrackIds = Array.from(new Set([...recentlyPlayed, ...userPlayedTracks]));
       
       // Check if we need to show initial tracks for logged-out users
       let feedTracks: any[] = [];
@@ -938,9 +938,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get all tracks with genre and play info
       const allTracks = await storage.getTracksWithGenreAndPlayInfo();
+      console.log(`[FEED] Found ${allTracks.length} total tracks`);
       
       // Filter out excluded tracks
       const availableTracks = allTracks.filter(t => !excludeTrackIds.includes(t.id));
+      console.log(`[FEED] ${availableTracks.length} tracks available after filtering`);
       
       // Get user's genre affinity (if logged in)
       let genreAffinity = new Map<string, number>();

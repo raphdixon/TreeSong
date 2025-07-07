@@ -27,7 +27,7 @@ import {
 } from "@shared/schema";
 import { nanoid } from "nanoid";
 import bcrypt from "bcrypt";
-import { eq, and, asc, desc, sql } from "drizzle-orm";
+import { eq, and, asc, desc, sql, inArray } from "drizzle-orm";
 import { db } from "./db";
 
 export interface IStorage {
@@ -705,7 +705,7 @@ export class DatabaseStorage implements IStorage {
         })
         .from(trackGenres)
         .innerJoin(genres, eq(trackGenres.genreId, genres.id))
-        .where(sql`${trackGenres.trackId} IN ${sql.raw(`(${trackIds.map(() => '?').join(', ')})`)}`);
+        .where(inArray(trackGenres.trackId, trackIds));
       
       for (const tg of allTrackGenres) {
         if (!trackGenreMap.has(tg.trackId)) {
