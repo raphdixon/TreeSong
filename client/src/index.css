@@ -1119,3 +1119,15 @@ body {
   height: 100vh;
   overflow: hidden;
 }
+
+/* Share button responsive styling */
+@media (max-width: 480px) {
+  .share-btn-text {
+    display: none;
+  }
+  
+  .win95-share-btn {
+    padding: 4px 6px !important;
+    min-width: 28px !important;
+  }
+}

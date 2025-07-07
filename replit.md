@@ -127,6 +127,15 @@ DemoTree is a public music sharing platform where musicians can upload their dem
 
 ```
 Changelog:
+- July 07, 2025. Added Share Track Functionality with URL-Based Track Loading
+  - Added share button next to play button in main waveform player
+  - Share button generates URL format: /?toptrack={artistname-songname}
+  - Clicking share button copies link to clipboard with toast notification
+  - Feed page detects toptrack URL parameter and loads matching track first
+  - URL-safe slug generation from artist name and track name
+  - Share button responsive on mobile: hides text on small screens (< 480px)
+  - Both play and share buttons maintain consistent 28px height across all devices
+  - Integrated into existing feed, artist page, and main player components
 - July 07, 2025. Removed Legacy Username Field from Entire Codebase
   - Completely removed the username field from database schema, storage interface, and all UI components
   - Username was a legacy field from pre-Replit Auth that was no longer being populated

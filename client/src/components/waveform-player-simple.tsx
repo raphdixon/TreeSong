@@ -369,7 +369,11 @@ export default function WaveformPlayer({
               border: '2px outset var(--win95-gray)',
               padding: '4px 8px',
               cursor: 'pointer',
-              fontSize: '12px'
+              fontSize: '12px',
+              height: '28px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
           >
             {isPlaying ? '⏸️' : '▶️'}
@@ -378,19 +382,24 @@ export default function WaveformPlayer({
           {artistName && trackName && (
             <button
               onClick={handleShare}
+              className="win95-share-btn"
               style={{
                 background: 'var(--win95-gray)',
                 border: '2px outset var(--win95-gray)',
-                padding: '4px 8px',
+                padding: '4px 6px',
                 cursor: 'pointer',
-                fontSize: '12px',
-                display: 'flex',
+                fontSize: '11px',
+                height: '28px',
+                whiteSpace: 'nowrap',
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: '4px'
+                gap: '2px',
+                minWidth: 'auto'
               }}
               title="Share this track"
             >
-              🔗 Share Track
+              <span style={{ fontSize: '10px' }}>🔗</span>
+              <span className="share-btn-text">Share Track</span>
             </button>
           )}
         </div>
