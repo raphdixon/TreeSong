@@ -112,7 +112,7 @@ export default function WaveformPlayer({
     };
   }, [onTrackEnd]);
 
-  // Update emoji display when props or user emojis change
+  // Initialize emoji display only once on mount
   useEffect(() => {
     console.log('[DEBUG] Initializing emojis from props:', emojiReactions?.length || 0);
     
@@ -120,12 +120,15 @@ export default function WaveformPlayer({
       setDisplayEmojis(emojiReactions);
       setEmojiCount(emojiReactions.length);
     }
-    
+  }, []); // Empty dependency array - run only once on mount
+  
+  // Update emoji count from user emojis
+  useEffect(() => {
     if (userEmojis) {
       console.log('[DEBUG] Initial emoji count response:', userEmojis);
       setEmojiCount((userEmojis as any).count || 0);
     }
-  }, [emojiReactions, userEmojis]);
+  }, [userEmojis]);
 
   // Emoji reaction mutation
   const addEmojiMutation = useMutation({
@@ -139,14 +142,21 @@ export default function WaveformPlayer({
     },
     onSuccess: (data) => {
       console.log('[DEBUG] Emoji reaction response:', data);
+      console.log('[DEBUG] Current displayEmojis before update:', displayEmojis);
       
       // Update display emojis with all reactions from server
       if (data.allReactions) {
+        console.log('[DEBUG] Setting displayEmojis to allReactions:', data.allReactions);
         setDisplayEmojis(data.allReactions);
         setEmojiCount(data.currentCount || data.allReactions.length);
       } else if (data.reaction) {
         // Fallback: add just the new reaction if allReactions not provided
-        setDisplayEmojis(prev => [...prev, data.reaction]);
+        console.log('[DEBUG] Adding single reaction:', data.reaction);
+        setDisplayEmojis(prev => {
+          const updated = [...prev, data.reaction];
+          console.log('[DEBUG] Updated displayEmojis:', updated);
+          return updated;
+        });
         setEmojiCount(data.currentCount || 0);
       }
       
