@@ -144,11 +144,6 @@ export default function WaveformPlayer({
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}/emoji-reactions/session/${sessionId}`] });
       queryClient.invalidateQueries({ queryKey: ['/api/tracks/public'] });
-      
-      toast({
-        title: "Reaction added! 🎵",
-        description: `Added ${(newReaction as any).emoji} at ${Math.floor((newReaction as any).time)}s`
-      });
     },
     onError: (error) => {
       console.error('Failed to add emoji reaction:', error);
@@ -212,14 +207,56 @@ export default function WaveformPlayer({
     <div className="space-y-4">
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
       
-      {/* Waveform */}
-      <SimpleWaveform
-        trackId={trackId}
-        duration={duration}
-        onSeek={handleSeek}
-        currentTime={currentTime}
-        isPlaying={isPlaying}
-      />
+      {/* Waveform with emoji overlay */}
+      <div style={{ position: 'relative' }}>
+        <SimpleWaveform
+          trackId={trackId}
+          duration={duration}
+          onSeek={handleSeek}
+          currentTime={currentTime}
+          isPlaying={isPlaying}
+        />
+        
+        {/* Emoji overlay */}
+        <div 
+          style={{ 
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            pointerEvents: 'none'
+          }}
+        >
+          {displayEmojis.map((reaction) => {
+            const position = (reaction.time / duration) * 100;
+            const randomHeight = 20 + (parseInt(reaction.id, 36) % 60); // Random height 20-80%
+            
+            return (
+              <div
+                key={reaction.id}
+                style={{ 
+                  left: `${position}%`,
+                  position: 'absolute',
+                  top: `${randomHeight}%`,
+                  transform: 'translate(-50%, -50%)',
+                  fontSize: '16px',
+                  zIndex: 20,
+                  cursor: 'pointer',
+                  pointerEvents: 'auto'
+                }}
+                title={`${reaction.emoji} at ${formatTime(reaction.time)}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSeek(reaction.time);
+                }}
+              >
+                {reaction.emoji}
+              </div>
+            );
+          })}
+        </div>
+      </div>
       
       {/* Controls */}
       <div style={{

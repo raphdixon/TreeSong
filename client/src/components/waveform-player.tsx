@@ -4,6 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import EmojiPicker from "./emoji-picker";
 import SimpleWaveform from "@/components/simple-waveform";
+import { useGlobalVolume } from "@/contexts/global-volume-context";
 
 import { nanoid } from "nanoid";
 
@@ -31,7 +32,7 @@ export default function WaveformPlayer({
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [volume, setVolume] = useState(75);
+  const globalVolume = useGlobalVolume();
 
   
   // New emoji and first-listen functionality
@@ -111,12 +112,6 @@ export default function WaveformPlayer({
       
       // Update feed data
       queryClient.invalidateQueries({ queryKey: ['/api/tracks/public'] });
-      
-      console.log('[DEBUG] About to show toast with currentCount:', response.currentCount);
-      toast({
-        title: "Emoji added!",
-        description: `${response.currentCount || 0}/10 emojis used`
-      });
       
     } catch (error) {
       console.error('Error adding emoji:', error);
@@ -512,14 +507,63 @@ export default function WaveformPlayer({
   return (
     <>
       {/* Waveform Container */}
-      <div className="win95-waveform-container">
-        <div className="win95-waveform">
-          <div ref={waveformRef} style={{ width: '100%', height: '100%' }} />
-          
-          {/* Emoji Markers on Waveform */}
-          <div className="waveform-markers" key={`markers-${displayEmojis.length}`}>
-            {generateEmojiMarkers()}
-          </div>
+      <div className="win95-waveform-container" style={{ position: 'relative' }}>
+        <SimpleWaveform
+          trackId={trackId}
+          duration={duration}
+          onSeek={(time) => {
+            if (audioRef.current) {
+              audioRef.current.currentTime = time;
+              setCurrentTime(time);
+            }
+          }}
+          currentTime={currentTime}
+          isPlaying={isPlaying}
+        />
+        
+        {/* Emoji Markers overlay */}
+        <div 
+          className="waveform-markers" 
+          style={{ 
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            pointerEvents: 'none'
+          }}
+        >
+          {displayEmojis.map((reaction) => {
+            const position = (reaction.time / duration) * 100;
+            const randomHeight = 20 + (parseInt(reaction.id, 36) % 60); // Random height 20-80%
+            
+            return (
+              <div
+                key={reaction.id}
+                className="emoji-marker"
+                style={{ 
+                  left: `${position}%`,
+                  position: 'absolute',
+                  top: `${randomHeight}%`,
+                  transform: 'translate(-50%, -50%)',
+                  fontSize: '16px',
+                  zIndex: 20,
+                  cursor: 'pointer',
+                  pointerEvents: 'auto'
+                }}
+                title={`${reaction.emoji} at ${formatTime(reaction.time)}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (audioRef.current) {
+                    audioRef.current.currentTime = reaction.time;
+                    setCurrentTime(reaction.time);
+                  }
+                }}
+              >
+                {reaction.emoji}
+              </div>
+            );
+          })}
         </div>
       </div>
       
