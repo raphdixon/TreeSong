@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { useLocation } from "wouter";
+import { useLocation, useParams } from "wouter";
 import { useTrackCounter } from "@/hooks/use-track-counter";
 import Windows95Layout from "@/components/windows95-layout";
 import WaveformPlayer from "@/components/waveform-player-simple";
@@ -238,12 +238,42 @@ export default function FeedPage() {
   const searchParams = new URLSearchParams(window.location.search);
   const topTrackSlug = searchParams.get('toptrack');
   
+  // Get playlist parameters from URL
+  const params = useParams<{ username?: string; playlistName?: string; playlistId?: string }>();
+  const isPlaylistUrl = !!(params.username && params.playlistName) || !!params.playlistId;
+  
   const { 
     tracksViewed, 
     incrementTrackCount, 
     shouldShowAuthPrompt,
     TRACKS_BEFORE_AUTH 
   } = useTrackCounter();
+
+  // Fetch playlist if we're on a playlist URL
+  const { data: playlistData } = useQuery({
+    queryKey: params.playlistId 
+      ? [`/api/playlists/${params.playlistId}`]
+      : params.username && params.playlistName
+      ? [`/api/playlists/by-name/${params.username}/${params.playlistName}`]
+      : ['no-playlist'],
+    enabled: isPlaylistUrl,
+    queryFn: async () => {
+      let url: string;
+      if (params.playlistId) {
+        url = `/api/playlists/${params.playlistId}`;
+      } else if (params.username && params.playlistName) {
+        url = `/api/playlists/by-name/${params.username}/${params.playlistName}`;
+      } else {
+        throw new Error("Invalid playlist URL");
+      }
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch playlist");
+      }
+      return response.json();
+    }
+  });
 
   // Fetch all public tracks for the feed
   const { data: allTracks = [], isLoading } = useQuery({
@@ -285,7 +315,32 @@ export default function FeedPage() {
     }).sort((a, b) => b.totalScore - a.totalScore);
   };
 
-  const recommendedTracks = getRecommendedTracks(allTracks);
+  // Merge playlist tracks with feed tracks
+  const getMergedTracks = () => {
+    let tracks = getRecommendedTracks(allTracks);
+    
+    if (isPlaylistUrl && playlistData?.tracks) {
+      // Get playlist tracks in order
+      const playlistTracks = playlistData.tracks.map((item: any) => ({
+        ...item.track,
+        isFromPlaylist: true,
+        playlistPosition: item.position
+      }));
+      
+      // Create a set of playlist track IDs for deduplication
+      const playlistTrackIds = new Set(playlistTracks.map((t: any) => t.id));
+      
+      // Remove duplicates from main feed
+      const feedWithoutDuplicates = tracks.filter((track: any) => !playlistTrackIds.has(track.id));
+      
+      // Prepend playlist tracks to the feed
+      tracks = [...playlistTracks, ...feedWithoutDuplicates];
+    }
+    
+    return tracks;
+  };
+
+  const recommendedTracks = getMergedTracks();
 
   // Check if user just logged in to save a track
   useEffect(() => {

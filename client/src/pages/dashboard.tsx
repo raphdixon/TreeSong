@@ -288,7 +288,7 @@ export default function DashboardPage() {
                         padding: "12px",
                         cursor: "pointer"
                       }}
-                      onClick={() => setLocation(`/playlist/${playlist.id}`)}
+                      onClick={() => setLocation(`/pl/${playlist.id}`)}
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div>
@@ -302,7 +302,7 @@ export default function DashboardPage() {
                           style={{ fontSize: "11px", padding: "2px 8px" }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            setLocation(`/playlist/${playlist.id}`);
+                            setLocation(`/pl/${playlist.id}`);
                           }}
                         >
                           ▶ Play

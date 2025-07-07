@@ -1,0 +1,43 @@
+Perfect—keeping one playlist logic is the right move for simplicity and user clarity. If persistent, user-editable playlists are the standard, you should always resolve a playlist URL to a canonical database playlist (by username/playlist name, or by unique playlist ID), fetch its tracks, and inject those tracks at the top of the main feed for playback.
+
+Here’s a prompt for Replit (or your devs), to describe exactly what you want:
+
+⸻
+
+Prompt for Replit: Playlist Logic for Feed Integration
+
+⸻
+
+Goal:
+Implement persistent, user-editable playlists so that when a playlist is played, the main music feed view is reused. The playlist tracks should be pushed to the top of the feed in order, with the regular recommendation feed continuing underneath. There should be no separate playlist feed.
+
+⸻
+
+Detailed Requirements:
+	•	When a user visits a playlist URL, e.g. /pl/{username}/{playlist-name}, fetch the list of track IDs from the database for that playlist.
+	•	Render the standard main feed component, but prepend the playlist tracks (in their saved order) to the beginning of the feed’s track array.
+	•	After the playlist tracks are played, the feed continues with the usual recommended/main feed tracks.
+	•	If a playlist contains a track that also appears later in the main feed, it should not be duplicated; only the first occurrence (from the playlist) should be played.
+	•	All playback, emoji, and engagement logic should behave as normal—there is never a separate playlist UI.
+	•	Playlists should be editable, with changes reflected immediately on playback for that URL.
+	•	URLs for playlists should be /pl/{username}/{playlist-name} or /pl/{playlist-id}.
+	•	There is no need to support ephemeral, tokenized playlists in URLs; all playlist logic references a database-stored playlist.
+
+⸻
+
+Example:
+	•	Main feed normally: [trackF, trackC, trackQ, trackV, trackR, ...]
+	•	Playlist fav-jams: [trackA, trackC, trackV]
+	•	Feed when playing /pl/username/fav-jams: [trackA, trackC, trackV, trackF, trackQ, trackR, ...]
+(Notice trackC and trackV from the playlist are not duplicated later in the feed.)
+
+⸻
+
+Implementation Suggestion:
+	•	On playlist page load, fetch playlist tracks and fetch the normal main feed.
+	•	Merge the arrays as above: playlist tracks (in order), then main feed tracks not already in playlist.
+	•	Pass this merged array to the main feed component for rendering/playback.
+
+⸻
+
+Let me know if you want this in code, pseudo-code, or a sample React snippet for the merging logic!

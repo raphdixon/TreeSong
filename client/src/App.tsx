@@ -11,7 +11,6 @@ import DashboardPage from "./pages/dashboard";
 import FeedPage from "./pages/feed";
 import ArtistPage from "./pages/artist";
 import PlayerPage from "./pages/player";
-import PlaylistPage from "./pages/playlist";
 import PublicPlayerPage from "./pages/public-player";
 import AdminPage from "./pages/admin";
 import NotFound from "./pages/not-found";
@@ -23,6 +22,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={FeedPage} />
+      <Route path="/pl/:username/:playlistName" component={FeedPage} />
+      <Route path="/pl/:playlistId" component={FeedPage} />
       <Route path="/artist/:userId" component={ArtistPage} />
       <Route path="/admin">
         {isLoading ? (
@@ -78,24 +79,7 @@ function Router() {
           <Redirect to="/" />
         )}
       </Route>
-      <Route path="/playlist/:id">
-        {isLoading ? (
-          <div className="desktop" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
-            <div className="window" style={{ width: '300px' }}>
-              <div className="title-bar">
-                <div className="title-bar-text">Playlist</div>
-              </div>
-              <div className="window-body" style={{ textAlign: 'center', padding: '20px' }}>
-                <p>Loading...</p>
-              </div>
-            </div>
-          </div>
-        ) : isAuthenticated ? (
-          <PlaylistPage />
-        ) : (
-          <Redirect to="/" />
-        )}
-      </Route>
+
       <Route path="/share/:token" component={PublicPlayerPage} />
       <Route component={NotFound} />
     </Switch>

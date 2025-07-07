@@ -543,23 +543,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/playlists/:id", isAuthenticated, async (req: any, res) => {
+  app.get("/api/playlists/:id", async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
       const playlist = await storage.getPlaylist(req.params.id);
       
       if (!playlist) {
         return res.status(404).json({ message: "Playlist not found" });
       }
       
-      // Check if user owns this playlist
-      if (playlist.userId !== userId) {
-        return res.status(403).json({ message: "Access denied" });
-      }
+      // Get tracks for the playlist
+      const tracks = await storage.getPlaylistTracks(playlist.id);
       
-      res.json(playlist);
+      res.json({ ...playlist, tracks });
     } catch (error) {
       console.error("Failed to fetch playlist:", error);
+      res.status(500).json({ message: "Failed to fetch playlist" });
+    }
+  });
+
+  app.get("/api/playlists/by-name/:username/:playlistName", async (req, res) => {
+    try {
+      const { username, playlistName } = req.params;
+      
+      // Find user by email (using username parameter as email)
+      const user = await storage.getUserByEmail(username);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Get all playlists for user
+      const playlists = await storage.getUserPlaylists(user.id);
+      
+      // Find playlist by name
+      const playlist = playlists.find(p => p.name.toLowerCase() === playlistName.toLowerCase());
+      
+      if (!playlist) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+      
+      // Get tracks for the playlist
+      const tracks = await storage.getPlaylistTracks(playlist.id);
+      
+      res.json({ ...playlist, tracks });
+    } catch (error) {
+      console.error("Failed to fetch playlist by name:", error);
       res.status(500).json({ message: "Failed to fetch playlist" });
     }
   });
