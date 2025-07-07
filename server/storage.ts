@@ -134,8 +134,8 @@ export class DatabaseStorage implements IStorage {
       
     return result.map(row => ({
       ...row,
-      creatorUsername: row.creatorUsername || 'Unknown Artist',
-      creatorArtistName: row.creatorArtistName || row.creatorEmail || 'Unknown Artist',
+      creatorUsername: row.creatorUsername || '',
+      creatorArtistName: row.creatorArtistName || '',
       creatorEmail: row.creatorEmail || ''
     }));
   }

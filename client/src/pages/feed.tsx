@@ -199,14 +199,7 @@ function FeedItem({ track, isActive, onTrackEnd }: FeedItemProps) {
         {/* Track Info */}
         <div className="win95-track-info">
           <div className="win95-creator">
-            <span>👤 {(() => {
-          console.log('[FEED] Track artist data:', {
-            id: track.id,
-            creatorArtistName: track.creatorArtistName,
-            creatorUsername: track.creatorUsername
-          });
-          return track.creatorArtistName || track.creatorUsername || 'Unknown Artist';
-        })()}</span>
+            <span>👤 {track.creatorArtistName || track.creatorUsername || 'Unknown Artist'}</span>
           </div>
           <div className="win95-reactions-count">
             {track.emojiReactions?.length || 0} reactions
@@ -254,15 +247,7 @@ export default function FeedPage() {
       if (!response.ok) {
         throw new Error("Failed to fetch tracks");
       }
-      const data = await response.json();
-      console.log('[FEED] First track data:', data[0] ? {
-        id: data[0].id,
-        originalName: data[0].originalName,
-        creatorUsername: data[0].creatorUsername,
-        creatorArtistName: data[0].creatorArtistName,
-        creatorEmail: data[0].creatorEmail
-      } : 'No tracks');
-      return data;
+      return response.json();
     }
   });
 
