@@ -1120,14 +1120,11 @@ body {
   overflow: hidden;
 }
 
-/* Share button responsive styling */
+/* Play button responsive styling */
 @media (max-width: 480px) {
-  .share-btn-text {
-    display: none;
-  }
-  
-  .win95-share-btn {
+  .win95-play-btn {
     padding: 4px 6px !important;
     min-width: 28px !important;
+    font-size: 10px !important;
   }
 }

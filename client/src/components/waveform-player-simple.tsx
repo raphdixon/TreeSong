@@ -364,6 +364,7 @@ export default function WaveformPlayer({
         <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
           <button
             onClick={togglePlayPause}
+            className="win95-play-btn"
             style={{
               background: 'var(--win95-gray)',
               border: '2px outset var(--win95-gray)',
@@ -399,7 +400,7 @@ export default function WaveformPlayer({
               title="Share this track"
             >
               <span style={{ fontSize: '10px' }}>🔗</span>
-              <span className="share-btn-text">Share Track</span>
+              <span>Share Track</span>
             </button>
           )}
         </div>
