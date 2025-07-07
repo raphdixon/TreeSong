@@ -17,6 +17,8 @@ interface WaveformPlayerProps {
   autoPlay?: boolean;
   onTrackEnd?: () => void;
   onReactionCountChange?: (count: number) => void;
+  artistName?: string;
+  trackName?: string;
 }
 
 export default function WaveformPlayer({ 
@@ -28,7 +30,9 @@ export default function WaveformPlayer({
   fileDeletedAt,
   autoPlay = false,
   onTrackEnd,
-  onReactionCountChange
+  onReactionCountChange,
+  artistName,
+  trackName
 }: WaveformPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -247,6 +251,32 @@ export default function WaveformPlayer({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const handleShare = () => {
+    if (!artistName || !trackName) return;
+    
+    // Create URL-safe version of artist and track name
+    const slug = `${artistName}-${trackName}`
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+    
+    const shareUrl = `${window.location.origin}/?toptrack=${encodeURIComponent(slug)}`;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      toast({ 
+        title: "Link copied!", 
+        description: "Share link copied to clipboard." 
+      });
+    }).catch(() => {
+      toast({ 
+        title: "Copy failed", 
+        description: "Please manually copy the link.",
+        variant: "destructive" 
+      });
+    });
+  };
+
   // Log component state for debugging
   useEffect(() => {
     console.log('[WaveformPlayer] Component mounted/updated', {
@@ -331,18 +361,39 @@ export default function WaveformPlayer({
         background: 'var(--win95-gray)',
         border: '2px inset var(--win95-gray)'
       }}>
-        <button
-          onClick={togglePlayPause}
-          style={{
-            background: 'var(--win95-gray)',
-            border: '2px outset var(--win95-gray)',
-            padding: '4px 8px',
-            cursor: 'pointer',
-            fontSize: '12px'
-          }}
-        >
-          {isPlaying ? '⏸️' : '▶️'}
-        </button>
+        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          <button
+            onClick={togglePlayPause}
+            style={{
+              background: 'var(--win95-gray)',
+              border: '2px outset var(--win95-gray)',
+              padding: '4px 8px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            {isPlaying ? '⏸️' : '▶️'}
+          </button>
+          
+          {artistName && trackName && (
+            <button
+              onClick={handleShare}
+              style={{
+                background: 'var(--win95-gray)',
+                border: '2px outset var(--win95-gray)',
+                padding: '4px 8px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+              title="Share this track"
+            >
+              🔗 Share Track
+            </button>
+          )}
+        </div>
         
         <div style={{
           fontFamily: 'monospace',

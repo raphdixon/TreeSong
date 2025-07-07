@@ -299,6 +299,8 @@ export default function ArtistPage() {
                 isPublic={true}
                 autoPlay={true}
                 onTrackEnd={() => navigateTrack('down')}
+                artistName={currentTrack.creatorArtistName || 'Unknown Artist'}
+                trackName={currentTrack.originalName}
               />
             </div>
           </div>

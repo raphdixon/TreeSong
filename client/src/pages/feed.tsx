@@ -231,6 +231,10 @@ export default function FeedPage() {
   const feedRef = useRef<HTMLDivElement>(null);
   const [reactionCounts, setReactionCounts] = useState<Record<string, number>>({});
   
+  // Get URL parameters
+  const searchParams = new URLSearchParams(window.location.search);
+  const topTrackSlug = searchParams.get('toptrack');
+  
   const { 
     tracksViewed, 
     incrementTrackCount, 
@@ -301,6 +305,45 @@ export default function FeedPage() {
   };
   
   const displayItems = createDisplayItems();
+  
+  // Check for toptrack parameter and find matching track
+  useEffect(() => {
+    if (topTrackSlug && recommendedTracks.length > 0) {
+      // Try to find a track that matches the slug
+      const findTrackIndex = () => {
+        for (let i = 0; i < displayItems.length; i++) {
+          const item = displayItems[i];
+          if (item.type === 'track' && item.data) {
+            // Create a slug from the track's artist and name
+            const trackSlug = `${item.data.creatorArtistName || 'unknown-artist'}-${item.data.originalName}`
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-|-$/g, '');
+            
+            if (trackSlug === topTrackSlug.toLowerCase()) {
+              console.log(`[FEED] Found matching track for slug: ${topTrackSlug}`);
+              return i;
+            }
+          }
+        }
+        return -1;
+      };
+      
+      const matchIndex = findTrackIndex();
+      if (matchIndex !== -1) {
+        setCurrentTrackIndex(matchIndex);
+        // Mark this track as viewed
+        const item = displayItems[matchIndex];
+        if (item?.type === 'track' && item.data) {
+          const trackId = item.data.id;
+          if (!hasViewedTrack.has(trackId)) {
+            incrementTrackCount(trackId);
+            setHasViewedTrack(prev => new Set(prev).add(trackId));
+          }
+        }
+      }
+    }
+  }, [topTrackSlug, recommendedTracks, displayItems]);
 
   const navigateTrack = (direction: 'up' | 'down') => {
     if (isScrolling) return;
@@ -542,6 +585,8 @@ export default function FeedPage() {
                     [currentTrack.id]: newCount
                   }));
                 }}
+                artistName={currentTrack.creatorArtistName || 'Unknown Artist'}
+                trackName={currentTrack.originalName}
               />
             </div>
           </div>
