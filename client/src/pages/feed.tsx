@@ -161,7 +161,6 @@ interface Track {
   duration: number;
   uploadDate: string;
   uploaderUserId: string;
-  creatorUsername: string;
   creatorArtistName: string;
   creatorEmail: string;
   emojiReactions: any[];
@@ -199,7 +198,7 @@ function FeedItem({ track, isActive, onTrackEnd }: FeedItemProps) {
         {/* Track Info */}
         <div className="win95-track-info">
           <div className="win95-creator">
-            <span>👤 {track.creatorArtistName || track.creatorUsername || 'Unknown Artist'}</span>
+            <span>👤 {track.creatorArtistName || 'Unknown Artist'}</span>
           </div>
           <div className="win95-reactions-count">
             {track.emojiReactions?.length || 0} reactions
@@ -516,11 +515,11 @@ export default function FeedPage() {
                   className="win95-creator win95-creator-btn"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setLocation(`/artist/${encodeURIComponent(currentTrack.creatorUsername)}`);
+                    setLocation(`/artist/${encodeURIComponent(currentTrack.uploaderUserId)}`);
                   }}
-                  title={`View ${currentTrack.creatorUsername}'s tracks`}
+                  title={`View artist's tracks`}
                 >
-                  👤 {currentTrack.creatorArtistName || currentTrack.creatorUsername || 'Unknown Artist'}
+                  👤 {currentTrack.creatorArtistName || 'Unknown Artist'}
                 </button>
                 <div className="win95-reactions-count">
                   {reactionCounts[currentTrack.id] ?? (currentTrack.emojiReactions?.length || 0)} reactions

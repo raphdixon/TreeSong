@@ -22,7 +22,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={FeedPage} />
-      <Route path="/artist/:username" component={ArtistPage} />
+      <Route path="/artist/:userId" component={ArtistPage} />
       <Route path="/admin">
         {isLoading ? (
           <div className="desktop" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>

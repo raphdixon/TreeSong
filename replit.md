@@ -127,6 +127,13 @@ DemoTree is a public music sharing platform where musicians can upload their dem
 
 ```
 Changelog:
+- July 07, 2025. Removed Legacy Username Field from Entire Codebase
+  - Completely removed the username field from database schema, storage interface, and all UI components
+  - Username was a legacy field from pre-Replit Auth that was no longer being populated
+  - Updated artist page routing from `/artist/:username` to `/artist/:userId` for consistency
+  - Modified feed page to link to artist pages using uploaderUserId instead of username
+  - Removed all creatorUsername references from Track interfaces and display logic
+  - Database migration successfully completed, removing unused track_listens table
 - July 07, 2025. Fixed Artist Name Display in All UI Components
   - Fixed issue where tracks were showing "Unknown Artist" instead of the artist name
   - The username field is empty for Replit Auth users (legacy field from previous auth system)

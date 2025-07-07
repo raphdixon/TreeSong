@@ -13,7 +13,6 @@ interface Track {
   duration: number;
   uploadDate: string;
   uploaderUserId: string;
-  creatorUsername: string;
   creatorArtistName: string;
   creatorEmail: string;
   emojiReactions: any[];
@@ -51,7 +50,7 @@ function FeedItem({ track, isActive, onTrackEnd }: FeedItemProps) {
         {/* Track Info */}
         <div className="win95-track-info">
           <div className="win95-creator">
-            👤 {track.creatorArtistName || track.creatorUsername || 'Unknown Artist'}
+            👤 {track.creatorArtistName || 'Unknown Artist'}
           </div>
           <div className="win95-reactions-count">
             {track.emojiReactions?.length || 0} reactions
@@ -76,8 +75,8 @@ function FeedItem({ track, isActive, onTrackEnd }: FeedItemProps) {
 export default function ArtistPage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const [match, params] = useRoute("/artist/:username");
-  const artistUsername = match ? params?.username : undefined;
+  const [match, params] = useRoute("/artist/:userId");
+  const artistUserId = match ? params?.userId : undefined;
   
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -85,7 +84,7 @@ export default function ArtistPage() {
 
   // Fetch all public tracks for the artist
   const { data: allTracks = [], isLoading } = useQuery({
-    queryKey: ["/api/artist/tracks", artistUsername],
+    queryKey: ["/api/artist/tracks", artistUserId],
     queryFn: async () => {
       const response = await fetch("/api/tracks/public");
       if (!response.ok) {
@@ -93,9 +92,9 @@ export default function ArtistPage() {
       }
       const tracks = await response.json();
       // Filter tracks by this artist
-      return tracks.filter((track: Track) => track.creatorUsername === decodeURIComponent(artistUsername || ''));
+      return tracks.filter((track: Track) => track.uploaderUserId === decodeURIComponent(artistUserId || ''));
     },
-    enabled: !!artistUsername
+    enabled: !!artistUserId
   });
 
   // Track recommendation algorithm scores
@@ -166,18 +165,18 @@ export default function ArtistPage() {
     return (
       <Windows95Layout>
         <div style={{ padding: '20px', textAlign: 'center' }}>
-          Loading {artistUsername}'s tracks...
+          Loading tracks...
         </div>
       </Windows95Layout>
     );
   }
 
-  if (!artistUsername || tracksWithScores.length === 0) {
+  if (!artistUserId || tracksWithScores.length === 0) {
     return (
       <Windows95Layout>
         <div style={{ padding: '20px', textAlign: 'center' }}>
           <h2>Artist not found</h2>
-          <p>No tracks found for {artistUsername}</p>
+          <p>No tracks found</p>
           <button 
             className="win95-btn" 
             onClick={() => setLocation('/')}
@@ -284,7 +283,7 @@ export default function ArtistPage() {
               {/* Track Info */}
               <div className="win95-track-info">
                 <div className="win95-creator">
-                  👤 {currentTrack.creatorArtistName || currentTrack.creatorUsername || 'Unknown Artist'}
+                  👤 {currentTrack.creatorArtistName || 'Unknown Artist'}
                 </div>
                 <div className="win95-reactions-count">
                   {currentTrack.emojiReactions?.length || 0} reactions
