@@ -1,4 +1,4 @@
-import { pgTable, text, varchar, timestamp, integer, boolean, real, jsonb, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, integer, boolean, real, jsonb, index, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { relations } from "drizzle-orm";
 import { z } from "zod";
@@ -121,7 +121,8 @@ export const userGenreRatings = pgTable("user_genre_ratings", {
   ratedAt: timestamp("rated_at").defaultNow().notNull()
 }, (table) => [
   index("idx_user_genre").on(table.userId, table.genreId),
-  index("idx_user_genre_ratings_user").on(table.userId)
+  index("idx_user_genre_ratings_user").on(table.userId),
+  unique("unique_user_genre").on(table.userId, table.genreId)
 ]);
 
 // Track Play History

@@ -46,19 +46,26 @@ export default function GenreRating({ genres, onComplete }: GenreRatingProps) {
     try {
       await rateMutation.mutateAsync({ genreId, rating });
       
-      // Check if all genres have been rated
-      const allRated = genres.every(g => ratings[g.id] || g.id === genreId);
-      
-      if (allRated) {
-        // Invalidate queries and complete
-        queryClient.invalidateQueries({ queryKey: ['/api/genres/unrated'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/genres/rated-all'] });
-        
-        // Small delay before completing to show the last rating
-        setTimeout(() => {
-          onComplete();
-        }, 500);
-      }
+      // Auto-advance to next genre after a short delay
+      setTimeout(() => {
+        if (currentIndex < genres.length - 1) {
+          setCurrentIndex(currentIndex + 1);
+        } else {
+          // Check if all genres have been rated
+          const allRated = genres.every(g => ratings[g.id] || g.id === genreId);
+          
+          if (allRated) {
+            // Invalidate queries and complete
+            queryClient.invalidateQueries({ queryKey: ['/api/genres/unrated'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/genres/rated-all'] });
+            
+            // Small delay before completing to show the last rating
+            setTimeout(() => {
+              onComplete();
+            }, 300);
+          }
+        }
+      }, 300);
     } catch (error) {
       console.error("Failed to save rating:", error);
     }
