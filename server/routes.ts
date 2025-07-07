@@ -125,6 +125,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storage.getAllEmojiReactions()
       ]);
       
+      // Debug log first track
+      console.log("[DEBUG] First track from storage:", tracks[0] ? {
+        id: tracks[0].id,
+        originalName: tracks[0].originalName,
+        creatorUsername: tracks[0].creatorUsername,
+        creatorArtistName: tracks[0].creatorArtistName,
+        creatorEmail: tracks[0].creatorEmail
+      } : 'No tracks');
+      
       // Group emoji reactions by trackId for efficient lookup
       const reactionsByTrackId = allEmojiReactions.reduce((acc, reaction) => {
         if (!acc[reaction.trackId]) {

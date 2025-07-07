@@ -199,7 +199,14 @@ function FeedItem({ track, isActive, onTrackEnd }: FeedItemProps) {
         {/* Track Info */}
         <div className="win95-track-info">
           <div className="win95-creator">
-            <span>👤 {track.creatorArtistName || track.creatorUsername || 'Unknown Artist'}</span>
+            <span>👤 {(() => {
+          console.log('[FEED] Track artist data:', {
+            id: track.id,
+            creatorArtistName: track.creatorArtistName,
+            creatorUsername: track.creatorUsername
+          });
+          return track.creatorArtistName || track.creatorUsername || 'Unknown Artist';
+        })()}</span>
           </div>
           <div className="win95-reactions-count">
             {track.emojiReactions?.length || 0} reactions
@@ -241,17 +248,21 @@ export default function FeedPage() {
 
   // Fetch all public tracks for the feed
   const { data: allTracks = [], isLoading } = useQuery({
-    queryKey: ["/api/feed/tracks"],
+    queryKey: ["/api/tracks/public"],
     queryFn: async () => {
-      // For now, we'll fetch from the existing tracks endpoint
-      // Later we'll create a dedicated feed endpoint
       const response = await fetch("/api/tracks/public");
       if (!response.ok) {
-        // Fallback to regular tracks endpoint for now
-        const fallbackResponse = await fetch("/api/tracks");
-        return fallbackResponse.json();
+        throw new Error("Failed to fetch tracks");
       }
-      return response.json();
+      const data = await response.json();
+      console.log('[FEED] First track data:', data[0] ? {
+        id: data[0].id,
+        originalName: data[0].originalName,
+        creatorUsername: data[0].creatorUsername,
+        creatorArtistName: data[0].creatorArtistName,
+        creatorEmail: data[0].creatorEmail
+      } : 'No tracks');
+      return data;
     }
   });
 
