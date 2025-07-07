@@ -127,6 +127,14 @@ DemoTree is a public music sharing platform where musicians can upload their dem
 
 ```
 Changelog:
+- July 07, 2025. Integrated Playlists with Main Feed for Seamless Playback
+  - Removed separate playlist player page and integrated playlists directly with main feed
+  - Updated URL structure to /pl/{playlist-id} and /pl/{username}/{playlist-name}
+  - Playlist tracks now appear at the top of the main feed followed by recommendations
+  - Implemented duplicate track removal between playlist and main feed
+  - Updated backend to support public playlist fetching with track data
+  - Fixed Upload button routing from /upload to /dashboard
+  - Playlists now use the existing Windows 95 feed interface for consistent UX
 - July 07, 2025. Added Share Track Functionality with URL-Based Track Loading
   - Added share button next to play button in main waveform player
   - Share button generates URL format: /?toptrack={artistname-songname}

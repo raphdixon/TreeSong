@@ -569,7 +569,7 @@ export default function FeedPage() {
               </button>
               <button 
                 className="win95-taskbar-btn"
-                onClick={() => setLocation('/upload')}
+                onClick={() => setLocation('/dashboard')}
                 title="Upload Music"
               >
                 📁 Upload
