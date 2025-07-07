@@ -127,6 +127,13 @@ DemoTree is a public music sharing platform where musicians can upload their dem
 
 ```
 Changelog:
+- July 07, 2025. Fixed Emoji Persistence Issue & Enhanced Real-Time Updates
+  - Fixed emoji reactions disappearing when scrolling away and back to a track
+  - Separated track switching logic from emoji data loading logic
+  - Emojis now persist properly when navigating between tracks
+  - Added real-time emoji counter showing "X/10" format above emoji picker
+  - Moved pagination controls below emoji grid for better UX
+  - Enhanced emoji state management for better user experience
 - July 07, 2025. MP3-Only Upload Restriction & Enhanced Windows 95 Dialogue Boxes
   - Restricted file uploads to MP3 format only for consistency and performance
   - Updated frontend validation to only accept MP3 files with improved error messages
