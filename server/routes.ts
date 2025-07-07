@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, RequestHandler } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import multer from "multer";
@@ -35,6 +35,32 @@ const upload = multer({
 });
 
 // Auth middleware will be provided by setupAuth
+
+// Admin middleware
+const isAdmin: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = req.user as any;
+    const userId = user.claims?.sub;
+    
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const dbUser = await storage.getUser(userId);
+    if (!dbUser || dbUser.email !== 'me@raph.plus') {
+      return res.status(403).json({ message: "Forbidden - Admin access only" });
+    }
+
+    next();
+  } catch (error) {
+    console.error("Admin auth error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.use(express.json());
@@ -93,7 +119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Batch fetch tracks and all emoji reactions in just 2 queries instead of N+1
       const [tracks, allEmojiReactions] = await Promise.all([
-        storage.getAllTracks(),
+        storage.getAllTracksForFeed(),
         storage.getAllEmojiReactions()
       ]);
       
@@ -404,7 +430,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin routes
+  app.get("/api/admin/tracks", isAdmin, async (req, res) => {
+    try {
+      const tracks = await storage.getAllTracks();
+      res.json(tracks);
+    } catch (error) {
+      console.error("Failed to fetch tracks:", error);
+      res.status(500).json({ message: "Failed to fetch tracks" });
+    }
+  });
 
+  app.get("/api/admin/users", isAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.patch("/api/admin/tracks/:id", isAdmin, async (req, res) => {
+    try {
+      const { title, artist } = req.body;
+      await storage.updateTrack(req.params.id, { title, artist });
+      res.json({ message: "Track updated successfully" });
+    } catch (error) {
+      console.error("Failed to update track:", error);
+      res.status(500).json({ message: "Failed to update track" });
+    }
+  });
+
+  app.patch("/api/admin/users/:id", isAdmin, async (req, res) => {
+    try {
+      const { artistName, email } = req.body;
+      await storage.updateUser(req.params.id, { artistName, email });
+      res.json({ message: "User updated successfully" });
+    } catch (error) {
+      console.error("Failed to update user:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  app.delete("/api/admin/tracks/:id", isAdmin, async (req, res) => {
+    try {
+      const track = await storage.getTrack(req.params.id);
+      if (!track) {
+        return res.status(404).json({ message: "Track not found" });
+      }
+
+      // Delete file from filesystem
+      const filePath = path.join(uploadsDir, track.filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+
+      await storage.deleteTrack(req.params.id);
+      res.json({ message: "Track deleted successfully" });
+    } catch (error) {
+      console.error("Failed to delete track:", error);
+      res.status(500).json({ message: "Failed to delete track" });
+    }
+  });
+
+  app.delete("/api/admin/users/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteUser(req.params.id);
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Failed to delete user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

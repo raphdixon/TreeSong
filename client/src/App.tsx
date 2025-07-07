@@ -12,6 +12,7 @@ import FeedPage from "./pages/feed";
 import ArtistPage from "./pages/artist";
 import PlayerPage from "./pages/player";
 import PublicPlayerPage from "./pages/public-player";
+import AdminPage from "./pages/admin";
 import NotFound from "./pages/not-found";
 
 function Router() {
@@ -22,6 +23,24 @@ function Router() {
     <Switch>
       <Route path="/" component={FeedPage} />
       <Route path="/artist/:username" component={ArtistPage} />
+      <Route path="/admin">
+        {isLoading ? (
+          <div className="desktop" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+            <div className="window" style={{ width: '300px' }}>
+              <div className="title-bar">
+                <div className="title-bar-text">Admin Panel</div>
+              </div>
+              <div className="window-body" style={{ textAlign: 'center', padding: '20px' }}>
+                <p>Loading...</p>
+              </div>
+            </div>
+          </div>
+        ) : isAuthenticated ? (
+          <AdminPage />
+        ) : (
+          <Redirect to="/" />
+        )}
+      </Route>
       <Route path="/dashboard">
         {isLoading ? (
           <div className="desktop" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>

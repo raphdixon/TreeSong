@@ -12,7 +12,7 @@ import {
 } from "@shared/schema";
 import { nanoid } from "nanoid";
 import bcrypt from "bcrypt";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, and, asc, desc, sql } from "drizzle-orm";
 import { db } from "./db";
 
 export interface IStorage {
@@ -26,7 +26,7 @@ export interface IStorage {
   
   // Track methods
   getTrack(id: string): Promise<Track | undefined>;
-  getAllTracks(): Promise<(Track & { creatorUsername: string })[]>;
+  getAllTracksForFeed(): Promise<(Track & { creatorUsername: string })[]>;
   getUserTracks(userId: string): Promise<Track[]>;
   createTrack(track: InsertTrack): Promise<Track>;
   updateTrackWaveform(trackId: string, waveformData: any): Promise<void>;
@@ -45,7 +45,12 @@ export interface IStorage {
   getShareByToken(token: string): Promise<Share | undefined>;
   createShare(share: InsertShare): Promise<Share>;
   
-
+  // Admin methods
+  getAllTracks(): Promise<Track[]>;
+  getAllUsers(): Promise<User[]>;
+  updateTrack(id: string, updates: Partial<Track>): Promise<void>;
+  updateUser(id: string, updates: Partial<User>): Promise<void>;
+  deleteUser(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -109,7 +114,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(tracks).where(eq(tracks.uploaderUserId, userId));
   }
 
-  async getAllTracks(): Promise<(Track & { creatorUsername: string })[]> {
+  async getAllTracksForFeed(): Promise<(Track & { creatorUsername: string })[]> {
     const result = await db
       .select({
         id: tracks.id,
@@ -218,6 +223,54 @@ export class DatabaseStorage implements IStorage {
       .returning();
       
     return share;
+  }
+
+  // Admin methods implementation
+  async getAllTracks(): Promise<Track[]> {
+    const allTracks = await db
+      .select()
+      .from(tracks)
+      .orderBy(desc(tracks.uploadDate));
+    
+    return allTracks;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    const allUsers = await db
+      .select()
+      .from(users)
+      .orderBy(desc(users.createdAt));
+    
+    return allUsers;
+  }
+
+  async updateTrack(id: string, updates: Partial<Track>): Promise<void> {
+    await db
+      .update(tracks)
+      .set(updates)
+      .where(eq(tracks.id, id));
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id));
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    // First delete all tracks by this user
+    await db
+      .delete(tracks)
+      .where(eq(tracks.uploaderUserId, id));
+    
+    // Then delete the user
+    await db
+      .delete(users)
+      .where(eq(users.id, id));
   }
 }
 
