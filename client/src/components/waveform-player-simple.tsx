@@ -130,16 +130,25 @@ export default function WaveformPlayer({
   // Emoji reaction mutation
   const addEmojiMutation = useMutation({
     mutationFn: async ({ emoji, time }: { emoji: string; time: number }) => {
-      return apiRequest('POST', `/api/tracks/${trackId}/emoji-reactions`, {
+      const response = await apiRequest('POST', `/api/tracks/${trackId}/emoji-reactions`, {
         emoji,
         time,
         listenerSessionId: sessionId
       });
+      return response.json();
     },
-    onSuccess: (newReaction) => {
-      // Add to display emojis
-      setDisplayEmojis(prev => [...prev, newReaction]);
-      setEmojiCount(prev => prev + 1);
+    onSuccess: (data) => {
+      console.log('[DEBUG] Emoji reaction response:', data);
+      
+      // Update display emojis with all reactions from server
+      if (data.allReactions) {
+        setDisplayEmojis(data.allReactions);
+        setEmojiCount(data.currentCount || data.allReactions.length);
+      } else if (data.reaction) {
+        // Fallback: add just the new reaction if allReactions not provided
+        setDisplayEmojis(prev => [...prev, data.reaction]);
+        setEmojiCount(data.currentCount || 0);
+      }
       
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}/emoji-reactions/session/${sessionId}`] });
