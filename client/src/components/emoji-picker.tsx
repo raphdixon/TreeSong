@@ -70,7 +70,11 @@ export default function EmojiPicker({
           <button
             key={emoji}
             className="emoji-button"
-            onClick={() => onEmojiSelect(emoji)}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              onEmojiSelect(emoji);
+            }}
             disabled={disabled}
             title={`Add ${emoji} reaction`}
           >
@@ -88,7 +92,11 @@ export default function EmojiPicker({
         padding: '2px'
       }}>
         <button
-          onClick={goToPrevPage}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            goToPrevPage();
+          }}
           disabled={disabled}
           style={{
             background: 'var(--win95-gray)',
@@ -115,7 +123,11 @@ export default function EmojiPicker({
         </div>
         
         <button
-          onClick={goToNextPage}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            goToNextPage();
+          }}
           disabled={disabled}
           style={{
             background: 'var(--win95-gray)',

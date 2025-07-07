@@ -206,9 +206,8 @@ export default function WaveformPlayer({
         }
       }
       
-      // Invalidate queries to refresh data
+      // Invalidate queries to refresh data - but NOT the public tracks query to avoid track changes
       queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}/emoji-reactions/session/${sessionId}`] });
-      queryClient.invalidateQueries({ queryKey: ['/api/tracks/public'] });
       
       // Also invalidate the specific track query to ensure fresh data
       queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}`] });
