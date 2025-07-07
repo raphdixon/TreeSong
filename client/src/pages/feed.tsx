@@ -529,6 +529,17 @@ export default function FeedPage() {
     let wheelTimeout: NodeJS.Timeout;
     
     const handleWheel = (e: WheelEvent) => {
+      // Check if the wheel event is coming from within the player or emoji picker
+      const target = e.target as HTMLElement;
+      if (target.closest('.win95-audio-player') || 
+          target.closest('.emoji-picker-wrapper') ||
+          target.closest('.emoji-grid') ||
+          target.closest('.emoji-button') ||
+          target.closest('.win95-waveform-container')) {
+        // Don't navigate tracks when interacting with player components
+        return;
+      }
+      
       e.preventDefault();
       
       // Debounce wheel events
@@ -545,6 +556,16 @@ export default function FeedPage() {
     };
 
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Don't navigate when typing in input fields or when interacting with player components
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || 
+          target.tagName === 'TEXTAREA' ||
+          target.closest('.win95-audio-player') ||
+          target.closest('.emoji-picker-wrapper') ||
+          target.closest('.emoji-grid')) {
+        return;
+      }
+      
       if (e.key === 'ArrowUp') {
         e.preventDefault();
         navigateTrack('up');
