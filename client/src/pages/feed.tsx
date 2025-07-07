@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { useTrackCounter } from "@/hooks/use-track-counter";
 import Windows95Layout from "@/components/windows95-layout";
-import WaveformPlayer from "@/components/waveform-player-new";
+import WaveformPlayer from "@/components/waveform-player-simple";
 import AuthPromptCard from "@/components/auth-prompt-card";
 import { ChevronUp, ChevronDown, User, LogIn, Upload } from "lucide-react";
 

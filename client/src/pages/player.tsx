@@ -2,7 +2,7 @@ import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import Windows95Layout from "@/components/windows95-layout";
-import WaveformPlayer from "@/components/waveform-player-new";
+import WaveformPlayer from "@/components/waveform-player-simple";
 import ShareModal from "@/components/share-modal";
 import { useState } from "react";
 

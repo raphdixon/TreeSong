@@ -1,5 +1,5 @@
 import {
-  users, tracks, emojiReactions, trackListens, shares,
+  users, tracks, emojiReactions, shares,
   type User,
   type InsertUser,
   type UpsertUser,
@@ -7,8 +7,6 @@ import {
   type InsertTrack,
   type EmojiReaction,
   type InsertEmojiReaction,
-  type TrackListen,
-  type InsertTrackListen,
   type Share,
   type InsertShare
 } from "@shared/schema";
@@ -41,10 +39,7 @@ export interface IStorage {
   createEmojiReaction(reaction: InsertEmojiReaction): Promise<EmojiReaction>;
   deleteEmojiReaction(id: string): Promise<void>;
   
-  // Track listen methods
-  getTrackListen(trackId: string, sessionId: string): Promise<TrackListen | undefined>;
-  createTrackListen(trackListen: InsertTrackListen): Promise<TrackListen>;
-  markTrackListenComplete(trackId: string, sessionId: string): Promise<void>;
+
   
   // Share methods
   getShareByToken(token: string): Promise<Share | undefined>;
@@ -202,44 +197,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(emojiReactions).where(eq(emojiReactions.id, id));
   }
 
-  // Track listen methods
-  async getTrackListen(trackId: string, sessionId: string): Promise<TrackListen | undefined> {
-    const [listen] = await db
-      .select()
-      .from(trackListens)
-      .where(and(
-        eq(trackListens.trackId, trackId),
-        eq(trackListens.sessionId, sessionId)
-      ));
-    return listen;
-  }
 
-  async createTrackListen(insertListen: InsertTrackListen): Promise<TrackListen> {
-    const id = nanoid();
-    
-    const [listen] = await db
-      .insert(trackListens)
-      .values({
-        id,
-        ...insertListen
-      })
-      .returning();
-      
-    return listen;
-  }
-
-  async markTrackListenComplete(trackId: string, sessionId: string): Promise<void> {
-    await db
-      .update(trackListens)
-      .set({
-        hasCompletedFullListen: true,
-        completedAt: new Date()
-      })
-      .where(and(
-        eq(trackListens.trackId, trackId),
-        eq(trackListens.sessionId, sessionId)
-      ));
-  }
 
   // Share methods
   async getShareByToken(token: string): Promise<Share | undefined> {

@@ -63,15 +63,7 @@ export const emojiReactions = pgTable("emoji_reactions", {
   listenerSessionId: varchar("listener_session_id") // For tracking unique listeners
 });
 
-// Track listens table - to track if a user has completed listening
-export const trackListens = pgTable("track_listens", {
-  id: varchar("id").primaryKey().notNull(),
-  trackId: varchar("track_id").notNull(),
-  sessionId: varchar("session_id").notNull(),
-  completedAt: timestamp("completed_at"),
-  startedAt: timestamp("started_at").defaultNow().notNull(),
-  hasCompletedFullListen: boolean("has_completed_full_listen").default(false).notNull()
-});
+
 
 // Shares table
 export const shares = pgTable("shares", {
@@ -92,11 +84,7 @@ export const insertEmojiReactionSchema = createInsertSchema(emojiReactions).omit
   timestamp: true
 });
 
-export const insertTrackListenSchema = createInsertSchema(trackListens).omit({
-  id: true,
-  startedAt: true,
-  completedAt: true
-});
+
 
 export const insertShareSchema = createInsertSchema(shares).omit({
   id: true,
@@ -108,7 +96,6 @@ export type InsertTrack = z.infer<typeof insertTrackSchema>;
 export type Track = typeof tracks.$inferSelect;
 export type InsertEmojiReaction = z.infer<typeof insertEmojiReactionSchema>;
 export type EmojiReaction = typeof emojiReactions.$inferSelect;
-export type InsertTrackListen = z.infer<typeof insertTrackListenSchema>;
-export type TrackListen = typeof trackListens.$inferSelect;
+
 export type InsertShare = z.infer<typeof insertShareSchema>;
 export type Share = typeof shares.$inferSelect;

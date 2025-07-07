@@ -1,7 +1,7 @@
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import Windows95Layout from "@/components/windows95-layout";
-import WaveformPlayer from "@/components/waveform-player-new";
+import WaveformPlayer from "@/components/waveform-player-simple";
 
 export default function PublicPlayerPage() {
   const { token } = useParams();
@@ -93,7 +93,6 @@ export default function PublicPlayerPage() {
           <WaveformPlayer 
             trackId={track.id}
             audioUrl={`/uploads/${track.filename}`}
-            bpm={track.bpm}
             duration={track.duration}
             emojiReactions={[]} // Will be fetched by the component
             isPublic={true}

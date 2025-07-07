@@ -6,7 +6,7 @@ import path from "path";
 import fs from "fs";
 import { nanoid } from "nanoid";
 import express from "express";
-import { insertTrackSchema, insertEmojiReactionSchema, insertTrackListenSchema } from "@shared/schema";
+import { insertTrackSchema, insertEmojiReactionSchema } from "@shared/schema";
 import rateLimit from "express-rate-limit";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { generateWaveformData } from "./waveform";
@@ -353,31 +353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Track listen routes
-  app.post("/api/tracks/:trackId/listens", async (req, res) => {
-    try {
-      const { sessionId } = req.body;
-      
-      const listenData = insertTrackListenSchema.parse({
-        trackId: req.params.trackId,
-        sessionId
-      });
 
-      const listen = await storage.createTrackListen(listenData);
-      res.json(listen);
-    } catch (error) {
-      res.status(400).json({ message: "Failed to create track listen" });
-    }
-  });
-
-  app.post("/api/tracks/:trackId/listens/:sessionId/complete", async (req, res) => {
-    try {
-      await storage.markTrackListenComplete(req.params.trackId, req.params.sessionId);
-      res.json({ success: true });
-    } catch (error) {
-      res.status(400).json({ message: "Failed to mark listen complete" });
-    }
-  });
 
 
 

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation, useRoute } from "wouter";
 import Windows95Layout from "@/components/windows95-layout";
-import WaveformPlayer from "@/components/waveform-player-new";
+import WaveformPlayer from "@/components/waveform-player-simple";
 import { ChevronUp, ChevronDown, ArrowLeft } from "lucide-react";
 
 interface Track {

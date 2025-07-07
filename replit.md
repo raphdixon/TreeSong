@@ -46,10 +46,10 @@ DemoTree is a public music sharing platform where musicians can upload their dem
 4. **Beat Grid Overlay**: Visual tempo grid aligned to detected or manual BPM
 
 ### Emoji Reaction System
-- Emoji reactions placed at specific audio timeline positions  
-- First-listen restriction preventing skipping until track completion
-- Session-based listen tracking for restriction enforcement
+- Emoji reactions placed at specific audio timeline positions with random vertical heights
+- Immediate access to emoji reactions without restrictions
 - Always-visible emoji picker window with popular music emojis
+- Global volume control affecting all tracks simultaneously
 
 ### Sharing Mechanism
 - Public share links with unique tokens
@@ -69,11 +69,11 @@ DemoTree is a public music sharing platform where musicians can upload their dem
 3. Optional BPM analysis performed client-side
 4. User redirected to player page for immediate playback
 
-### Comment Creation Flow
-1. User clicks on waveform → Comment popup appears
-2. Comment submitted with time position → Stored in database
-3. Email notifications sent to team members
-4. Comments rendered as markers on waveform
+### Emoji Reaction Flow
+1. User clicks emoji from always-visible picker → Reaction placed at current playback time
+2. Reaction stored in database with time position and random vertical height
+3. Emoji appears immediately on waveform timeline
+4. Global volume control affects all audio tracks simultaneously
 
 ### Sharing Flow
 1. User requests share link → Unique token generated
@@ -127,6 +127,14 @@ DemoTree is a public music sharing platform where musicians can upload their dem
 
 ```
 Changelog:
+- July 07, 2025. Removed First-Listen Restrictions & Enhanced Volume Control
+  - Completely removed first-listen restriction system allowing immediate emoji reactions
+  - Eliminated all listen tracking functionality (trackListens table, routes, components)
+  - Enhanced global volume control in Windows 95 taskbar with cleaner popup interface
+  - Removed 50% and 100% preset buttons from volume popup, keeping only Mute
+  - Made close button smaller and later removed it entirely for cleaner UX
+  - Volume popup now toggles properly when clicking speaker icon again
+  - All tracks now support immediate seeking and emoji placement without restrictions
 - July 05, 2025. Replit Auth Integration Complete
   - Replaced JWT-based authentication with Replit Auth (OpenID Connect)
   - Updated database schema to support Replit user data (id, email, firstName, lastName, profileImageUrl)
