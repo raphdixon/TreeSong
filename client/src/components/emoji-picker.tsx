@@ -101,7 +101,7 @@ export default function EmojiPicker({
       </div>
       
       {/* Emoji grid */}
-      <div className="emoji-grid" style={{ height: '140px' }}>
+      <div className="emoji-grid">
         {currentEmojis.map((emoji) => (
           <button
             key={emoji}

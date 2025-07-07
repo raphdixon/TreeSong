@@ -899,13 +899,13 @@ html {
 
 .emoji-grid {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   grid-template-rows: repeat(4, 1fr);
-  gap: 6px;
-  padding: 8px;
-  background: white;
+  gap: 4px;
+  padding: 6px;
+  background: var(--windows-gray);
   border: 1px inset var(--windows-gray);
-  height: 180px;
+  height: 160px;
   width: 100%;
 }
 
@@ -914,12 +914,12 @@ html {
   border: 1px outset var(--windows-gray);
   width: 100%;
   height: 100%;
-  min-height: 36px;
+  min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 20px;
+  font-size: 18px;
   transition: all 0.1s;
 }
 
@@ -984,9 +984,10 @@ html {
   
   .emoji-grid {
     grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(8, 1fr);
-    height: 200px;
-    gap: 4px;
+    grid-template-rows: repeat(4, 1fr);
+    height: 160px;
+    gap: 3px;
+    padding: 4px;
   }
   
   .desktop-window {
