@@ -232,7 +232,6 @@ export default function FeedPage() {
   const [isScrolling, setIsScrolling] = useState(false);
   const [hasViewedTrack, setHasViewedTrack] = useState<Set<string>>(new Set());
   const feedRef = useRef<HTMLDivElement>(null);
-  const [reactionCounts, setReactionCounts] = useState<Record<string, number>>({});
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [saveTrackId, setSaveTrackId] = useState<string | null>(null);
   const [genreRatingCompleted, setGenreRatingCompleted] = useState(false);
@@ -807,7 +806,7 @@ export default function FeedPage() {
                   </button>
                 </div>
                 <div className="win95-reactions-count">
-                  {reactionCounts[currentTrack.id] ?? (currentTrack.emojiReactions?.length || 0)} reactions
+                  {currentTrack.emojiReactions?.length || 0} reactions
                 </div>
               </div>
               
@@ -820,13 +819,6 @@ export default function FeedPage() {
                 isPublic={true}
                 autoPlay={true}
                 onTrackEnd={() => navigateTrack('down')}
-                onReactionCountChange={(newCount) => {
-                  // Update the reaction count in the state
-                  setReactionCounts(prev => ({
-                    ...prev,
-                    [currentTrack.id]: newCount
-                  }));
-                }}
                 artistName={currentTrack.creatorArtistName || 'Unknown Artist'}
                 trackName={currentTrack.originalName}
               />
