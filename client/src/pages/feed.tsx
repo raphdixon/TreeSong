@@ -236,8 +236,14 @@ export default function FeedPage() {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [saveTrackId, setSaveTrackId] = useState<string | null>(null);
   const [genreRatingCompleted, setGenreRatingCompleted] = useState(false);
-  const [hasStarted, setHasStarted] = useState(false);
-  const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
+  const [hasStarted, setHasStarted] = useState(() => {
+    // Check if user has already started in this session
+    return sessionStorage.getItem('hasStarted') === 'true';
+  });
+  const [shouldAutoPlay, setShouldAutoPlay] = useState(() => {
+    // Auto-play should be enabled if user has already started
+    return sessionStorage.getItem('hasStarted') === 'true';
+  });
   
   // Get URL parameters
   const searchParams = new URLSearchParams(window.location.search);
@@ -648,6 +654,8 @@ export default function FeedPage() {
         onStart={() => {
           setHasStarted(true);
           setShouldAutoPlay(true);
+          // Persist the started state in sessionStorage
+          sessionStorage.setItem('hasStarted', 'true');
         }}
       />
     );
