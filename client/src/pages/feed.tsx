@@ -8,6 +8,7 @@ import WaveformPlayer from "@/components/waveform-player-simple";
 import AuthPromptCard from "@/components/auth-prompt-card";
 import SaveTrackDialog from "@/components/save-track-dialog";
 import GenreRating from "@/components/genre-rating";
+import StartupScreen from "@/components/startup-screen";
 import { ChevronUp, ChevronDown, User, LogIn, Upload } from "lucide-react";
 import type { Genre } from "@shared/schema";
 
@@ -235,6 +236,8 @@ export default function FeedPage() {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [saveTrackId, setSaveTrackId] = useState<string | null>(null);
   const [genreRatingCompleted, setGenreRatingCompleted] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
   
   // Get URL parameters
   const searchParams = new URLSearchParams(window.location.search);
@@ -497,6 +500,11 @@ export default function FeedPage() {
 
       setCurrentTrackIndex(newIndex);
       
+      // Ensure autoplay continues after user has started
+      if (hasStarted) {
+        setShouldAutoPlay(true);
+      }
+      
       // Track view for actual tracks (not auth prompts)
       const item = displayItems[newIndex];
       if (item?.type === 'track' && item.data) {
@@ -632,6 +640,18 @@ export default function FeedPage() {
 
   const currentItem = displayItems[currentTrackIndex];
   const currentTrack = currentItem?.type === 'track' ? currentItem.data : null;
+
+  // Show startup screen on first load
+  if (!hasStarted) {
+    return (
+      <StartupScreen 
+        onStart={() => {
+          setHasStarted(true);
+          setShouldAutoPlay(true);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="win95-desktop" ref={feedRef}>
@@ -782,7 +802,7 @@ export default function FeedPage() {
                 duration={currentTrack.duration}
                 emojiReactions={currentTrack.emojiReactions || []}
                 isPublic={true}
-                autoPlay={true}
+                autoPlay={shouldAutoPlay}
                 onTrackEnd={() => navigateTrack('down')}
                 artistName={currentTrack.creatorArtistName || 'Unknown Artist'}
                 trackName={currentTrack.originalName}
