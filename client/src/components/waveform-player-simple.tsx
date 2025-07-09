@@ -38,6 +38,7 @@ export default function WaveformPlayer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [volume, setVolume] = useState(70); // Local volume state for playlist mode
+  const [audioMissing, setAudioMissing] = useState(false);
 
   const [sessionId] = useState(() => {
     const existingSessionId = localStorage.getItem('demoTreeSessionId');
@@ -235,11 +236,20 @@ export default function WaveformPlayer({
     } else {
       audioRef.current.play().catch(error => {
         console.error('Error playing audio:', error);
-        toast({
-          title: "Playback Error",
-          description: "Unable to play audio. Please try again.",
-          variant: "destructive"
-        });
+        // Check if this is a network error (missing file)
+        if (error.message && error.message.includes('Failed to load')) {
+          toast({
+            title: "Audio File Not Found",
+            description: "This audio file is temporarily unavailable. Please try another track.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Playback Error",
+            description: "Unable to play audio. Please try again.",
+            variant: "destructive"
+          });
+        }
       });
     }
   };
@@ -298,9 +308,24 @@ export default function WaveformPlayer({
     );
   }
 
+  // Log the audio URL for debugging
+  console.log('[Audio Debug] Loading audio from:', audioUrl, 'for track:', trackId);
+  
   return (
     <div className="space-y-4">
-      <audio ref={audioRef} src={audioUrl} preload="metadata" />
+      <audio 
+        ref={audioRef} 
+        src={audioUrl} 
+        preload="metadata"
+        onError={(e) => {
+          console.error('[Audio Error] Failed to load audio:', e.currentTarget.error);
+          console.error('[Audio Error] URL was:', audioUrl);
+          setAudioMissing(true);
+        }}
+        onLoadedMetadata={() => {
+          setAudioMissing(false);
+        }}
+      />
       
       {/* Waveform with emoji overlay */}
       <div style={{ position: 'relative' }}>

@@ -843,6 +843,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Debug endpoint to check audio files
+  app.get("/api/debug/audio-files", async (req, res) => {
+    try {
+      const tracks = await storage.getAllTracks();
+      const results = await Promise.all(tracks.map(async (track) => {
+        const filePath = path.join(uploadsDir, track.filename);
+        const exists = fs.existsSync(filePath);
+        return { 
+          trackId: track.id, 
+          filename: track.filename, 
+          exists,
+          originalName: track.originalName,
+          uploaderId: track.uploaderUserId
+        };
+      }));
+      
+      const missing = results.filter(r => !r.exists);
+      res.json({ 
+        total: tracks.length, 
+        existing: tracks.length - missing.length,
+        missing: missing.length, 
+        missingFiles: missing 
+      });
+    } catch (error) {
+      console.error("Failed to check audio files:", error);
+      res.status(500).json({ message: "Failed to check audio files" });
+    }
+  });
+
   // Admin settings routes
   app.get("/api/admin/settings/:key", isAdmin, async (req, res) => {
     try {

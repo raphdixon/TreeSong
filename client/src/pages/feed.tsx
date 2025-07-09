@@ -237,8 +237,9 @@ export default function FeedPage() {
   const [saveTrackId, setSaveTrackId] = useState<string | null>(null);
   const [genreRatingCompleted, setGenreRatingCompleted] = useState(false);
   const [hasStarted, setHasStarted] = useState(() => {
-    // Check if user has already started in this session
-    return sessionStorage.getItem('hasStarted') === 'true';
+    // Force the startup screen to show by clearing the flag
+    sessionStorage.removeItem('hasStarted');
+    return false;
   });
   
   // Get URL parameters
