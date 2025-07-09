@@ -240,10 +240,6 @@ export default function FeedPage() {
     // Check if user has already started in this session
     return sessionStorage.getItem('hasStarted') === 'true';
   });
-  const [shouldAutoPlay, setShouldAutoPlay] = useState(() => {
-    // Auto-play should be enabled if user has already started
-    return sessionStorage.getItem('hasStarted') === 'true';
-  });
   
   // Get URL parameters
   const searchParams = new URLSearchParams(window.location.search);
@@ -506,11 +502,6 @@ export default function FeedPage() {
 
       setCurrentTrackIndex(newIndex);
       
-      // Ensure autoplay continues after user has started
-      if (hasStarted) {
-        setShouldAutoPlay(true);
-      }
-      
       // Track view for actual tracks (not auth prompts)
       const item = displayItems[newIndex];
       if (item?.type === 'track' && item.data) {
@@ -653,7 +644,6 @@ export default function FeedPage() {
       <StartupScreen 
         onStart={() => {
           setHasStarted(true);
-          setShouldAutoPlay(true);
           // Persist the started state in sessionStorage
           sessionStorage.setItem('hasStarted', 'true');
         }}
@@ -810,7 +800,7 @@ export default function FeedPage() {
                 duration={currentTrack.duration}
                 emojiReactions={currentTrack.emojiReactions || []}
                 isPublic={true}
-                autoPlay={shouldAutoPlay}
+                autoPlay={true}
                 onTrackEnd={() => navigateTrack('down')}
                 artistName={currentTrack.creatorArtistName || 'Unknown Artist'}
                 trackName={currentTrack.originalName}
