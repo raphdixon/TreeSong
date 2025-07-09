@@ -322,13 +322,16 @@ export default function FeedPage() {
   const { data: allTracks = [], isLoading } = useQuery({
     queryKey: ["/api/feed/tracks", sessionId],
     queryFn: async () => {
+      console.log('[FEED] Fetching feed tracks...');
       const response = await fetch(`/api/feed/tracks?sessionId=${sessionId}`, {
         credentials: 'include'
       });
       if (!response.ok) {
         throw new Error("Failed to fetch tracks");
       }
-      return response.json();
+      const result = await response.json();
+      console.log('[FEED] Feed tracks fetched:', result.length);
+      return result;
     }
   });
 
@@ -386,6 +389,11 @@ export default function FeedPage() {
   };
 
   const recommendedTracks = getMergedTracks();
+  
+  // Log track changes
+  useEffect(() => {
+    console.log('[FEED] Current track index changed to:', currentTrackIndex, 'Track:', displayItems[currentTrackIndex]);
+  }, [currentTrackIndex]);
 
   // Check if user just logged in to save a track
   useEffect(() => {

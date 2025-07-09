@@ -169,14 +169,18 @@ export default function WaveformPlayer({
   // Emoji reaction mutation
   const addEmojiMutation = useMutation({
     mutationFn: async ({ emoji, time }: { emoji: string; time: number }) => {
+      console.log('[WAVEFORM-PLAYER] Starting emoji mutation:', { emoji, time, trackId, sessionId });
       const response = await apiRequest('POST', `/api/tracks/${trackId}/emoji-reactions`, {
         emoji,
         time,
         listenerSessionId: sessionId
       });
-      return response.json();
+      const result = await response.json();
+      console.log('[WAVEFORM-PLAYER] Emoji mutation response received:', result);
+      return result;
     },
     onSuccess: (data) => {
+      console.log('[WAVEFORM-PLAYER] Mutation onSuccess called, processing data:', data);
       console.log('[DEBUG] Emoji reaction response:', data);
       console.log('[DEBUG] Current displayEmojis before update:', displayEmojis);
       
@@ -207,10 +211,12 @@ export default function WaveformPlayer({
       }
       
       // Invalidate queries to refresh data - but NOT the public tracks query to avoid track changes
+      console.log('[WAVEFORM-PLAYER] About to invalidate queries for:', trackId);
       queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}/emoji-reactions/session/${sessionId}`] });
       
       // Also invalidate the specific track query to ensure fresh data
       queryClient.invalidateQueries({ queryKey: [`/api/tracks/${trackId}`] });
+      console.log('[WAVEFORM-PLAYER] Query invalidation complete');
     },
     onError: (error) => {
       console.error('Failed to add emoji reaction:', error);
