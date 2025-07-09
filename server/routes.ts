@@ -243,9 +243,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Moving file from", req.file.path, "to", newPath);
       
       // Move file to permanent location
-      fs.renameSync(req.file.path, newPath);
+      try {
+        // First try rename (fast)
+        fs.renameSync(req.file.path, newPath);
+      } catch (renameError: any) {
+        console.log("Rename failed, trying copy approach:", renameError.message);
+        // If rename fails (e.g., cross-device), fall back to copy + delete
+        try {
+          fs.copyFileSync(req.file.path, newPath);
+          fs.unlinkSync(req.file.path); // Delete the temp file
+        } catch (copyError: any) {
+          console.error("Failed to move file:", copyError);
+          return res.status(500).json({ message: "Failed to save audio file. Please try again." });
+        }
+      }
       
-      console.log("File moved successfully");
+      // Verify the file exists at the new location
+      if (!fs.existsSync(newPath)) {
+        console.error("File not found at destination after move:", newPath);
+        return res.status(500).json({ message: "File upload failed. Please try again." });
+      }
+      
+      console.log("File moved successfully, size:", fs.statSync(newPath).size, "bytes");
 
       const userId = req.user.claims.sub;
 
