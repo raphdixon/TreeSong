@@ -321,16 +321,13 @@ export default function FeedPage() {
   const { data: allTracks = [], isLoading } = useQuery({
     queryKey: ["/api/feed/tracks", sessionId],
     queryFn: async () => {
-      console.log('[FEED] Fetching feed tracks...');
       const response = await fetch(`/api/feed/tracks?sessionId=${sessionId}`, {
         credentials: 'include'
       });
       if (!response.ok) {
         throw new Error("Failed to fetch tracks");
       }
-      const result = await response.json();
-      console.log('[FEED] Feed tracks fetched:', result.length);
-      return result;
+      return response.json();
     }
   });
 
@@ -389,17 +386,14 @@ export default function FeedPage() {
 
   const recommendedTracks = getMergedTracks();
   
-  // Log track changes
-  useEffect(() => {
-    console.log('[FEED] Current track index changed to:', currentTrackIndex, 'Track:', displayItems[currentTrackIndex]);
-  }, [currentTrackIndex]);
+
 
   // Check if user just logged in to save a track
   useEffect(() => {
     if (user && isAuthenticated) {
       const savedTrackId = sessionStorage.getItem('saveTrackId');
       if (savedTrackId) {
-        console.log('[FEED] User logged in to save track:', savedTrackId);
+
         setSaveTrackId(savedTrackId);
         setShowSaveDialog(true);
         sessionStorage.removeItem('saveTrackId');
@@ -423,7 +417,7 @@ export default function FeedPage() {
                                 (genreRatingsShown > 0 && tracksSeenForRating >= 4);
         
         if (shouldShowRating) {
-          console.log(`[FEED] Injecting genre rating at position ${i} (shown: ${genreRatingsShown}, tracks seen: ${tracksSeenForRating})`);
+
           items.push({ type: 'genre-rating', index: i });
           genreRatingsShown++;
           tracksSeenForRating = 0;
@@ -433,7 +427,7 @@ export default function FeedPage() {
       
       // Check for auth prompt
       if (!isAuthenticated && shouldShowAuthPrompt(i)) {
-        console.log(`[FEED] Injecting auth prompt at position ${i}`);
+
         items.push({ type: 'auth', index: i });
       } else if (trackIndex < recommendedTracks.length) {
         items.push({ type: 'track', data: recommendedTracks[trackIndex], index: i });
@@ -466,7 +460,7 @@ export default function FeedPage() {
               .replace(/^-|-$/g, '');
             
             if (trackSlug === topTrackSlug.toLowerCase()) {
-              console.log(`[FEED] Found matching track for slug: ${topTrackSlug}`);
+
               return i;
             }
           }
@@ -491,13 +485,6 @@ export default function FeedPage() {
   }, [topTrackSlug, recommendedTracks, displayItems]);
 
   const navigateTrack = (direction: 'up' | 'down') => {
-    console.log('[FEED] navigateTrack called:', {
-      direction,
-      currentIndex: currentTrackIndex,
-      isScrolling,
-      caller: new Error().stack?.split('\n')[2]
-    });
-    
     if (isScrolling) return;
     
     setIsScrolling(true);
@@ -507,7 +494,7 @@ export default function FeedPage() {
       : Math.max(currentTrackIndex - 1, 0);
     
     if (newIndex !== currentTrackIndex) {
-      console.log('[FEED] Changing track index from', currentTrackIndex, 'to', newIndex);
+
       setCurrentTrackIndex(newIndex);
       
       // Track view for actual tracks (not auth prompts)
@@ -517,7 +504,7 @@ export default function FeedPage() {
         if (!hasViewedTrack.has(trackId)) {
           incrementTrackCount(trackId);
           setHasViewedTrack(prev => new Set(prev).add(trackId));
-          console.log(`[FEED] Track ${trackId} marked as viewed`);
+
         }
       }
     }
@@ -529,13 +516,11 @@ export default function FeedPage() {
   const handleTrackEnd = () => {
     // Auto-advance to next item when current track ends
     if (currentTrackIndex < displayItems.length - 1) {
-      console.log('[FEED] Track ended, auto-advancing to next item');
       setTimeout(() => navigateTrack('down'), 1000);
     }
   };
 
   const handleLogin = () => {
-    console.log('[FEED] Redirecting to login...');
     window.location.href = '/api/login';
   };
 
@@ -547,22 +532,11 @@ export default function FeedPage() {
       // Check if the wheel event is coming from within the player or emoji picker
       const target = e.target as HTMLElement;
       
-      console.log('[FEED] Wheel event detected:', {
-        deltaY: e.deltaY,
-        target: target.className,
-        closestPlayer: !!target.closest('.win95-audio-player'),
-        closestEmojiPicker: !!target.closest('.emoji-picker-wrapper'),
-        closestEmojiGrid: !!target.closest('.emoji-grid'),
-        closestEmojiButton: !!target.closest('.emoji-button'),
-        closestWaveform: !!target.closest('.win95-waveform-container')
-      });
-      
       if (target.closest('.win95-audio-player') || 
           target.closest('.emoji-picker-wrapper') ||
           target.closest('.emoji-grid') ||
           target.closest('.emoji-button') ||
           target.closest('.win95-waveform-container')) {
-        console.log('[FEED] Wheel event ignored - inside player component');
         return;
       }
       
@@ -715,7 +689,6 @@ export default function FeedPage() {
           <GenreRating 
             genres={unratedGenres} 
             onComplete={() => {
-              console.log('[FEED] Genre rating completed');
               // If all genres are rated, set completed flag
               if (hasRatedAll) {
                 setGenreRatingCompleted(true);
@@ -727,14 +700,6 @@ export default function FeedPage() {
         ) : currentTrack ? (
           <div 
             className="win95-audio-player"
-            onClick={(e) => {
-              console.log('[FEED] Audio player container clicked:', {
-                target: (e.target as HTMLElement).className,
-                currentTarget: e.currentTarget.className,
-                isDefaultPrevented: e.defaultPrevented,
-                isPropagationStopped: e.isPropagationStopped
-              });
-            }}
           >
             {/* Title Bar */}
             <div className="win95-title-bar ml-[0px] mr-[0px] mt-[0px] mb-[0px] pt-[14px] pb-[14px]">
@@ -805,7 +770,7 @@ export default function FeedPage() {
                     💾 Save
                   </button>
                 </div>
-                <div className="win95-reactions-count">
+                <div className="win95-reactions-count" id={`reaction-count-${currentTrack.id}`}>
                   {currentTrack.emojiReactions?.length || 0} reactions
                 </div>
               </div>

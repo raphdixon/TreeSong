@@ -15,31 +15,23 @@ export function useTrackCounter() {
       currentSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       sessionStorage.setItem(SESSION_ID_KEY, currentSessionId);
       sessionStorage.setItem(STORAGE_KEY, '0');
-      console.log('[TRACK_COUNTER] New session initialized:', currentSessionId);
     }
     setSessionId(currentSessionId);
 
     // Load current count
     const storedCount = parseInt(sessionStorage.getItem(STORAGE_KEY) || '0', 10);
     setTracksViewed(storedCount);
-    console.log('[TRACK_COUNTER] Session loaded with tracks viewed:', storedCount);
   }, []);
 
   const incrementTrackCount = (trackId: string) => {
     const newCount = tracksViewed + 1;
     setTracksViewed(newCount);
     sessionStorage.setItem(STORAGE_KEY, newCount.toString());
-    console.log(`[TRACK_COUNTER] Track viewed: ${trackId}, Total: ${newCount}/${TRACKS_BEFORE_AUTH}`);
-    
-    if (newCount === TRACKS_BEFORE_AUTH) {
-      console.log('[TRACK_COUNTER] Auth prompt threshold reached!');
-    }
   };
 
   const resetTrackCount = () => {
     setTracksViewed(0);
     sessionStorage.setItem(STORAGE_KEY, '0');
-    console.log('[TRACK_COUNTER] Track count reset');
   };
 
   const shouldShowAuthPrompt = (index: number): boolean => {
@@ -48,10 +40,6 @@ export function useTrackCounter() {
     const position = index + 1;
     const shouldShow = position > TRACKS_BEFORE_AUTH && 
                       (position - TRACKS_BEFORE_AUTH - 1) % (TRACKS_BEFORE_AUTH + 1) === 0;
-    
-    if (shouldShow) {
-      console.log(`[TRACK_COUNTER] Auth prompt should show at index ${index}`);
-    }
     
     return shouldShow;
   };

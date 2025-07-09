@@ -42,12 +42,10 @@ export default function WaveformPlayer({
   const [sessionId] = useState(() => {
     const existingSessionId = localStorage.getItem('demoTreeSessionId');
     if (existingSessionId) {
-      console.log('[SESSION] Using existing session ID:', existingSessionId);
       return existingSessionId;
     }
     const newSessionId = nanoid();
     localStorage.setItem('demoTreeSessionId', newSessionId);
-    console.log('[SESSION] Created new session ID:', newSessionId);
     return newSessionId;
   });
 
@@ -122,8 +120,6 @@ export default function WaveformPlayer({
   // Reset emoji display only when switching to a different track
   useEffect(() => {
     if (trackId !== currentTrackId) {
-      console.log('[DEBUG] Track changed from', currentTrackId, 'to:', trackId, 'resetting emoji state');
-      
       // Reset emojis for new track
       setDisplayEmojis([]);
       setEmojiCount(0);
@@ -134,7 +130,6 @@ export default function WaveformPlayer({
   // Initialize emoji display from props when data becomes available
   useEffect(() => {
     if (emojiReactions && emojiReactions.length > 0) {
-      console.log('[DEBUG] Setting initial emojis from props:', emojiReactions.length);
       setDisplayEmojis(emojiReactions);
     }
   }, [emojiReactions]); // Update display when emoji data loads
@@ -142,14 +137,18 @@ export default function WaveformPlayer({
   // Update emoji display and count from user session data
   useEffect(() => {
     if (userEmojis) {
-      console.log('[DEBUG] Initial emoji count response:', userEmojis);
       const sessionData = userEmojis as any;
-      setEmojiCount(sessionData.count || 0);
+      const count = sessionData.count || 0;
+      setEmojiCount(count);
+      
+      // Update the reaction count display in the DOM
+      const countElement = document.getElementById(`reaction-count-${trackId}`);
+      if (countElement) {
+        countElement.textContent = `${count} reactions`;
+      }
       
       // Merge session emojis with existing emojis
       if (sessionData.reactions && sessionData.reactions.length > 0) {
-        console.log('[DEBUG] Merging session emojis with existing emojis');
-        
         setDisplayEmojis(prev => {
           // Get existing emoji IDs to avoid duplicates
           const existingIds = new Set(prev.map(e => e.id));
@@ -183,9 +182,11 @@ export default function WaveformPlayer({
         setDisplayEmojis(data.allReactions);
         const newCount = data.currentCount || data.allReactions.length;
         setEmojiCount(newCount);
-        // Call the callback to update parent component
-        if (onReactionCountChange) {
-          onReactionCountChange(newCount);
+        
+        // Update the reaction count display in the DOM directly
+        const countElement = document.getElementById(`reaction-count-${trackId}`);
+        if (countElement) {
+          countElement.textContent = `${newCount} reactions`;
         }
       } else if (data.reaction) {
         // Fallback: add just the new reaction if allReactions not provided
@@ -195,9 +196,11 @@ export default function WaveformPlayer({
         });
         const newCount = data.currentCount || 0;
         setEmojiCount(newCount);
-        // Call the callback to update parent component
-        if (onReactionCountChange) {
-          onReactionCountChange(newCount);
+        
+        // Update the reaction count display in the DOM directly
+        const countElement = document.getElementById(`reaction-count-${trackId}`);
+        if (countElement) {
+          countElement.textContent = `${newCount} reactions`;
         }
       }
       
@@ -268,17 +271,7 @@ export default function WaveformPlayer({
     });
   };
 
-  // Log component state for debugging
-  useEffect(() => {
-    console.log('[WaveformPlayer] Component mounted/updated', {
-      trackId,
-      audioUrl,
-      duration,
-      hasEmojiReactions: displayEmojis.length,
-      isPlaying,
-      currentTime
-    });
-  });
+
 
   if (fileDeletedAt) {
     return (
