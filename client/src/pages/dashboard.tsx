@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,6 +15,8 @@ export default function DashboardPage() {
   const queryClient = useQueryClient();
   const [showUpload, setShowUpload] = useState(false);
   const [activeTab, setActiveTab] = useState("tracks");
+  const [isMinimizing, setIsMinimizing] = useState(false);
+  const windowRef = useRef<HTMLDivElement>(null);
 
   // Redirect if not logged in
   if (!isLoading && !isAuthenticated) {
@@ -91,25 +93,61 @@ export default function DashboardPage() {
     return new Date(date).toLocaleDateString();
   };
 
+  // Handle minimize with animation
+  const handleMinimize = () => {
+    setIsMinimizing(true);
+    // After animation completes, navigate to feed
+    setTimeout(() => {
+      setLocation('/');
+    }, 300);
+  };
+
+  // Handle close (go back to feed)
+  const handleClose = () => {
+    setLocation('/');
+  };
+
   return (
     <Windows95Layout>
-      <div className="window dashboard-window" style={{ 
-        top: "20px", 
-        left: "20px", 
-        right: "20px",
-        bottom: "60px",
-        width: "auto",
-        minHeight: "calc(100vh - 120px)",
-        maxWidth: "1200px",
-        margin: "0 auto",
-        background: "var(--win95-gray)"
-      }}>
+      <div 
+        ref={windowRef}
+        className={`window dashboard-window ${isMinimizing ? 'minimizing' : ''}`} 
+        style={{ 
+          top: "20px", 
+          left: "20px", 
+          right: "20px",
+          bottom: "60px",
+          width: "auto",
+          minHeight: "calc(100vh - 120px)",
+          maxWidth: "1200px",
+          margin: "0 auto",
+          background: "var(--win95-gray)"
+        }}
+      >
         <div className="title-bar">
           <div className="title-bar-text">TreeNote - Dashboard</div>
           <div className="title-bar-controls">
-            <div className="title-bar-button">_</div>
-            <div className="title-bar-button">□</div>
-            <div className="title-bar-button">×</div>
+            <button 
+              className="title-bar-button" 
+              onClick={handleMinimize}
+              style={{ cursor: 'pointer' }}
+            >
+              _
+            </button>
+            <button 
+              className="title-bar-button" 
+              style={{ cursor: 'not-allowed', opacity: 0.5 }}
+              disabled
+            >
+              □
+            </button>
+            <button 
+              className="title-bar-button" 
+              onClick={handleClose}
+              style={{ cursor: 'pointer' }}
+            >
+              ×
+            </button>
           </div>
         </div>
         
@@ -344,7 +382,6 @@ export default function DashboardPage() {
             >
               ← Feed
             </button>
-            <span>Ready</span>
           </div>
           <span>Artist: {userData?.artistName || userData?.email || 'Loading...'}</span>
         </div>
