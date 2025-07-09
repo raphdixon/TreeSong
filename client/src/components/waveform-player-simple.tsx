@@ -70,9 +70,19 @@ export default function WaveformPlayer({
       
       // Auto-play if requested
       if (autoPlay) {
-        audioRef.current.play().then(() => {
-          setIsPlaying(true);
-        }).catch(console.error);
+        // Small delay to ensure the audio element is ready
+        const playTimeout = setTimeout(() => {
+          if (audioRef.current) {
+            audioRef.current.play().then(() => {
+              setIsPlaying(true);
+            }).catch(error => {
+              console.warn('Autoplay failed:', error.message);
+              // Don't show error toast for autoplay failures - this is expected behavior
+            });
+          }
+        }, 100);
+        
+        return () => clearTimeout(playTimeout);
       }
     }
   }, [audioUrl, autoPlay, volume]);
@@ -223,7 +233,14 @@ export default function WaveformPlayer({
     if (isPlaying) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play();
+      audioRef.current.play().catch(error => {
+        console.error('Error playing audio:', error);
+        toast({
+          title: "Playback Error",
+          description: "Unable to play audio. Please try again.",
+          variant: "destructive"
+        });
+      });
     }
   };
 
